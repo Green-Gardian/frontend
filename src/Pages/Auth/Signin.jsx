@@ -1,5 +1,3 @@
-
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -25,6 +23,7 @@ const SignIn = () => {
     email: "",
     password: "",
   });
+  const [error, setError] = useState("");
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -40,11 +39,16 @@ const SignIn = () => {
     console.log("insdei handle submit fuction!");
     const res = await signInFunc(credentials);
 
+    if (res.error) {
+      setError(res.error);
+
+      return;
+    }
+
     //storing token in cookies
-    Cookies.set("access_token", res.access_token);
+    Cookies.set("access_token", res.access_token ? res.access_token : null);
     Cookies.set("refresh_token", res.refresh_token);
     Cookies.set("username", res.username);
-
     window.location.href = "/admin/staff";
   };
 
@@ -65,10 +69,12 @@ const SignIn = () => {
         <CardContent className="px-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
-              <Alert className="text-red-400 border-red-400">
-                <Terminal className="h-4 w-4" />
-                <AlertTitle>Error Message</AlertTitle>
-              </Alert>
+              {error && (
+                <Alert className="text-red-400 border-red-400">
+                  <Terminal className="h-4 w-4" />
+                  <AlertTitle>{error}</AlertTitle>
+                </Alert>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium">

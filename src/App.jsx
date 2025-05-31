@@ -1,13 +1,15 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
-import Applayout from "./layout/Applayout";
+import { AdminLayout, SuperAdminLayout } from "./layout";
 
-import { Dashboard } from "./Pages/Dashboard";
-import { Vehicles } from "./Pages/Vehicles";
-import { Staff } from "./Pages/Staff";
-import { Settings } from "./Pages/Settings";
-import { Signin } from "./Pages/Auth";
-import { NotFound } from "./Pages/Not-Found";
+import {
+  Dashboard,
+  Vehicles,
+  Staff,
+  Settings,
+  NotFound,
+  Signin,
+} from "./Pages";
 
 import "./index.css";
 
@@ -15,7 +17,7 @@ function App() {
   const router = createBrowserRouter([
     {
       path: "/admin",
-      element: <Applayout />,
+      element: <AdminLayout />,
       children: [
         {
           path: "",
@@ -36,6 +38,20 @@ function App() {
         {
           path: "*",
           element: <NotFound />,
+        },
+      ],
+    },
+    {
+      path: "/super-admin",
+      element: <SuperAdminLayout />,
+      children: [
+        {
+          path: "dashboard",
+          element: <h1 className="text-white">Main Super Admin Dashboard</h1>,
+        },
+        {
+          path: "societies",
+          element: <h1 className="text-white">Societies</h1>,
         },
       ],
     },

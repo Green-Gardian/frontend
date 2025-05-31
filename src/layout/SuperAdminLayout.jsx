@@ -1,11 +1,12 @@
+import React from 'react'
 import { Outlet } from "react-router-dom"
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 
-const Applayout = () => {
+const SuperAdminLayout = () => {
   return (
-    <SidebarProvider>
-      <AppSidebar />
+   <SidebarProvider>
+      <AppSidebar role="super-admin" />
       <SidebarInset>
           <div className="block md:hidden absolute">
             <SidebarTrigger />
@@ -18,4 +19,4 @@ const Applayout = () => {
   )
 }
 
-export default Applayout
+export default SuperAdminLayout

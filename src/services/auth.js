@@ -24,7 +24,6 @@ const signUp = async ({ credentials }) => {
 };
 
 const signInFunc = async (credentials) => {
-
   try {
     const options = {
       method: "POST",
@@ -32,24 +31,21 @@ const signInFunc = async (credentials) => {
       body: JSON.stringify(credentials),
     };
 
-
-
-
     const response = await fetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/signin`,
       options
     );
 
+    const data = await response.json();
+
     if (!response.ok) {
-      throw new Error("Network response was not ok!");
+      return { error: data.message };
     }
 
-    const data = await response.json();
-    // window.location.href='/admin/dashboard'
     return data;
   } catch (err) {
     console.log("Erorr : ", err.message);
-    return 'Error while fetching!'
+    return "Error while fetching!";
   }
 };
 

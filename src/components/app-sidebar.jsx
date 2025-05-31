@@ -30,7 +30,21 @@ import { NavLink } from "react-router-dom"
 
 import Cookies from 'js-cookie'
 
-const routes = [
+const superAdminRoutes = [
+      {
+    title: "Dashboard",
+    icon: <LayoutDashboard className="h-5 w-5" />,
+    href: "/super-admin/dashboard",
+  },
+      {
+    title: "Societies",
+    icon: <LayoutDashboard className="h-5 w-5" />,
+    href: "/super-admin/societies",
+  },
+
+]
+
+const adminRoutes = [
   {
     title: "Dashboard",
     icon: <LayoutDashboard className="h-5 w-5" />,
@@ -73,7 +87,10 @@ const routes = [
   },
 ]
 
-export function AppSidebar() {
+
+export function AppSidebar({role}) {
+  const routes = role === "admin" ? adminRoutes : superAdminRoutes;
+
   return (
     <Sidebar className="bg-[#121212] border-none">
       <SidebarHeader className="bg-[#121212] border-b border-zinc-800">
