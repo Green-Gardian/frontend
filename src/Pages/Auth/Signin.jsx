@@ -1,4 +1,4 @@
-"use client";
+
 
 import { Button } from "@/components/ui/button";
 import {
@@ -7,6 +7,7 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,9 +16,13 @@ import { Leaf, Lock, User, EyeOff, Eye, Terminal } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
+import Cookies from "js-cookie";
+
+import { signInFunc } from "@/services/auth";
+
 const SignIn = () => {
   const [credentials, setCredentials] = useState({
-    username: "",
+    email: "",
     password: "",
   });
 
@@ -30,8 +35,17 @@ const SignIn = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("insdei handle submit fuction!");
+    const res = await signInFunc(credentials);
+
+    //storing token in cookies
+    Cookies.set("access_token", res.access_token);
+    Cookies.set("refresh_token", res.refresh_token);
+    Cookies.set("username", res.username);
+
+    window.location.href = "/admin/staff";
   };
 
   return (
@@ -54,22 +68,22 @@ const SignIn = () => {
               <Alert className="text-red-400 border-red-400">
                 <Terminal className="h-4 w-4" />
                 <AlertTitle>Error Message</AlertTitle>
-               
               </Alert>
 
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-sm font-medium">
-                  Username
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Email
                 </Label>
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                     <User size={18} />
                   </div>
                   <Input
-                    id="username"
-                    placeholder="Enter your username"
+                    id="email"
+                    placeholder="Enter your email"
                     onChange={handleChange}
-                    name="username"
+                    name="email"
+                    type="email"
                     className="pl-10 py-5 bg-gray-50"
                   />
                 </div>
@@ -90,7 +104,6 @@ const SignIn = () => {
                     name="password"
                     type={showPassword ? "text" : "password"}
                     className="pl-10 py-5 bg-gray-50"
-                    
                   />
                   <button
                     type="button"
@@ -128,9 +141,6 @@ const SignIn = () => {
             <Button
               className="w-full py-6 bg-[#624DE3]/80 hover:bg-[#624DE3] text-white font-medium"
               type="submit"
-              onClick={()=>{
-                window.location.href='/admin'
-              }}
             >
               Sign In
             </Button>

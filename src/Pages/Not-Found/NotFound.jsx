@@ -12,7 +12,7 @@ const NotFound = () => {
                 <div className="relative">
                     <div className="absolute">
                         <div className="">
-                            <div class="text-5xl font-dark font-bold">404</div>
+                            <div className="text-5xl font-dark font-bold">404</div>
                             <h1 className="my-2 text-gray-800 font-bold text-2xl">
                                 Looks like you've found the
                                 doorway to the great nothing

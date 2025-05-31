@@ -1,0 +1,201 @@
+
+import { cn } from "@/lib/utils"
+
+import { Settings, MoreHorizontal, LogOut, Leaf, LayoutDashboard, Users, Car, UserCheck, BarChart3, CreditCard, HelpCircle, UserCircle } from 'lucide-react'
+
+import {
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarFooter,
+} from "@/components/ui/sidebar"
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
+import { NavLink } from "react-router-dom"
+
+import Cookies from 'js-cookie'
+
+const routes = [
+  {
+    title: "Dashboard",
+    icon: <LayoutDashboard className="h-5 w-5" />,
+    href: "/admin/dashboard",
+  },
+  {
+    title: "Staff",
+    icon: <Users className="h-5 w-5" />,
+    href: "/admin/staff",
+  },
+  {
+    title: "Vehicles",
+    icon: <Car className="h-5 w-5" />,
+    href: "/admin/vehicles",
+  },
+  {
+    title: "Customers",
+    icon: <UserCircle className="h-5 w-5" />,
+    href: "/admin/customers",
+  },
+  {
+    title: "Analytics",
+    icon: <BarChart3 className="h-5 w-5" />,
+    href: "/admin/analytics",
+  },
+  {
+    title: "Payment",
+    icon: <CreditCard className="h-5 w-5" />,
+    href: "/admin/payment",
+  },
+  {
+    title: "Settings",
+    icon: <Settings className="h-5 w-5" />,
+    href: "/admin/settings",
+  },
+  {
+    title: "Help",
+    icon: <HelpCircle className="h-5 w-5" />,
+    href: "/admin/help",
+  },
+]
+
+export function AppSidebar() {
+  return (
+    <Sidebar className="bg-[#121212] border-none">
+      <SidebarHeader className="bg-[#121212] border-b border-zinc-800">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              size="lg"
+              className="data-[state=open]:bg-[#121212] data-[state=open]:text-white hover:bg-zinc-800 bg-zinc-800 text-white"
+            >
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-white text-black">
+                <Leaf className="size-4" />
+              </div>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold text-white">
+                  Green Guardian
+                </span>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+      <SidebarContent className="bg-[#121212]">
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {routes.map((route) => (
+                <NavLink
+                  key={route.href}
+                  to={route.href}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-3 rounded-md px-3 py-2 text-[14px] font-medium transition-colors hover:cursor-pointer",
+                      isActive
+                        ? "bg-[#fff]/12 text-[#FFFFFF]/80 border-1 border-[#EDEDED]/8"
+                        : "text-white/80 hover:text-white hover:bg-zinc-800/50"
+                    )
+                  }
+                >
+                  {route.icon}
+                  {route.title}
+                </NavLink>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter className="bg-[#121212] border-t border-zinc-800">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton
+                  size="lg"
+                  className="data-[state=open]:bg-zinc-800 data-[state=open]:text-white hover:bg-zinc-800 text-white"
+                >
+                  <Avatar className="h-8 w-8 rounded-lg">
+                    <AvatarImage
+                      src="/placeholder.svg?height=32&width=32"
+                      alt="Muhammad Hassan"
+                    />
+                    <AvatarFallback className="rounded-full bg-[#121212] text-zinc-300">
+                      MH
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold text-white">
+                      Muhammad Hassan
+                    </span>
+                    <span className="truncate text-xs text-zinc-400">
+                      hassanamr@gmail.com
+                    </span>
+                  </div>
+                  <MoreHorizontal className="ml-auto size-4 text-zinc-400" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg bg-[#121212] border-[#EDEDED]/8 text-zinc-300"
+                side="bottom"
+                align="end"
+                sideOffset={4}
+              >
+                <DropdownMenuLabel className="p-0 font-normal">
+                  <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                    <Avatar className="h-8 w-8 rounded-full">
+                      <AvatarImage
+                        src="/placeholder.svg?height=32&width=32"
+                        alt="Muhammad Hassan"
+                      />
+                      <AvatarFallback className="rounded-lg bg-[#121212] text-zinc-300">
+                        MH
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="grid flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-semibold text-white">
+                        Muhammad Hassan
+                      </span>
+                      <span className="truncate text-xs text-zinc-400">
+                        hassanamr@gmail.com
+                      </span>
+                    </div>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-white/12" />
+                <DropdownMenuItem className="text-white/80 hover:text-[#FFFFFF]/80 hover:bg-[#fff]/12 focus:bg-[#fff]/12 focus:text-[#FFFFFF]/80 cursor-pointer transition-colors">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Profile Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-red-400 hover:text-red-300 focus:text-red-300 hover:bg-[#fff]/12 focus:bg-[#fff]/12 cursor-pointer transition-colors"
+                  onClick={() => {
+                    Cookies.remove('access_token');
+                    window.location.href = "/signin"
+                  }}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
+  )
+}
