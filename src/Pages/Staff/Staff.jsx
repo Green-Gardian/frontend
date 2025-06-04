@@ -327,7 +327,7 @@ const Staff = () => {
               placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full sm:max-w-[300px] h-10 px-4 rounded-md border  text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-0 focus:border-gray-200 focus:bg-white transition-colors duration-200"
+              className="w-full sm:max-w-[300px] h-10 px-4 rounded-md border text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-0 focus:border-gray-200 focus:bg-white transition-colors duration-200"
             />
           </div>
 
@@ -438,7 +438,7 @@ const Staff = () => {
               </PaginationItem>
 
               <div className="hidden sm:flex">
-                {getPageNumbers().map((pageNum, index) => (
+                {getPageNumbers().map((pageNum) => (
                   <PaginationItem key={pageNum}>
                     <PaginationLink
                       onClick={() => handlePageChange(pageNum)}
