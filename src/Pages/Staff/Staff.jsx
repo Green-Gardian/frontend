@@ -228,13 +228,18 @@ const Staff = () => {
     }
   }, []);
 
-  const itemsPerPage = 7;
+  const itemsPerPage = 7; 
 
   const filteredRecords = staffRecords.filter(
-    (record) =>
-      record.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.contactInfo.includes(searchTerm)
+    (record) => {
+      const term = (searchTerm || "").toLowerCase();
+      return (
+        record.name.toLowerCase().includes(term) ||
+        record.role.toLowerCase().includes(term) ||
+        record.contactInfo.includes(term) ||
+        record.EmployeeStatus.toLowerCase().includes(term)
+      );
+    }
   );
 
   const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);

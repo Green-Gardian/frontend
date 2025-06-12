@@ -1,7 +1,19 @@
+import { cn } from "@/lib/utils";
 
-import { cn } from "@/lib/utils"
-
-import { Settings, MoreHorizontal, LogOut, Leaf, LayoutDashboard, Users, Car, UserCheck, BarChart3, CreditCard, HelpCircle, UserCircle } from 'lucide-react'
+import {
+  Settings,
+  MoreHorizontal,
+  LogOut,
+  Leaf,
+  LayoutDashboard,
+  Users,
+  Car,
+  UserCheck,
+  BarChart3,
+  CreditCard,
+  HelpCircle,
+  UserCircle,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -13,7 +25,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 import {
   DropdownMenu,
@@ -22,33 +34,32 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-import { NavLink } from "react-router-dom"
+import { NavLink } from "react-router-dom";
 
-import Cookies from 'js-cookie'
+import Cookies from "js-cookie";
 
 const superAdminRoutes = [
-      {
+  {
     title: "Dashboard",
     icon: <LayoutDashboard className="h-5 w-5" />,
-    href: "/super-admin/dashboard",
+    href: "/super-admin/",
   },
-      {
+  {
     title: "Societies",
     icon: <LayoutDashboard className="h-5 w-5" />,
     href: "/super-admin/societies",
   },
-
-]
+];
 
 const adminRoutes = [
   {
     title: "Dashboard",
     icon: <LayoutDashboard className="h-5 w-5" />,
-    href: "/admin/dashboard",
+    href: "/admin/",
   },
   {
     title: "Staff",
@@ -80,15 +91,9 @@ const adminRoutes = [
     icon: <Settings className="h-5 w-5" />,
     href: "/admin/settings",
   },
-  {
-    title: "Help",
-    icon: <HelpCircle className="h-5 w-5" />,
-    href: "/admin/help",
-  },
-]
+];
 
-
-export function AppSidebar({role}) {
+export function AppSidebar({ role }) {
   const routes = role === "admin" ? adminRoutes : superAdminRoutes;
 
   return (
@@ -201,8 +206,8 @@ export function AppSidebar({role}) {
                 <DropdownMenuItem
                   className="text-red-400 hover:text-red-300 focus:text-red-300 hover:bg-[#fff]/12 focus:bg-[#fff]/12 cursor-pointer transition-colors"
                   onClick={() => {
-                    Cookies.remove('access_token');
-                    window.location.href = "/signin"
+                    Cookies.remove("access_token");
+                    window.location.href = "/signin";
                   }}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
@@ -214,5 +219,5 @@ export function AppSidebar({role}) {
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

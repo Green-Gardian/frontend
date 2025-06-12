@@ -9,6 +9,9 @@ import {
   Settings,
   NotFound,
   Signin,
+  Customer,
+  Payments,
+  Analytics
 } from "./Pages";
 
 import "./index.css";
@@ -28,8 +31,20 @@ function App() {
           element: <Vehicles />,
         },
         {
+          path: "customers",
+          element: <Customer />,
+        },
+        {
           path: "staff",
           element: <Staff />,
+        },
+        {
+          path:"payment", 
+          element:<Payments/>
+        },
+        {
+          path:"analytics",
+          element:<Analytics/>
         },
         {
           path: "settings",

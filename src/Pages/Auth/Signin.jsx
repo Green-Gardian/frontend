@@ -36,7 +36,7 @@ const SignIn = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("insdei handle submit fuction!");
+    console.log("inside handle submit fuction!");
     const res = await signInFunc(credentials);
 
     if (res.error) {
