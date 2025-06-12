@@ -13,7 +13,6 @@ const signUp = async ({ credentials }) => {
 
     if (!response.ok) {
       throw new Error("Network response was not ok!");
-      return;
     }
 
     const data = await response.json();

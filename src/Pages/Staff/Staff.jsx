@@ -414,7 +414,7 @@ const Staff = () => {
               </PaginationItem>
 
               <div className="hidden sm:flex">
-                {getPageNumbers().map((pageNum, index) => (
+                {getPageNumbers().map((pageNum) => (
                   <PaginationItem key={pageNum}>
                     <PaginationLink
                       onClick={() => handlePageChange(pageNum)}
