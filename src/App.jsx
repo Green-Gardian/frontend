@@ -74,11 +74,11 @@ function App() {
       children: [
         {
           path: "dashboard",
-          element: <h1 className="text-white">Main Super Admin Dashboard</h1>,
+          element: <h1 className="text-white"> Super Admin Dashboard</h1>,
         },
         {
           path: "societies",
-          element: <h1 className="text-white">Societies</h1>,
+          element: <h1 className="text-white"> Societies</h1>,
         },
       ],
     },

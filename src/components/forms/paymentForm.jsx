@@ -283,11 +283,11 @@ const PaymentForm = ({ onClose, onSubmit }) => {
                   <SelectValue placeholder="Select service type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Basic">Basic (₹2,000)</SelectItem>
-                  <SelectItem value="Standard">Standard (₹2,500)</SelectItem>
-                  <SelectItem value="Premium">Premium (₹3,000)</SelectItem>
+                  <SelectItem value="Basic">Basic (Rs.2,000)</SelectItem>
+                  <SelectItem value="Standard">Standard (Rs.2,500)</SelectItem>
+                  <SelectItem value="Premium">Premium (Rs.3,000)</SelectItem>
                   <SelectItem value="Premium Plus">
-                    Premium Plus (₹3,500)
+                    Premium Plus (Rs.3,500)
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -298,7 +298,7 @@ const PaymentForm = ({ onClose, onSubmit }) => {
 
             <div className="space-y-2">
               <Label htmlFor="monthlyFee">
-                Monthly Fee (₹) <span className="text-red-500">*</span>
+                Monthly Fee (Rs.) <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="monthlyFee"
@@ -315,7 +315,7 @@ const PaymentForm = ({ onClose, onSubmit }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="lateFee">Late Fee (₹)</Label>
+              <Label htmlFor="lateFee">Late Fee (Rs.)</Label>
               <Input
                 id="lateFee"
                 name="lateFee"

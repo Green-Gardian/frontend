@@ -244,12 +244,12 @@ const PaymentHistory = ({ resident, onClose }) => {
                       <TableCell className="font-medium">{payment.month}</TableCell>
                       <TableCell>{payment.dueDate}</TableCell>
                       <TableCell>{payment.paymentDate}</TableCell>
-                      <TableCell>₹{payment.amount.toLocaleString()}</TableCell>
+                      <TableCell>Rs.{payment.amount.toLocaleString()}</TableCell>
                       <TableCell className={payment.lateFee > 0 ? "text-red-600 font-medium" : ""}>
-                        ₹{payment.lateFee.toLocaleString()}
+                        Rs.{payment.lateFee.toLocaleString()}
                       </TableCell>
                       <TableCell className="font-medium">
-                        ₹{(payment.amount + payment.lateFee).toLocaleString()}
+                        Rs.{(payment.amount + payment.lateFee).toLocaleString()}
                       </TableCell>
                       <TableCell>
                         <Badge className={`${getStatusBadgeStyle(payment.status)} text-xs`}>{payment.status}</Badge>

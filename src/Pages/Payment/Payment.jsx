@@ -384,7 +384,6 @@ const Payments = () => {
   }
 
   const exportResidentData = (resident) => {
-    // In a real app, you'd fetch all payment history for this resident
     const residentData = [{
       "House Number": resident.houseNumber,
       "Resident Name": resident.residentName,
