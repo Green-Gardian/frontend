@@ -9,7 +9,7 @@ import * as XLSX from "xlsx"
 
 
 // Mock payment history data - in real app, this would be fetched from API
-const getPaymentHistory = (residentId) => [
+const getPaymentHistory = () => [
   {
     month: "June 2024",
     dueDate: "2024-06-05",
