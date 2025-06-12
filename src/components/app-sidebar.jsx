@@ -13,6 +13,7 @@ import {
   CreditCard,
   HelpCircle,
   UserCircle,
+  MessageCircleMore,
 } from "lucide-react";
 
 import {
@@ -87,9 +88,9 @@ const adminRoutes = [
     href: "/admin/payment",
   },
   {
-    title: "Settings",
-    icon: <Settings className="h-5 w-5" />,
-    href: "/admin/settings",
+    title: "Messaging",
+    icon: <MessageCircleMore className="h-5 w-5" />,
+    href: "/admin/messaging",
   },
 ];
 
@@ -199,7 +200,12 @@ export function AppSidebar({ role }) {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-white/12" />
-                <DropdownMenuItem className="text-white/80 hover:text-[#FFFFFF]/80 hover:bg-[#fff]/12 focus:bg-[#fff]/12 focus:text-[#FFFFFF]/80 cursor-pointer transition-colors">
+                <DropdownMenuItem
+                  className="text-white/80 hover:text-[#FFFFFF]/80 hover:bg-[#fff]/12 focus:bg-[#fff]/12 focus:text-[#FFFFFF]/80 cursor-pointer transition-colors"
+                  onClick={() => {
+                    window.location.href = "/admin/settings";
+                  }}
+                >
                   <Settings className="mr-2 h-4 w-4" />
                   Profile Settings
                 </DropdownMenuItem>

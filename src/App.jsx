@@ -11,8 +11,12 @@ import {
   Signin,
   Customer,
   Payments,
-  Analytics
+  Analytics,
+  StaffPerformance,
+  Messaging
 } from "./Pages";
+
+
 
 import "./index.css";
 
@@ -39,8 +43,16 @@ function App() {
           element: <Staff />,
         },
         {
+          path: "staff-performance/:employeeId",
+          element: <StaffPerformance />,
+        },
+        {
           path:"payment", 
           element:<Payments/>
+        },
+        {
+          path:"messaging", 
+          element:<Messaging/>
         },
         {
           path:"analytics",

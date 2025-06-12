@@ -49,7 +49,7 @@ const SignIn = () => {
     Cookies.set("access_token", res.access_token ? res.access_token : null);
     Cookies.set("refresh_token", res.refresh_token);
     Cookies.set("username", res.username);
-    window.location.href = "/admin/staff";
+    window.location.href = "/admin/";
   };
 
   return (

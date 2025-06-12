@@ -1,14 +1,6 @@
-import React, { useState, useEffect } from "react";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
+import React, { useState, useEffect } from "react"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   Pagination,
   PaginationContent,
@@ -17,20 +9,15 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination";
-
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-
-import { Cookie, Plus, SquarePen, Trash2 } from "lucide-react";
-
-import InfoCards from "@/components/info-cards";
-import Modal from "@/components/modal";
-
-import StaffForm from "@/components/forms/staffForm";
-
-import Cookies from "js-cookie";
+} from "@/components/ui/pagination"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Plus, SquarePen, Trash2, Eye } from "lucide-react"
+import InfoCards from "@/components/info-cards"
+import Modal from "@/components/modal"
+import StaffForm from "@/components/forms/staffForm"
+import Cookies from "js-cookie"
 
 const staffRecords = [
   {
@@ -183,7 +170,7 @@ const staffRecords = [
     EmployeeStatus: "Inactive",
     Action: "",
   },
-];
+]
 
 const cardsData = [
   {
@@ -210,104 +197,106 @@ const cardsData = [
     percentage: 6.08,
     backgroundColor: "bg-[#E6F1FD]",
   },
-];
+]
 
 const Staff = () => {
-  const [username, setUsername] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [username, setUsername] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   useEffect(() => {
-    setUsername(Cookies.get("username"));
-  }, []);
+    setUsername(Cookies.get("username"))
+  }, [])
 
   useEffect(() => {
     if (!Cookies.get("access_token")) {
-      window.location.href = "/signin";
+      window.location.href = "/signin"
     }
-  }, []);
+  }, [])
 
-  const itemsPerPage = 7; 
+  const itemsPerPage = 7
 
-  const filteredRecords = staffRecords.filter(
-    (record) => {
-      const term = (searchTerm || "").toLowerCase();
-      return (
-        record.name.toLowerCase().includes(term) ||
-        record.role.toLowerCase().includes(term) ||
-        record.contactInfo.includes(term) ||
-        record.EmployeeStatus.toLowerCase().includes(term)
-      );
-    }
-  );
+  const filteredRecords = staffRecords.filter((record) => {
+    const term = (searchTerm || "").toLowerCase()
+    return (
+      record.name.toLowerCase().includes(term) ||
+      record.role.toLowerCase().includes(term) ||
+      record.contactInfo.includes(term) ||
+      record.EmployeeStatus.toLowerCase().includes(term)
+    )
+  })
 
-  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentRecords = filteredRecords.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentRecords = filteredRecords.slice(startIndex, endIndex)
 
   React.useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
+    setCurrentPage(1)
+  }, [searchTerm])
 
   const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
+    setCurrentPage(page)
+  }
 
   const handlePrevious = () => {
     if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+      setCurrentPage(currentPage - 1)
     }
-  };
+  }
 
   const handleNext = () => {
     if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
+      setCurrentPage(currentPage + 1)
     }
-  };
+  }
 
   const getPageNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 5;
+    const pages = []
+    const maxVisiblePages = 5
 
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
+        pages.push(i)
       }
     } else {
       if (currentPage <= 3) {
-        pages.push(1, 2, 3, 4, 5);
+        pages.push(1, 2, 3, 4, 5)
       } else if (currentPage >= totalPages - 2) {
         for (let i = totalPages - 4; i <= totalPages; i++) {
-          pages.push(i);
+          pages.push(i)
         }
       } else {
         for (let i = currentPage - 2; i <= currentPage + 2; i++) {
-          pages.push(i);
+          pages.push(i)
         }
       }
     }
 
-    return pages;
-  };
+    return pages
+  }
 
   const openModal = () => {
-    setIsModalOpen(true);
-  };
+    setIsModalOpen(true)
+  }
 
   const onClose = () => {
-    setIsModalOpen(false);
-  };
+    setIsModalOpen(false)
+  }
 
   const onSubmit = () => {
-    console.log("Form submitted successfully!");
-  };
+    console.log("Form submitted successfully!")
+  }
+
+  const handleViewPerformance = (employeeId) => {
+    window.location.href = `/admin/staff-performance/${employeeId}`;
+  }
 
   return (
     <div className="bg-white min-h-screen py-6 px-4 gap-y-6 flex flex-col w-auto">
       <h1 className="text-[#121212] text-[24px] leading-[32px]">
-        Hello,<span className="font-semibold">{username}</span>
+        Hello, <span className="font-semibold">{username}</span>
       </h1>
 
       {/*Cards Section */}
@@ -332,7 +321,7 @@ const Staff = () => {
               placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full sm:max-w-[300px] h-10 px-4 rounded-md border  text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-0 focus:border-gray-200 focus:bg-white transition-colors duration-200"
+              className="w-full sm:max-w-[300px] h-10 px-4 rounded-md border text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-0 focus:border-gray-200 focus:bg-white transition-colors duration-200"
             />
           </div>
 
@@ -350,53 +339,32 @@ const Staff = () => {
                 <TableRow>
                   <TableHead className="w-[100px]">Employee Id</TableHead>
                   <TableHead className="min-w-[150px]">Name</TableHead>
-                  <TableHead className="min-w-[120px] hidden sm:table-cell">
-                    Role
-                  </TableHead>
-                  <TableHead className="min-w-[130px] hidden md:table-cell">
-                    Contact Info
-                  </TableHead>
-                  <TableHead className="min-w-[140px] hidden lg:table-cell">
-                    Payment Mode
-                  </TableHead>
+                  <TableHead className="min-w-[120px] hidden sm:table-cell">Role</TableHead>
+                  <TableHead className="min-w-[130px] hidden md:table-cell">Contact Info</TableHead>
+                  <TableHead className="min-w-[140px] hidden lg:table-cell">Payment Mode</TableHead>
                   <TableHead className="min-w-[100px]">Status</TableHead>
-                  <TableHead className="min-w-[100px]">Actions</TableHead>
+                  <TableHead className="min-w-[120px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {currentRecords.length > 0 ? (
                   currentRecords.map((record, index) => (
-                    <TableRow
-                      key={index}
-                      className={`${
-                        index % 2 === 0 ? "bg-[#F7F6FE]" : "bg-white"
-                      }`}
-                    >
-                      <TableCell className="font-medium text-center">
-                        #{record.employeeId}
-                      </TableCell>
+                    <TableRow key={index} className={`${index % 2 === 0 ? "bg-[#F7F6FE]" : "bg-white"}`}>
+                      <TableCell className="font-medium text-center">#{record.employeeId}</TableCell>
                       <TableCell className="font-medium">
                         <div className="flex flex-col">
                           <span>{record.name}</span>
-                          <span className="text-xs text-gray-500 sm:hidden">
-                            {record.role}
-                          </span>
+                          <span className="text-xs text-gray-500 sm:hidden">{record.role}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        {record.role}
-                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">{record.role}</TableCell>
                       <TableCell className="hidden md:table-cell">
                         <div className="flex flex-col">
                           <span>{record.contactInfo}</span>
-                          <span className="text-xs text-gray-500 lg:hidden">
-                            {record.paymentMethod}
-                          </span>
+                          <span className="text-xs text-gray-500 lg:hidden">{record.paymentMethod}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="hidden lg:table-cell">
-                        {record.paymentMethod}
-                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">{record.paymentMethod}</TableCell>
                       <TableCell>
                         <Badge
                           className={`${
@@ -410,6 +378,11 @@ const Staff = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-x-2 justify-start">
+                          <Eye
+                            className="h-4 w-4 cursor-pointer text-blue-600"
+                            onClick={() => handleViewPerformance(record.employeeId)}
+                            title="View Performance"
+                          />
                           <SquarePen className="h-4 w-4 cursor-pointer text-primary" />
                           <Trash2 className="h-4 w-4 cursor-pointer text-[#A30D11]" />
                         </div>
@@ -435,9 +408,7 @@ const Staff = () => {
                 <PaginationPrevious
                   onClick={handlePrevious}
                   className={`cursor-pointer text-sm ${
-                    currentPage === 1
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-gray-100"
+                    currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"
                   }`}
                 />
               </PaginationItem>
@@ -447,11 +418,7 @@ const Staff = () => {
                   <PaginationItem key={pageNum}>
                     <PaginationLink
                       onClick={() => handlePageChange(pageNum)}
-                      className={`cursor-pointer  ${
-                        currentPage === pageNum
-                          ? "bg-primary text-white"
-                          : "bg-white"
-                      }`}
+                      className={`cursor-pointer  ${currentPage === pageNum ? "bg-primary text-white" : "bg-white"}`}
                     >
                       {pageNum}
                     </PaginationLink>
@@ -474,9 +441,7 @@ const Staff = () => {
                 <PaginationNext
                   onClick={handleNext}
                   className={`cursor-pointer text-sm ${
-                    currentPage === totalPages
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-gray-100"
+                    currentPage === totalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"
                   }`}
                 />
               </PaginationItem>
@@ -489,7 +454,7 @@ const Staff = () => {
         <StaffForm onClose={onClose} onSubmit={onSubmit} />
       </Modal>
     </div>
-  );
-};
+  )
+}
 
-export default Staff;
+export default Staff
