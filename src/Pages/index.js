@@ -8,7 +8,8 @@ import { Signin } from "./Auth";
 import { Customer } from "./Customer";
 import { Payments } from "./Payment";
 import { Analytics } from "./Analytics";
-import Messaging from "./Messaging/Messaging";
+import {Messaging} from "./Messaging";
+import { VerifyAndSetToken } from "./VerifyAndSetToken";
 
 export {
   Dashboard,
@@ -22,4 +23,5 @@ export {
   Analytics,
   Messaging,
   NotFound,
+  VerifyAndSetToken
 };

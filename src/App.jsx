@@ -13,10 +13,9 @@ import {
   Payments,
   Analytics,
   StaffPerformance,
-  Messaging
+  Messaging,
+  VerifyAndSetToken,
 } from "./Pages";
-
-
 
 import "./index.css";
 
@@ -47,16 +46,16 @@ function App() {
           element: <StaffPerformance />,
         },
         {
-          path:"payment", 
-          element:<Payments/>
+          path: "payment",
+          element: <Payments />,
         },
         {
-          path:"messaging", 
-          element:<Messaging/>
+          path: "messaging",
+          element: <Messaging />,
         },
         {
-          path:"analytics",
-          element:<Analytics/>
+          path: "analytics",
+          element: <Analytics />,
         },
         {
           path: "settings",
@@ -85,6 +84,10 @@ function App() {
     {
       path: "signin",
       element: <Signin />,
+    },
+    {
+      path: "verify-email",
+      element: <VerifyAndSetToken />,
     },
     {
       path: "*",

@@ -1,4 +1,4 @@
-const signUp = async ({ credentials }) => {
+const signUp = async (credentials) => {
   try {
     const options = {
       method: "POST",
@@ -23,8 +23,7 @@ const signUp = async ({ credentials }) => {
 };
 
 const signInFunc = async (credentials) => {
-
-  console.log('signin function!')
+  console.log("signin function!");
 
   try {
     const options = {
@@ -53,4 +52,34 @@ const signInFunc = async (credentials) => {
   }
 };
 
-export { signUp, signInFunc };
+const verifyEmail = async (token,credentials) => {
+  console.log("verify email function!");
+
+  try {
+    const options = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(credentials),
+    };
+
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/verify-email?token=${token}`,
+      options
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+
+    console.log("data : ", data);
+
+    return data;
+  } catch (err) {
+    console.log("Erorr : ", err.message);
+    return "Error while fetching!";
+  }
+};
+
+export { signUp, signInFunc, verifyEmail };
