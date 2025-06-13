@@ -41,7 +41,6 @@ const SignIn = () => {
 
     if (res.error) {
       setError(res.error);
-
       return;
     }
 

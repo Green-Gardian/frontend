@@ -1,18 +1,26 @@
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { X, Car, Hash, User, CheckCircle } from "lucide-react"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { X, Car, Hash, User, CheckCircle } from "lucide-react";
+
+import { addVehicle } from "../../services/vehicle";
 
 const VehicleForm = ({ onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
     plateNumber: "",
     assignedTo: "",
     status: "",
-  })
+  });
 
-  const [errors, setErrors] = useState({})
+  const [errors, setErrors] = useState({});
 
   const drivers = [
     { value: "muhammad-hassan-amir", label: "Muhammad Hassan Amir" },
@@ -24,88 +32,96 @@ const VehicleForm = ({ onClose, onSubmit }) => {
     { value: "hamza-yousaf", label: "Hamza Yousaf" },
     { value: "ahmed-siddiqui", label: "Ahmed Siddiqui" },
     { value: "unassigned", label: "Unassigned" },
-  ]
+  ];
 
   const statuses = [
     { value: "active", label: "Active" },
     { value: "inactive", label: "Inactive" },
     { value: "maintenance", label: "Maintenance" },
     { value: "available", label: "Available" },
-  ]
+  ];
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-    }))
+    }));
 
     if (errors[field]) {
       setErrors((prev) => ({
         ...prev,
         [field]: "",
-      }))
+      }));
     }
-  }
+  };
 
   const validateForm = () => {
-    const newErrors = {}
+    const newErrors = {};
 
     if (!formData.plateNumber.trim()) {
-      newErrors.plateNumber = "Vehicle plate number is required"
-    } else if (!/^[A-Z]{2,3}-\d{3,4}$/.test(formData.plateNumber.toUpperCase())) {
-      newErrors.plateNumber = "Please enter a valid plate number format (e.g., ABC-123)"
+      newErrors.plateNumber = "Vehicle plate number is required";
+    } else if (
+      !/^[A-Z]{2,3}-\d{3,4}$/.test(formData.plateNumber.toUpperCase())
+    ) {
+      newErrors.plateNumber =
+        "Please enter a valid plate number format (e.g., ABC-123)";
     }
 
     if (!formData.assignedTo) {
-      newErrors.assignedTo = "Assignment is required"
+      newErrors.assignedTo = "Assignment is required";
     }
 
     if (!formData.status) {
-      newErrors.status = "Status is required"
+      newErrors.status = "Status is required";
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
     if (validateForm()) {
-      onSubmit && onSubmit(formData)
+      await addVehicle(formData);
+
       // Reset form after successful submission
       setFormData({
         plateNumber: "",
         assignedTo: "",
         status: "",
-      })
+      });
     }
-  }
+  };
 
   const handleReset = () => {
     setFormData({
       plateNumber: "",
       assignedTo: "",
       status: "",
-    })
-    setErrors({})
-  }
+    });
+    setErrors({});
+  };
 
   const handlePlateNumberChange = (e) => {
     // Auto-format plate number as user types
-    let value = e.target.value.toUpperCase()
+    let value = e.target.value.toUpperCase();
     // Remove any characters that aren't letters, numbers, or hyphens
-    value = value.replace(/[^A-Z0-9-]/g, '')
-    
+    value = value.replace(/[^A-Z0-9-]/g, "");
+
     // Auto-add hyphen after 2-3 letters
-    if (value.length === 3 && !value.includes('-')) {
-      value = value.slice(0, 3) + '-' + value.slice(3)
-    } else if (value.length === 2 && !value.includes('-') && /\d/.test(value.charAt(2))) {
-      value = value.slice(0, 2) + '-' + value.slice(2)
+    if (value.length === 3 && !value.includes("-")) {
+      value = value.slice(0, 3) + "-" + value.slice(3);
+    } else if (
+      value.length === 2 &&
+      !value.includes("-") &&
+      /\d/.test(value.charAt(2))
+    ) {
+      value = value.slice(0, 2) + "-" + value.slice(2);
     }
-    
-    handleInputChange("plateNumber", value)
-  }
+
+    handleInputChange("plateNumber", value);
+  };
 
   return (
     <div className="w-full max-w-md bg-white rounded-lg shadow-xl mx-2">
@@ -116,7 +132,12 @@ const VehicleForm = ({ onClose, onSubmit }) => {
           <h2 className="text-xl font-semibold text-gray-900">Add Vehicle</h2>
         </div>
         {onClose && (
-          <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0 hover:bg-gray-100">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-8 w-8 p-0 hover:bg-gray-100"
+          >
             <X className="h-4 w-4" />
           </Button>
         )}
@@ -126,7 +147,10 @@ const VehicleForm = ({ onClose, onSubmit }) => {
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
         {/* Vehicle Plate Number Field */}
         <div className="space-y-2">
-          <Label htmlFor="plateNumber" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+          <Label
+            htmlFor="plateNumber"
+            className="text-sm font-medium text-gray-700 flex items-center gap-2"
+          >
             <Hash className="h-4 w-4" />
             Vehicle Plate Number
           </Label>
@@ -136,21 +160,33 @@ const VehicleForm = ({ onClose, onSubmit }) => {
             placeholder="ABC-123"
             value={formData.plateNumber}
             onChange={handlePlateNumberChange}
-            className={`w-full ${errors.plateNumber ? "border-red-500 focus:border-red-500" : ""}`}
+            className={`w-full ${
+              errors.plateNumber ? "border-red-500 focus:border-red-500" : ""
+            }`}
             maxLength={8}
           />
-          {errors.plateNumber && <p className="text-sm text-red-600">{errors.plateNumber}</p>}
+          {errors.plateNumber && (
+            <p className="text-sm text-red-600">{errors.plateNumber}</p>
+          )}
           <p className="text-xs text-gray-500">Format: ABC-123 or AB-1234</p>
         </div>
 
         {/* Assigned To Field */}
         <div className="space-y-2">
-          <Label htmlFor="assignedTo" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+          <Label
+            htmlFor="assignedTo"
+            className="text-sm font-medium text-gray-700 flex items-center gap-2"
+          >
             <User className="h-4 w-4" />
             Assigned To
           </Label>
-          <Select value={formData.assignedTo} onValueChange={(value) => handleInputChange("assignedTo", value)}>
-            <SelectTrigger className={`w-full ${errors.assignedTo ? "border-red-500" : ""}`}>
+          <Select
+            value={formData.assignedTo}
+            onValueChange={(value) => handleInputChange("assignedTo", value)}
+          >
+            <SelectTrigger
+              className={`w-full ${errors.assignedTo ? "border-red-500" : ""}`}
+            >
               <SelectValue placeholder="Select driver or unassigned" />
             </SelectTrigger>
             <SelectContent>
@@ -161,17 +197,27 @@ const VehicleForm = ({ onClose, onSubmit }) => {
               ))}
             </SelectContent>
           </Select>
-          {errors.assignedTo && <p className="text-sm text-red-600">{errors.assignedTo}</p>}
+          {errors.assignedTo && (
+            <p className="text-sm text-red-600">{errors.assignedTo}</p>
+          )}
         </div>
 
         {/* Status Field */}
         <div className="space-y-2">
-          <Label htmlFor="status" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+          <Label
+            htmlFor="status"
+            className="text-sm font-medium text-gray-700 flex items-center gap-2"
+          >
             <CheckCircle className="h-4 w-4" />
             Status
           </Label>
-          <Select value={formData.status} onValueChange={(value) => handleInputChange("status", value)}>
-            <SelectTrigger className={`w-full ${errors.status ? "border-red-500" : ""}`}>
+          <Select
+            value={formData.status}
+            onValueChange={(value) => handleInputChange("status", value)}
+          >
+            <SelectTrigger
+              className={`w-full ${errors.status ? "border-red-500" : ""}`}
+            >
               <SelectValue placeholder="Select status" />
             </SelectTrigger>
             <SelectContent>
@@ -182,21 +228,31 @@ const VehicleForm = ({ onClose, onSubmit }) => {
               ))}
             </SelectContent>
           </Select>
-          {errors.status && <p className="text-sm text-red-600">{errors.status}</p>}
+          {errors.status && (
+            <p className="text-sm text-red-600">{errors.status}</p>
+          )}
         </div>
 
         {/* Form Actions */}
         <div className="flex flex-col sm:flex-row gap-3 pt-4">
-          <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 text-white">
+          <Button
+            type="submit"
+            className="flex-1 bg-primary hover:bg-primary/90 text-white"
+          >
             Add Vehicle
           </Button>
-          <Button type="button" variant="outline" onClick={handleReset} className="flex-1">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleReset}
+            className="flex-1"
+          >
             Reset Form
           </Button>
         </div>
       </form>
     </div>
-  )
-}
+  );
+};
 
-export default VehicleForm
+export default VehicleForm;

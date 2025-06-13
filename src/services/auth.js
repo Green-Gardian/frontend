@@ -23,6 +23,9 @@ const signUp = async ({ credentials }) => {
 };
 
 const signInFunc = async (credentials) => {
+
+  console.log('signin function!')
+
   try {
     const options = {
       method: "POST",
@@ -40,6 +43,8 @@ const signInFunc = async (credentials) => {
     if (!response.ok) {
       return { error: data.message };
     }
+
+    console.log("data : ", data);
 
     return data;
   } catch (err) {
