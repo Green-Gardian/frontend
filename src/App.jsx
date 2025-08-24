@@ -1,4 +1,5 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
+import Cookies from "js-cookie";
 
 import { AdminLayout, SuperAdminLayout } from "./layout";
 
@@ -15,12 +16,37 @@ import {
   StaffPerformance,
   Messaging,
   VerifyAndSetToken,
+  SuperAdminDashboard,
+  UserManagement,
+  SocietyManagement,
+  SuperAdminAnalytics,
+  SuperAdminSettings,
 } from "./Pages";
 
 import "./index.css";
 
+// Component to redirect based on user role
+const RootRedirect = () => {
+  const userRole = Cookies.get("user_role");
+  const accessToken = Cookies.get("access_token");
+  
+  if (!accessToken) {
+    return <Navigate to="/signin" replace />;
+  }
+  
+  if (userRole === "super_admin") {
+    return <Navigate to="/super-admin" replace />;
+  } else {
+    return <Navigate to="/admin" replace />;
+  }
+};
+
 function App() {
   const router = createBrowserRouter([
+    {
+      path: "/",
+      element: <RootRedirect />,
+    },
     {
       path: "/admin",
       element: <AdminLayout />,
@@ -72,12 +98,32 @@ function App() {
       element: <SuperAdminLayout />,
       children: [
         {
+          path: "",
+          element: <SuperAdminDashboard />,
+        },
+        {
           path: "dashboard",
-          element: <h1 className="text-white"> Super Admin Dashboard</h1>,
+          element: <SuperAdminDashboard />,
+        },
+        {
+          path: "users",
+          element: <UserManagement />,
         },
         {
           path: "societies",
-          element: <h1 className="text-white"> Societies</h1>,
+          element: <SocietyManagement />,
+        },
+        {
+          path: "analytics",
+          element: <SuperAdminAnalytics />,
+        },
+        {
+          path: "settings",
+          element: <SuperAdminSettings />,
+        },
+        {
+          path: "*",
+          element: <NotFound />,
         },
       ],
     },

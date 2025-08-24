@@ -1,3 +1,5 @@
+import Cookies from "js-cookie";
+
 const signUp = async (credentials) => {
   try {
     const options = {
@@ -82,4 +84,168 @@ const verifyEmail = async (token,credentials) => {
   }
 };
 
-export { signUp, signInFunc, verifyEmail };
+// Super Admin Functions
+const getAllUsers = async (params = {}) => {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page);
+    if (params.limit) queryParams.append('limit', params.limit);
+    if (params.role) queryParams.append('role', params.role);
+    if (params.search) queryParams.append('search', params.search);
+
+    const token = Cookies.get('access_token');
+    
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/users?${queryParams}`,
+      {
+        method: "GET",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+
+    return data;
+  } catch (err) {
+    console.log("Error fetching users: ", err.message);
+    return { error: "Error while fetching users!" };
+  }
+};
+
+const blockUser = async (userId, isBlocked) => {
+  try {
+    const token = Cookies.get('access_token');
+    
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/users/${userId}/block`,
+      {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ isBlocked }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+
+    return data;
+  } catch (err) {
+    console.log("Error blocking user: ", err.message);
+    return { error: "Error while blocking user!" };
+  }
+};
+
+const deleteUser = async (userId) => {
+  try {
+    const token = Cookies.get('access_token');
+    
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/users/${userId}`,
+      {
+        method: "DELETE",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+
+    return data;
+  } catch (err) {
+    console.log("Error deleting user: ", err.message);
+    return { error: "Error while deleting user!" };
+  }
+};
+
+const getSystemStats = async () => {
+  try {
+    const token = Cookies.get('access_token');
+    console.log("Token from cookies:", token);
+    
+    if (!token) {
+      return { error: "No access token found" };
+    }
+    
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/system-stats`,
+      {
+        method: "GET",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+      }
+    );
+
+    const data = await response.json();
+    console.log("System stats response:", data);
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+
+    return data;
+  } catch (err) {
+    console.log("Error fetching system stats: ", err.message);
+    return { error: "Error while fetching system stats!" };
+  }
+};
+
+const addAdminAndStaff = async (userData) => {
+  try {
+    const token = Cookies.get('access_token');
+    
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/add-admin-and-staff`,
+      {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(userData),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+
+    return data;
+  } catch (err) {
+    console.log("Error adding admin/staff: ", err.message);
+    return { error: "Error while adding admin/staff!" };
+  }
+};
+
+export { 
+  signUp, 
+  signInFunc, 
+  verifyEmail, 
+  getAllUsers, 
+  blockUser, 
+  deleteUser, 
+  getSystemStats,
+  addAdminAndStaff 
+};

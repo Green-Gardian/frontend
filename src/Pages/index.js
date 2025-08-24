@@ -11,6 +11,9 @@ import { Analytics } from "./Analytics";
 import {Messaging} from "./Messaging";
 import { VerifyAndSetToken } from "./VerifyAndSetToken";
 
+// SuperAdmin exports
+export * from "./SuperAdmin";
+
 export {
   Dashboard,
   Vehicles,

@@ -1,5 +1,6 @@
 import React from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, Navigate } from "react-router-dom";
+import Cookies from "js-cookie";
 import {
   SidebarProvider,
   SidebarTrigger,
@@ -8,6 +9,18 @@ import {
 import { AppSidebar } from "@/components/app-sidebar";
 
 const SuperAdminLayout = () => {
+  const userRole = Cookies.get("user_role");
+  const accessToken = Cookies.get("access_token");
+  
+  if (!accessToken) {
+    return <Navigate to="/signin" replace />;
+  }
+  
+  // Only allow super_admin role
+  if (userRole !== "super_admin") {
+    return <Navigate to="/admin" replace />;
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar role="super-admin" />

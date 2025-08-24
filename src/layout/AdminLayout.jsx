@@ -1,4 +1,5 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, Navigate } from "react-router-dom";
+import Cookies from "js-cookie";
 import {
   SidebarProvider,
   SidebarTrigger,
@@ -7,6 +8,22 @@ import {
 import { AppSidebar } from "@/components/app-sidebar";
 
 const AdminLayout = () => {
+  const userRole = Cookies.get("user_role");
+  const accessToken = Cookies.get("access_token");
+  
+  if (!accessToken) {
+    return <Navigate to="/signin" replace />;
+  }
+  
+  // Only allow admin, customer_support, and driver roles
+  if (userRole === "super_admin") {
+    return <Navigate to="/super-admin" replace />;
+  }
+  
+  if (!["admin", "customer_support", "driver"].includes(userRole)) {
+    return <Navigate to="/signin" replace />;
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar role="admin" />

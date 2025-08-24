@@ -14,6 +14,9 @@ import {
   HelpCircle,
   UserCircle,
   MessageCircleMore,
+  Building2,
+  Shield,
+  Activity,
 } from "lucide-react";
 
 import {
@@ -50,9 +53,24 @@ const superAdminRoutes = [
     href: "/super-admin/",
   },
   {
+    title: "User Management",
+    icon: <Users className="h-5 w-5" />,
+    href: "/super-admin/users",
+  },
+  {
     title: "Societies",
-    icon: <LayoutDashboard className="h-5 w-5" />,
+    icon: <Building2 className="h-5 w-5" />,
     href: "/super-admin/societies",
+  },
+  {
+    title: "System Analytics",
+    icon: <Activity className="h-5 w-5" />,
+    href: "/super-admin/analytics",
+  },
+  {
+    title: "Settings",
+    icon: <Settings className="h-5 w-5" />,
+    href: "/super-admin/settings",
   },
 ];
 
@@ -112,6 +130,9 @@ export function AppSidebar({ role }) {
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold text-white">
                   Green Guardian
+                </span>
+                <span className="truncate text-xs text-zinc-400">
+                  {role === "super-admin" ? "Super Admin" : "Admin"}
                 </span>
               </div>
             </SidebarMenuButton>
@@ -203,7 +224,8 @@ export function AppSidebar({ role }) {
                 <DropdownMenuItem
                   className="text-white/80 hover:text-[#FFFFFF]/80 hover:bg-[#fff]/12 focus:bg-[#fff]/12 focus:text-[#FFFFFF]/80 cursor-pointer transition-colors"
                   onClick={() => {
-                    window.location.href = "/admin/settings";
+                    const settingsPath = role === "super-admin" ? "/super-admin/settings" : "/admin/settings";
+                    window.location.href = settingsPath;
                   }}
                 >
                   <Settings className="mr-2 h-4 w-4" />

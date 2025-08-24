@@ -38,6 +38,7 @@ const SignIn = () => {
     e.preventDefault();
     console.log("inside handle submit fuction!");
     const res = await signInFunc(credentials);
+    console.log("Signin response:", res);
 
     if (res.error) {
       setError(res.error);
@@ -45,10 +46,18 @@ const SignIn = () => {
     }
 
     //storing token in cookies
+    console.log("Setting cookies with token:", res.access_token);
     Cookies.set("access_token", res.access_token ? res.access_token : null);
     Cookies.set("refresh_token", res.refresh_token);
     Cookies.set("username", res.username);
-    window.location.href = "/admin/";
+    Cookies.set("user_role", res.role);
+    
+    // Redirect based on user role
+    if (res.role === 'super_admin') {
+      window.location.href = "/super-admin/";
+    } else {
+      window.location.href = "/admin/";
+    }
   };
 
   return (
