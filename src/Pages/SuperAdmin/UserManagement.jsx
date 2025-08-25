@@ -29,10 +29,12 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { getAllUsers, blockUser, deleteUser, addAdminAndStaff } from "@/services/auth";
+import { getSocieties } from "@/services/society";
 import Modal from "@/components/modal";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
+  const [societies, setSocieties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({});
@@ -40,7 +42,8 @@ const UserManagement = () => {
     page: 1,
     limit: 10,
     role: 'all',
-    search: ''
+    search: '',
+    societyId: 'all'
   });
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -50,12 +53,25 @@ const UserManagement = () => {
     lastName: '',
     email: '',
     phone: '',
-    role: 'admin'
+    role: 'admin',
+    societyId: ''
   });
 
   useEffect(() => {
     fetchUsers();
+    fetchSocieties();
   }, [filters]);
+
+  const fetchSocieties = async () => {
+    try {
+      const response = await getSocieties();
+      if (!response.error) {
+        setSocieties(response.societies);
+      }
+    } catch (err) {
+      console.log("Failed to fetch societies");
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -118,7 +134,8 @@ const UserManagement = () => {
           lastName: '',
           email: '',
           phone: '',
-          role: 'admin'
+          role: 'admin',
+          societyId: ''
         });
         fetchUsers();
       }
@@ -192,7 +209,7 @@ const UserManagement = () => {
           <CardTitle className="text-white">Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-zinc-400" />
               <Input
@@ -216,6 +233,23 @@ const UserManagement = () => {
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="customer_support">Customer Support</SelectItem>
                 <SelectItem value="driver">Driver</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select 
+              value={filters.societyId} 
+              onValueChange={(value) => setFilters({ ...filters, societyId: value, page: 1 })}
+            >
+              <SelectTrigger className="bg-zinc-900 border-zinc-700 text-white">
+                <SelectValue placeholder="Filter by society" />
+              </SelectTrigger>
+              <SelectContent className="bg-zinc-900 border-zinc-700">
+                <SelectItem value="all">All Societies</SelectItem>
+                {societies.map((society) => (
+                  <SelectItem key={society.id} value={society.id}>
+                    {society.society_name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -250,6 +284,7 @@ const UserManagement = () => {
               <TableRow className="border-zinc-800">
                 <TableHead className="text-zinc-300">User</TableHead>
                 <TableHead className="text-zinc-300">Role</TableHead>
+                <TableHead className="text-zinc-300">Society</TableHead>
                 <TableHead className="text-zinc-300">Status</TableHead>
                 <TableHead className="text-zinc-300">Created</TableHead>
                 <TableHead className="text-zinc-300">Actions</TableHead>
@@ -274,6 +309,11 @@ const UserManagement = () => {
                   <TableCell>
                     <Badge className={getRoleColor(user.role)}>
                       {user.role.replace('_', ' ')}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge className="bg-zinc-700 text-zinc-300 border-zinc-700">
+                      {societies.find(s => s.id === user.society_id)?.society_name || 'N/A'}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -354,6 +394,98 @@ const UserManagement = () => {
         </CardContent>
       </Card>
 
+      {/* Users by Society View */}
+      <Card className="bg-[#1a1a1a] border-zinc-800">
+        <CardHeader>
+          <CardTitle className="text-white">Users by Society</CardTitle>
+          <CardDescription className="text-zinc-400">
+            View users organized by their assigned societies
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {/* Users without society */}
+            {users.filter(user => !user.society_id).length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-3">Users without Society</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {users.filter(user => !user.society_id).map((user) => (
+                    <div key={user.id} className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
+                      <div className="flex items-center space-x-3 mb-3">
+                        <div className="h-8 w-8 rounded-full bg-zinc-700 flex items-center justify-center">
+                          {getRoleIcon(user.role)}
+                        </div>
+                        <div>
+                          <p className="text-white font-medium">
+                            {user.first_name} {user.last_name}
+                          </p>
+                          <p className="text-zinc-400 text-sm">{user.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Badge className={getRoleColor(user.role)}>
+                          {user.role.replace('_', ' ')}
+                        </Badge>
+                        <span className="text-zinc-400 text-sm">
+                          {formatDate(user.created_at)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Users grouped by society */}
+            {Object.entries(
+              users.reduce((acc, user) => {
+                if (user.society_id) {
+                  if (!acc[user.society_id]) {
+                    acc[user.society_id] = {
+                      society: societies.find(s => s.id === user.society_id),
+                      users: []
+                    };
+                  }
+                  acc[user.society_id].users.push(user);
+                }
+                return acc;
+              }, {})
+            ).map(([societyId, { society, users: societyUsers }]) => (
+              <div key={societyId}>
+                <h3 className="text-lg font-semibold text-white mb-3">
+                  {society?.society_name} - {society?.city}, {society?.state}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {societyUsers.map((user) => (
+                    <div key={user.id} className="bg-zinc-800 rounded-lg p-4 border border-zinc-700">
+                      <div className="flex items-center space-x-3 mb-3">
+                        <div className="h-8 w-8 rounded-full bg-zinc-700 flex items-center justify-center">
+                          {getRoleIcon(user.role)}
+                        </div>
+                        <div>
+                          <p className="text-white font-medium">
+                            {user.first_name} {user.last_name}
+                          </p>
+                          <p className="text-zinc-400 text-sm">{user.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Badge className={getRoleColor(user.role)}>
+                          {user.role.replace('_', ' ')}
+                        </Badge>
+                        <span className="text-zinc-400 text-sm">
+                          {formatDate(user.created_at)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Add User Modal */}
       <Modal
         isOpen={showAddModal}
@@ -416,6 +548,27 @@ const UserManagement = () => {
             </Select>
           </div>
           
+          {newUser.role !== 'super_admin' && (
+            <div>
+              <label className="text-sm font-medium text-zinc-300">Society</label>
+              <Select 
+                value={newUser.societyId} 
+                onValueChange={(value) => setNewUser({ ...newUser, societyId: value })}
+              >
+                <SelectTrigger className="mt-1 bg-zinc-900 border-zinc-700 text-white">
+                  <SelectValue placeholder="Select a society" />
+                </SelectTrigger>
+                <SelectContent className="bg-zinc-900 border-zinc-700">
+                  {societies.map((society) => (
+                    <SelectItem key={society.id} value={society.id}>
+                      {society.society_name} - {society.city}, {society.state}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="flex justify-end space-x-2 pt-4">
             <Button variant="outline" onClick={() => setShowAddModal(false)}>
               Cancel

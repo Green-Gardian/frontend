@@ -260,6 +260,74 @@ const SuperAdminDashboard = () => {
         </Card>
       </div>
 
+      {/* Users by Society Overview */}
+      <Card className="bg-[#1a1a1a] border-zinc-800">
+        <CardHeader>
+          <CardTitle className="text-white">Users by Society</CardTitle>
+          <CardDescription className="text-zinc-400">
+            Overview of user distribution across societies
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {stats?.societiesWithUsers?.map((societyData) => (
+              <div key={societyData.society.id} className="p-4 bg-zinc-900/50 rounded-lg border border-zinc-700">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-white">
+                    {societyData.society.name}
+                  </h3>
+                  <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">
+                    {societyData.society.city}, {societyData.society.state}
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {societyData.userCounts.map((roleCount) => (
+                    <div key={roleCount.role} className="text-center">
+                      <div className="text-2xl font-bold text-white">{roleCount.count}</div>
+                      <div className="text-xs text-zinc-400 capitalize">
+                        {roleCount.role.replace('_', ' ')}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3 pt-3 border-t border-zinc-700">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-zinc-400">Total Users:</span>
+                    <span className="text-white font-semibold">
+                      {societyData.userCounts.reduce((total, role) => total + role.count, 0)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {stats?.usersWithoutSociety && stats.usersWithoutSociety.length > 0 && (
+              <div className="p-4 bg-zinc-900/50 rounded-lg border border-zinc-700">
+                <h3 className="text-lg font-semibold text-white mb-3">Users without Society</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {stats.usersWithoutSociety.map((roleCount) => (
+                    <div key={roleCount.role} className="text-center">
+                      <div className="text-2xl font-bold text-white">{roleCount.count}</div>
+                      <div className="text-xs text-zinc-400 capitalize">
+                        {roleCount.role.replace('_', ' ')}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3 pt-3 border-t border-zinc-700">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-zinc-400">Total Users:</span>
+                    <span className="text-white font-semibold">
+                      {stats.usersWithoutSociety.reduce((total, role) => total + role.count, 0)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Quick Actions */}
       <Card className="bg-[#1a1a1a] border-zinc-800">
         <CardHeader>
