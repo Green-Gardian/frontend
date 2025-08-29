@@ -16,6 +16,7 @@ import {
   StaffPerformance,
   Messaging,
   VerifyAndSetToken,
+  Alerts,
   SuperAdminDashboard,
   UserManagement,
   SocietyManagement,
@@ -78,6 +79,10 @@ function App() {
         {
           path: "messaging",
           element: <Messaging />,
+        },
+        {
+          path: "alerts",
+          element: <Alerts />,
         },
         {
           path: "analytics",

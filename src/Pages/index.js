@@ -8,8 +8,9 @@ import { Signin } from "./Auth";
 import { Customer } from "./Customer";
 import { Payments } from "./Payment";
 import { Analytics } from "./Analytics";
-import {Messaging} from "./Messaging";
+import { Messaging } from "./Messaging";
 import { VerifyAndSetToken } from "./VerifyAndSetToken";
+import { Alerts } from "./Alerts";
 
 // SuperAdmin exports
 export * from "./SuperAdmin";
@@ -26,5 +27,6 @@ export {
   Analytics,
   Messaging,
   NotFound,
-  VerifyAndSetToken
+  VerifyAndSetToken,
+  Alerts
 };

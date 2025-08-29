@@ -20,12 +20,11 @@ const signUp = async (credentials) => {
     const data = await response.json();
     return data;
   } catch (err) {
-    console.log("Erorr : ", err.message);
+    // Handle error silently
   }
 };
 
 const signInFunc = async (credentials) => {
-  console.log("signin function!");
 
   try {
     const options = {
@@ -45,18 +44,13 @@ const signInFunc = async (credentials) => {
       return { error: data.message };
     }
 
-    console.log("data : ", data);
-
     return data;
   } catch (err) {
-    console.log("Erorr : ", err.message);
     return "Error while fetching!";
   }
 };
 
 const verifyEmail = async (token,credentials) => {
-  console.log("verify email function!");
-
   try {
     const options = {
       method: "POST",
@@ -75,11 +69,8 @@ const verifyEmail = async (token,credentials) => {
       return { error: data.message };
     }
 
-    console.log("data : ", data);
-
     return data;
   } catch (err) {
-    console.log("Erorr : ", err.message);
     return "Error while fetching!";
   }
 };
@@ -114,7 +105,6 @@ const getAllUsers = async (params = {}) => {
 
     return data;
   } catch (err) {
-    console.log("Error fetching users: ", err.message);
     return { error: "Error while fetching users!" };
   }
 };
@@ -143,7 +133,6 @@ const blockUser = async (userId, isBlocked) => {
 
     return data;
   } catch (err) {
-    console.log("Error blocking user: ", err.message);
     return { error: "Error while blocking user!" };
   }
 };
@@ -171,7 +160,6 @@ const deleteUser = async (userId) => {
 
     return data;
   } catch (err) {
-    console.log("Error deleting user: ", err.message);
     return { error: "Error while deleting user!" };
   }
 };
@@ -179,7 +167,6 @@ const deleteUser = async (userId) => {
 const getSystemStats = async () => {
   try {
     const token = Cookies.get('access_token');
-    console.log("Token from cookies:", token);
     
     if (!token) {
       return { error: "No access token found" };
@@ -197,7 +184,6 @@ const getSystemStats = async () => {
     );
 
     const data = await response.json();
-    console.log("System stats response:", data);
 
     if (!response.ok) {
       return { error: data.message };
@@ -205,7 +191,6 @@ const getSystemStats = async () => {
 
     return data;
   } catch (err) {
-    console.log("Error fetching system stats: ", err.message);
     return { error: "Error while fetching system stats!" };
   }
 };
@@ -234,7 +219,6 @@ const addAdminAndStaff = async (userData) => {
 
     return data;
   } catch (err) {
-    console.log("Error adding admin/staff: ", err.message);
     return { error: "Error while adding admin/staff!" };
   }
 };

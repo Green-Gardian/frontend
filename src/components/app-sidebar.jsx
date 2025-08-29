@@ -110,6 +110,11 @@ const adminRoutes = [
     icon: <MessageCircleMore className="h-5 w-5" />,
     href: "/admin/messaging",
   },
+  {
+    title: "Alerts",
+    icon: <Activity className="h-5 w-5" />,
+    href: "/admin/alerts",
+  },
 ];
 
 export function AppSidebar({ role }) {

@@ -36,9 +36,7 @@ const SignIn = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("inside handle submit fuction!");
     const res = await signInFunc(credentials);
-    console.log("Signin response:", res);
 
     if (res.error) {
       setError(res.error);
@@ -46,11 +44,11 @@ const SignIn = () => {
     }
 
     //storing token in cookies
-    console.log("Setting cookies with token:", res.access_token);
     Cookies.set("access_token", res.access_token ? res.access_token : null);
     Cookies.set("refresh_token", res.refresh_token);
     Cookies.set("username", res.username);
     Cookies.set("user_role", res.role);
+    Cookies.set("user_society_id", res.society_id);
     
     // Redirect based on user role
     if (res.role === 'super_admin') {
