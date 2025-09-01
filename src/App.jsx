@@ -114,8 +114,8 @@ function App() {
           element: <SocietyManagement />,
         },
         {
-          path: "analytics",
-          element: <SuperAdminAnalytics />,
+          path: "messages",
+          element: <Messaging />,
         },
         {
           path: "settings",

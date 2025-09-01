@@ -227,7 +227,7 @@ const VerifyAndSetToken = () => {
               <Button
                 type="button"
                 className="w-full py-6 bg-green-600 hover:bg-green-700 text-white font-medium"
-                onClick={() => (window.location.href = "/login")}
+                onClick={() => (window.location.href = "/signin")}
               >
                 Go to Login
               </Button>
