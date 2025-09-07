@@ -9,7 +9,11 @@ import Cookies from "js-cookie";
 import io from "socket.io-client";
 import { getMessages, getChats } from "@/services/messages";
 
-const socket = io("http://localhost:3001");
+const socket = io("http://localhost:3001", {
+  auth: {
+    token: Cookies.get("access_token"),
+  },
+});
 
 const Messaging = () => {
   const [username, setUsername] = useState("");
@@ -41,13 +45,23 @@ const Messaging = () => {
 
       socket.on("connect", () => {
         console.log("Connected to socket server");
-        socket.emit("join", `user_${userId}`);
+        socket.emit("joinRoom", userId);
       });
 
       socket.on("receiveMessage", async (msg) => {
         console.log("Received message:", msg);
-        if (selectedConversation && msg.chatId === selectedConversation.id) {
-         await fetchMessagesForChat(selectedConversation.id);
+
+        await fetchChatGroups();
+
+        if (selectedConversation?.id === msg.chatId) {
+         fetchMessagesForChat(setSelectedConversation?.id)
+        }
+      });
+
+      socket.on("messageSent", async (data) => {
+        console.log("Message sent confirmation:", data);
+        if (selectedConversation) {
+          await fetchMessagesForChat(selectedConversation.id);
         }
       });
 
@@ -58,25 +72,26 @@ const Messaging = () => {
       return () => {
         socket.off("connect");
         socket.off("receiveMessage");
+        socket.off("messageSent");
         socket.off("disconnect");
         socket.disconnect();
       };
     }
-  }, [userId, selectedConversation]);
+  }, [userId]);
+
+  const fetchChatGroups = async () => {
+    try {
+      const data = await getChats();
+      console.log("Chat Groups: ", data);
+      if (data && !data.error) {
+        setConversations(data);
+      }
+    } catch (error) {
+      console.error("Error fetching chat groups:", error);
+    }
+  };
 
   useEffect(() => {
-    const fetchChatGroups = async () => {
-      try {
-        const data = await getChats();
-        console.log("Chat Groups: ", data);
-        if (data && !data.error) {
-          setConversations(data);
-        }
-      } catch (error) {
-        console.error("Error fetching chat groups:", error);
-      }
-    };
-
     fetchChatGroups();
   }, []);
 
@@ -84,8 +99,6 @@ const Messaging = () => {
     try {
       const data = await getMessages({ chatId: chatId.toString() });
       console.log("Messages: ", data);
-
-      console.log("User ID in fetchMessagesForChat: ", userId);
 
       if (data && !data.error) {
         const formattedMessages =
@@ -99,6 +112,7 @@ const Messaging = () => {
             }),
             senderId: msg.sender_id,
             senderName: msg.sender_name,
+            isMine: msg.isMine,
           })) || [];
 
         console.log("Formatted Messages: ", formattedMessages);
@@ -120,7 +134,7 @@ const Messaging = () => {
   }, [messages]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView();
   };
 
   const handleSendMessage = async () => {
@@ -129,15 +143,12 @@ const Messaging = () => {
     const messageData = {
       chatId: selectedConversation.id,
       content: newMessage,
-      senderId: userId,
-      sender_name: username,
     };
-
-    socket.emit("message", messageData);
 
     setNewMessage("");
 
-    await fetchMessagesForChat(selectedConversation.id);
+    socket.emit("message", messageData);
+    fetchMessagesForChat(selectedConversation.id);
   };
 
   const handleKeyPress = (e) => {
@@ -146,7 +157,7 @@ const Messaging = () => {
     }
   };
 
-  const filteredConversations = conversations.filter(
+  const filteredConversations = conversations?.filter(
     (conv) =>
       conv.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       conv.participant_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -252,7 +263,7 @@ const Messaging = () => {
                           </span>
                         </div>
                         <p className="text-sm truncate text-gray-500">
-                          {conversation.last_message || "No messages yet"}
+                          {conversation.lastmessage || "No messages yet"}
                         </p>
                       </div>
                     </div>
@@ -316,65 +327,36 @@ const Messaging = () => {
                   <div
                     key={msg.id}
                     className={`flex ${
-                      msg.sender === "support" ? "justify-end" : "justify-start"
+                      msg.isMine ? "justify-end" : "justify-start"
                     }`}
                   >
-                    {msg.sender_id === userId && (
-                      <Avatar className="mr-2 mt-1">
-                        <AvatarImage
-                          src="/placeholder.svg?height=40&width=40"
-                          alt={
-                            selectedConversation.participant_name ||
-                            selectedConversation.name
-                          }
-                        />
-                        <AvatarFallback>
-                          {(
-                            selectedConversation.participant_name ||
-                            selectedConversation.name ||
-                            selectedConversation.chattitle ||
-                            "U"
-                          )
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
                     <div
                       className={`max-w-[75%] ${
-                        msg.sender === "support"
+                        msg.isMine
                           ? "bg-primary text-white rounded-l-lg rounded-br-lg"
                           : "bg-gray-100 text-gray-800 rounded-r-lg rounded-bl-lg"
-                      } p-3 text-sm`}
+                      } p-3 text-[15px]`}
                     >
                       <p>{msg.message}</p>
-                      <p
-                        className={`text-xs mt-1 ${
-                          msg.sender === "support"
-                            ? "text-blue-100"
-                            : "text-gray-500"
-                        }`}
-                      >
-                        {msg.time}
-                      </p>
+                      <div className="flex gap-x-2">
+                        {!msg.isMine && (
+                          <p
+                            className={`text-[11px] mt-1 ${
+                              msg.isMine ? "text-blue-100" : "text-gray-500"
+                            }`}
+                          >
+                            {msg.senderName}
+                          </p>
+                        )}
+                        <p
+                          className={`text-[11px] mt-1 ${
+                            msg.isMine ? "text-blue-100" : "text-gray-500"
+                          }`}
+                        >
+                          {msg.time}
+                        </p>
+                      </div>
                     </div>
-                    {msg.sender === "support" && (
-                      <Avatar className="ml-2 mt-1">
-                        <AvatarImage
-                          src="/placeholder.svg?height=40&width=40"
-                          alt="Support"
-                        />
-                        <AvatarFallback>
-                          {username
-                            ? username
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")
-                            : "CS"}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
                   </div>
                 ))}
                 <div ref={messagesEndRef} />
