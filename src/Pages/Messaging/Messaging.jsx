@@ -17,7 +17,6 @@ const socket = io("http://localhost:3001", {
 
 const Messaging = () => {
   const [username, setUsername] = useState("");
-  const [userId, setUserId] = useState("");
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -28,9 +27,7 @@ const Messaging = () => {
 
   useEffect(() => {
     const storedUsername = Cookies.get("username");
-    const storedUserId = Cookies.get("userId");
     setUsername(storedUsername);
-    setUserId(storedUserId);
   }, []);
 
   useEffect(() => {
@@ -40,12 +37,11 @@ const Messaging = () => {
   }, []);
 
   useEffect(() => {
-    if (userId) {
+    {
       socket.connect();
 
       socket.on("connect", () => {
         console.log("Connected to socket server");
-        socket.emit("joinRoom", userId);
       });
 
       socket.on("receiveMessage", async (msg) => {
@@ -54,7 +50,7 @@ const Messaging = () => {
         await fetchChatGroups();
 
         if (selectedConversation?.id === msg.chatId) {
-         fetchMessagesForChat(setSelectedConversation?.id)
+          await fetchMessagesForChat(selectedConversation.id);
         }
       });
 
@@ -77,7 +73,7 @@ const Messaging = () => {
         socket.disconnect();
       };
     }
-  }, [userId]);
+  }, [selectedConversation]);
 
   const fetchChatGroups = async () => {
     try {
@@ -104,7 +100,7 @@ const Messaging = () => {
         const formattedMessages =
           data?.map((msg) => ({
             id: msg.id,
-            sender: msg.sender_id === userId ? "support" : "user",
+            sender: msg.sender_name,
             message: msg.content,
             time: new Date(msg.created_at).toLocaleTimeString([], {
               hour: "2-digit",
@@ -123,11 +119,21 @@ const Messaging = () => {
     }
   };
 
+  const handleConversationSelect = (conversation) => {
+    setSelectedConversation(conversation);
+    setSidebarOpen(false);
+
+    if (conversation.id) {
+      console.log(`Joining room for chat: ${conversation.id}`);
+      socket.emit("joinRoom", { chatId: conversation.id });
+    }
+  };
+
   useEffect(() => {
     if (selectedConversation) {
       fetchMessagesForChat(selectedConversation.id);
     }
-  }, [selectedConversation, userId]);
+  }, [selectedConversation]);
 
   useEffect(() => {
     scrollToBottom();
@@ -148,7 +154,6 @@ const Messaging = () => {
     setNewMessage("");
 
     socket.emit("message", messageData);
-    fetchMessagesForChat(selectedConversation.id);
   };
 
   const handleKeyPress = (e) => {
@@ -228,10 +233,7 @@ const Messaging = () => {
                         ? "bg-[#F7F6FE]"
                         : ""
                     }`}
-                    onClick={() => {
-                      setSelectedConversation(conversation);
-                      setSidebarOpen(false);
-                    }}
+                    onClick={() => handleConversationSelect(conversation)}
                   >
                     <div className="flex items-start gap-3">
                       <div className="relative">
