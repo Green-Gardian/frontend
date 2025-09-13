@@ -6,14 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Phone, Send, Plus, Menu, X } from "lucide-react";
 import Cookies from "js-cookie";
-import io from "socket.io-client";
+import { useChatWebSocket } from "@/hooks/useWebSocket";
 import { getMessages, getChats } from "@/services/messages";
-
-const socket = io("http://localhost:3001", {
-  auth: {
-    token: Cookies.get("access_token"),
-  },
-});
 
 const Messaging = () => {
   const [username, setUsername] = useState("");
@@ -24,6 +18,18 @@ const Messaging = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const messagesEndRef = useRef(null);
+
+  // Use the unified WebSocket hook
+  const { 
+    isConnected, 
+    error, 
+    joinRoom, 
+    sendMessage, 
+    onReceiveMessage, 
+    onMessageSent, 
+    onConnect, 
+    onDisconnect 
+  } = useChatWebSocket();
 
   useEffect(() => {
     const storedUsername = Cookies.get("username");
@@ -37,44 +43,33 @@ const Messaging = () => {
   }, []);
 
   useEffect(() => {
-    {
-      socket.connect();
+    onConnect(() => {
+      console.log("Connected to unified WebSocket server");
+    });
 
-      socket.on("connect", () => {
-        console.log("Connected to socket server");
-      });
+    onReceiveMessage(async (msg) => {
+      console.log("Received message:", msg);
+      await fetchChatGroups();
+      if (selectedConversation?.id === msg.chatId) {
+        await fetchMessagesForChat(selectedConversation.id);
+      }
+    });
 
-      socket.on("receiveMessage", async (msg) => {
-        console.log("Received message:", msg);
+    onMessageSent(async (data) => {
+      console.log("Message sent confirmation:", data);
+      if (selectedConversation) {
+        await fetchMessagesForChat(selectedConversation.id);
+      }
+    });
 
-        await fetchChatGroups();
+    onDisconnect(() => {
+      console.log("Disconnected from WebSocket server");
+    });
 
-        if (selectedConversation?.id === msg.chatId) {
-          await fetchMessagesForChat(selectedConversation.id);
-        }
-      });
-
-      socket.on("messageSent", async (data) => {
-        console.log("Message sent confirmation:", data);
-        if (selectedConversation) {
-          await fetchMessagesForChat(selectedConversation.id);
-        }
-      });
-
-      socket.on("disconnect", () => {
-        console.log("Disconnected from socket server");
-      });
-
-      return () => {
-        socket.off("connect");
-        socket.off("receiveMessage");
-        socket.off("messageSent");
-        socket.off("disconnect");
-        socket.disconnect();
-        
-      };
-    }
-  }, [selectedConversation]);
+    return () => {
+      // Cleanup is handled by the hook
+    };
+  }, [selectedConversation, onConnect, onReceiveMessage, onMessageSent, onDisconnect]);
 
   const fetchChatGroups = async () => {
     try {
@@ -126,7 +121,7 @@ const Messaging = () => {
 
     if (conversation.id) {
       console.log(`Joining room for chat: ${conversation.id}`);
-      socket.emit("joinRoom", { chatId: conversation.id });
+      joinRoom(conversation.id, username);
     }
   };
 
@@ -147,14 +142,8 @@ const Messaging = () => {
   const handleSendMessage = async () => {
     if (newMessage.trim() === "" || !selectedConversation) return;
 
-    const messageData = {
-      chatId: selectedConversation.id,
-      content: newMessage,
-    };
-
+    sendMessage(selectedConversation.id, newMessage);
     setNewMessage("");
-
-    socket.emit("message", messageData);
   };
 
   const handleKeyPress = (e) => {
