@@ -63,9 +63,9 @@ const superAdminRoutes = [
     href: "/super-admin/societies",
   },
   {
-    title: "System Analytics",
-    icon: <Activity className="h-5 w-5" />,
-    href: "/super-admin/analytics",
+    title: "Messages",
+    icon: <MessageCircleMore className="h-5 w-5" />,
+    href: "/super-admin/messages",
   },
   {
     title: "Settings",
