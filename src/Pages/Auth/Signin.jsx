@@ -16,7 +16,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 import Cookies from "js-cookie";
 
-import { signInFunc } from "@/services/auth";
+import { signInFunc, forgotPasswordFunc } from "@/services/auth";
 
 const SignIn = () => {
   const [credentials, setCredentials] = useState({
@@ -24,6 +24,9 @@ const SignIn = () => {
     password: "",
   });
   const [error, setError] = useState("");
+  const [showResendVerification, setShowResendVerification] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState("");
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -32,6 +35,33 @@ const SignIn = () => {
       ...credentials,
       [e.target.name]: e.target.value,
     });
+    setError(""); // Clear error when user types
+    setShowResendVerification(false); // Hide resend option when user types
+  };
+
+  const handleResendVerification = async () => {
+    if (!credentials.email) {
+      setResendMessage("Please enter your email address first");
+      return;
+    }
+
+    setIsResending(true);
+    setResendMessage("");
+
+    try {
+      const res = await forgotPasswordFunc({ email: credentials.email });
+      
+      if (res.error) {
+        setResendMessage(res.error);
+      } else {
+        setResendMessage(res.message || "Verification email sent successfully");
+        setShowResendVerification(false);
+      }
+    } catch (err) {
+      setResendMessage("Failed to send verification email. Please try again.");
+    } finally {
+      setIsResending(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -40,6 +70,10 @@ const SignIn = () => {
 
     if (res.error) {
       setError(res.error);
+      // Show resend verification option if it's a verification error
+      if (res.error.includes("verify your email")) {
+        setShowResendVerification(true);
+      }
       return;
     }
 
@@ -80,6 +114,29 @@ const SignIn = () => {
                   <Terminal className="h-4 w-4" />
                   <AlertTitle>{error}</AlertTitle>
                 </Alert>
+              )}
+
+              {resendMessage && (
+                <Alert className={resendMessage.includes("successfully") ? "text-green-600 border-green-400" : "text-red-400 border-red-400"}>
+                  <Terminal className="h-4 w-4" />
+                  <AlertTitle>{resendMessage}</AlertTitle>
+                </Alert>
+              )}
+
+              {showResendVerification && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-blue-800 mb-3">
+                    Your email address is not verified. Click the button below to resend the verification email.
+                  </p>
+                  <Button
+                    onClick={handleResendVerification}
+                    disabled={isResending}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                    size="sm"
+                  >
+                    {isResending ? "Sending..." : "Resend Verification Email"}
+                  </Button>
+                </div>
               )}
 
               <div className="space-y-2">

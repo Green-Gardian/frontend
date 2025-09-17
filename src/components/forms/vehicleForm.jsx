@@ -8,31 +8,67 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { X, Car, Hash, User, CheckCircle } from "lucide-react"
 
 import { addVehicle, updateVehicle } from "../../services/vehicle"
+import { getDrivers } from "../../services/driver"
 
 const VehicleForm = ({ onClose, onSubmit, vehicleToEdit = null }) => {
   const isEditMode = !!vehicleToEdit
 
   const [formData, setFormData] = useState({
     plateNo: "",
-    driverName: "",
+    driverName: "unassigned",
     status: "",
   })
 
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [drivers, setDrivers] = useState([])
+  const [isLoadingDrivers, setIsLoadingDrivers] = useState(false)
+
+  // Fetch drivers on component mount
+  useEffect(() => {
+    fetchDrivers()
+  }, [])
+
+  const fetchDrivers = async () => {
+    setIsLoadingDrivers(true)
+    try {
+      const response = await getDrivers()
+      if (response.error) {
+        console.error("Error fetching drivers:", response.error)
+        setDrivers([])
+      } else {
+        // Transform drivers data for the select component
+        const driversList = response.drivers?.map(driver => ({
+          value: driver.username, // Using username as value since backend expects username
+          label: `${driver.first_name} ${driver.last_name} (${driver.username})`,
+          id: driver.id,
+          email: driver.email,
+          phone: driver.phone_number
+        })) || []
+        
+        // Add "Unassigned" option
+        driversList.unshift({ value: "unassigned", label: "Unassigned" })
+        setDrivers(driversList)
+      }
+    } catch (error) {
+      console.error("Error fetching drivers:", error)
+      setDrivers([{ value: "unassigned", label: "Unassigned" }])
+    } finally {
+      setIsLoadingDrivers(false)
+    }
+  }
 
   useEffect(() => {
-    if (vehicleToEdit) {
+    if (vehicleToEdit && drivers.length > 0) {
       const driverExists = drivers.some((driver) => driver.value === vehicleToEdit.driver_name)
 
       setFormData({
         plateNo: vehicleToEdit.plate_no || "",
-        driverName: driverExists ? vehicleToEdit.driver_name : "",
+        driverName: driverExists ? vehicleToEdit.driver_name : "unassigned",
         status: vehicleToEdit.status || "",
       })
-
     }
-  }, [vehicleToEdit])
+  }, [vehicleToEdit, drivers])
 
   useEffect(() => {
     if (isEditMode) {
@@ -40,12 +76,11 @@ const VehicleForm = ({ onClose, onSubmit, vehicleToEdit = null }) => {
     }
   }, [formData, isEditMode])
 
-  const drivers = [{ value: "driver_1", label: "Driver 1" }]
-
   const statuses = [
     { value: "active", label: "Active" },
     { value: "inactive", label: "Inactive" },
     { value: "maintenance", label: "Maintenance" },
+    { value: "available", label: "Available" },
   ]
 
   const handleInputChange = (field, value) => {
@@ -71,9 +106,7 @@ const VehicleForm = ({ onClose, onSubmit, vehicleToEdit = null }) => {
       newErrors.plateNo = "Please enter a valid plate number format (e.g., ABC-123)"
     }
 
-    if (!formData.driverName) {
-      newErrors.driverName = "Assignment is required"
-    }
+    // Driver assignment is optional - can be unassigned
 
     if (!formData.status) {
       newErrors.status = "Status is required"
@@ -94,14 +127,14 @@ const VehicleForm = ({ onClose, onSubmit, vehicleToEdit = null }) => {
           // Update existing vehicle
           await updateVehicle(vehicleToEdit.id, {
             plate_no: formData.plateNo,
-            driver_name: formData.driverName,
+            driver_name: formData.driverName === "unassigned" ? "" : formData.driverName,
             status: formData.status,
           })
         } else {
           // Add new vehicle
           await addVehicle({
             plateNo: formData.plateNo,
-            driverName: formData.driverName,
+            driverName: formData.driverName === "unassigned" ? "" : formData.driverName,
             status: formData.status,
           })
         }
@@ -129,14 +162,14 @@ const VehicleForm = ({ onClose, onSubmit, vehicleToEdit = null }) => {
       // Reset to original values
       setFormData({
         plateNo: vehicleToEdit.plate_no || "",
-        driverName: vehicleToEdit.driver_name || "",
+        driverName: vehicleToEdit.driver_name || "unassigned",
         status: vehicleToEdit.status || "",
       })
     } else {
       // Clear form for new vehicle
       setFormData({
         plateNo: "",
-        driverName: "",
+        driverName: "unassigned",
         status: "",
       })
     }
@@ -197,29 +230,37 @@ const VehicleForm = ({ onClose, onSubmit, vehicleToEdit = null }) => {
         <div className="space-y-2">
           <Label htmlFor="driverName" className="text-sm font-medium text-gray-700 flex items-center gap-2">
             <User className="h-4 w-4" />
-            Assigned To
+            Assigned To Driver
           </Label>
           <Select
-            value={formData.driverName}
+            value={isLoadingDrivers ? undefined : formData.driverName}
             onValueChange={(value) => handleInputChange("driverName", value)}
-            defaultValue={isEditMode ? vehicleToEdit.driver_name : ""}
+            disabled={isLoadingDrivers}
           >
             <SelectTrigger className={`w-full ${errors.driverName ? "border-red-500" : ""}`}>
-              <SelectValue placeholder="Select driver or unassigned">
-                {formData.driverName
-                  ? drivers.find((d) => d.value === formData.driverName)?.label || formData.driverName
-                  : "Select driver or unassigned"}
+              <SelectValue placeholder={isLoadingDrivers ? "Loading drivers..." : "Select driver or leave unassigned"}>
+                {isLoadingDrivers 
+                  ? "Loading drivers..." 
+                  : formData.driverName
+                    ? drivers.find((d) => d.value === formData.driverName)?.label || formData.driverName
+                    : "Select driver or leave unassigned"
+                }
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {drivers.map((driver) => (
-                <SelectItem key={driver.value} value={driver.value}>
-                  {driver.label}
-                </SelectItem>
-              ))}
+              {isLoadingDrivers ? (
+                <SelectItem value="loading" disabled>Loading drivers...</SelectItem>
+              ) : (
+                drivers.map((driver) => (
+                  <SelectItem key={driver.value} value={driver.value}>
+                    {driver.label}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
           {errors.driverName && <p className="text-sm text-red-600">{errors.driverName}</p>}
+          <p className="text-xs text-gray-500">Leave unassigned if no driver is assigned to this vehicle</p>
         </div>
 
         {/* Status Field */}

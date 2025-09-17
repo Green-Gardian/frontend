@@ -4,7 +4,7 @@ import { Staff } from "./Staff";
 import { StaffPerformance } from "./Staff";
 import { Settings } from "./Settings";
 import { NotFound } from "./Not-Found";
-import { Signin } from "./Auth";
+import { Signin, ForgotPassword, ResetPassword } from "./Auth";
 import { Customer } from "./Customer";
 import { Payments } from "./Payment";
 import { Analytics } from "./Analytics";
@@ -23,6 +23,8 @@ export {
   StaffPerformance,
   Settings,
   Signin,
+  ForgotPassword,
+  ResetPassword,
   Payments,
   Analytics,
   Messaging,

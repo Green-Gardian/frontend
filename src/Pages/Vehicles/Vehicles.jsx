@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-import { Plus, SquarePen, Trash2 } from "lucide-react";
+import { Plus, SquarePen, Trash2, Users } from "lucide-react";
 
 import InfoCards from "@/components/info-cards";
 import Modal from "@/components/modal";
@@ -33,6 +33,7 @@ import VehicleForm from "@/components/forms/vehicleForm";
 import Cookies from "js-cookie";
 
 import { getVehicles, deleteVehicle } from "@/services/vehicle";
+import { getDrivers } from "@/services/driver";
 
 const Vehicle = () => {
   const [username, setUsername] = useState("");
@@ -42,6 +43,7 @@ const Vehicle = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [vehicleToEdit, setVehicleToEdit] = useState(null);
+  const [drivers, setDrivers] = useState([]);
   const [cardValues, setCardValues] = useState({
     total: 0,
     active: 0,
@@ -79,7 +81,23 @@ const Vehicle = () => {
   useEffect(() => {
     setUsername(Cookies.get("username"));
     fetchData();
+    fetchDrivers();
   }, []);
+
+  const fetchDrivers = async () => {
+    try {
+      const res = await getDrivers();
+      if (res.error) {
+        console.error("Error fetching drivers:", res.error);
+        setDrivers([]);
+      } else {
+        setDrivers(res.drivers || []);
+      }
+    } catch (error) {
+      console.error("Error fetching drivers:", error);
+      setDrivers([]);
+    }
+  };
 
   useEffect(() => {
     if (!Cookies.get("access_token")) {
@@ -219,8 +237,10 @@ const Vehicle = () => {
   };
 
   const openModal = (vehicle = null) => {
+    console.log("Opening modal with vehicle:", vehicle);
     setVehicleToEdit(vehicle);
     setIsModalOpen(true);
+    console.log("Modal state set to true");
   };
 
   const onClose = () => {
@@ -232,6 +252,21 @@ const Vehicle = () => {
     console.log("Vehicle form submitted successfully!");
     onClose();
     await fetchData();
+  };
+
+  const getDriverInfo = (driverName) => {
+    if (!driverName || driverName === "unassigned") return { name: "Unassigned", status: "unassigned" };
+    
+    const driver = drivers.find(d => d.username === driverName);
+    if (driver) {
+      return {
+        name: `${driver.first_name} ${driver.last_name}`,
+        username: driver.username,
+        email: driver.email,
+        status: driver.is_verified ? "verified" : "unverified"
+      };
+    }
+    return { name: driverName, status: "unknown" };
   };
 
   const getStatusBadgeStyle = (status) => {
@@ -281,11 +316,23 @@ const Vehicle = () => {
             />
           </div>
 
-          <Button className="w-full sm:w-auto " onClick={() => openModal()}>
-            <Plus className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Add Vehicle</span>
-            <span className="sm:hidden">Add</span>
-          </Button>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button 
+              variant="outline" 
+              className="w-full sm:w-auto" 
+              onClick={() => window.location.href = "/admin/staff"}
+            >
+              <Users className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Manage Drivers</span>
+              <span className="sm:hidden">Drivers</span>
+            </Button>
+            
+            <Button className="w-full sm:w-auto " onClick={() => openModal()}>
+              <Plus className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Add Vehicle</span>
+              <span className="sm:hidden">Add</span>
+            </Button>
+          </div>
         </div>
 
         <div className="rounded-md overflow-hidden">
@@ -328,12 +375,19 @@ const Vehicle = () => {
                         <div className="flex flex-col">
                           <span>{record.plate_no || "N/A"}</span>
                           <span className="text-xs text-gray-500 sm:hidden">
-                            {record.driver_name || "Unassigned"}
+                            {getDriverInfo(record.driver_name).name}
                           </span>
                         </div>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
-                        {record.driver_name || "Unassigned"}
+                        <div className="flex flex-col">
+                          <span className="font-medium">{getDriverInfo(record.driver_name).name}</span>
+                          {record.driver_name && (
+                            <span className="text-xs text-gray-500">
+                              @{getDriverInfo(record.driver_name).username}
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge
@@ -429,7 +483,7 @@ const Vehicle = () => {
         )}
       </div>
 
-      <Modal status={isModalOpen}>
+      <Modal isOpen={isModalOpen} onClose={onClose}>
         <VehicleForm
           onClose={onClose}
           onSubmit={fetchData}

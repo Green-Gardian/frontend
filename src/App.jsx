@@ -10,6 +10,8 @@ import {
   Settings,
   NotFound,
   Signin,
+  ForgotPassword,
+  ResetPassword,
   Customer,
   Payments,
   Analytics,
@@ -135,6 +137,14 @@ function App() {
     {
       path: "signin",
       element: <Signin />,
+    },
+    {
+      path: "forgot-password",
+      element: <ForgotPassword />,
+    },
+    {
+      path: "reset-password",
+      element: <ResetPassword />,
     },
     {
       path: "verify-email",

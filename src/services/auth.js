@@ -223,6 +223,56 @@ const addAdminAndStaff = async (userData) => {
   }
 };
 
+const forgotPasswordFunc = async (credentials) => {
+  try {
+    const options = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(credentials),
+    };
+
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/forgot-password`,
+      options
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+
+    return data;
+  } catch (err) {
+    return { error: "Error while sending reset email!" };
+  }
+};
+
+const resetPasswordFunc = async (token, credentials) => {
+  try {
+    const options = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(credentials),
+    };
+
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/reset-password?token=${token}`,
+      options
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+
+    return data;
+  } catch (err) {
+    return { error: "Error while resetting password!" };
+  }
+};
+
 export { 
   signUp, 
   signInFunc, 
@@ -231,5 +281,7 @@ export {
   blockUser, 
   deleteUser, 
   getSystemStats,
-  addAdminAndStaff 
+  addAdminAndStaff,
+  forgotPasswordFunc,
+  resetPasswordFunc
 };
