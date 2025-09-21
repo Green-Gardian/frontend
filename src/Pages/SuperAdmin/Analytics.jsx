@@ -41,6 +41,7 @@ const SuperAdminAnalytics = () => {
         setStats(response);
       }
     } catch (err) {
+      
       setError("Failed to fetch system statistics");
     } finally {
       setLoading(false);

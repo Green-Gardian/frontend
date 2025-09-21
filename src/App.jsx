@@ -1,4 +1,8 @@
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+} from "react-router-dom";
 import Cookies from "js-cookie";
 
 import { AdminLayout, SuperAdminLayout } from "./layout";
@@ -32,11 +36,11 @@ import "./index.css";
 const RootRedirect = () => {
   const userRole = Cookies.get("user_role");
   const accessToken = Cookies.get("access_token");
-  
+
   if (!accessToken) {
     return <Navigate to="/signin" replace />;
   }
-  
+
   if (userRole === "super_admin") {
     return <Navigate to="/super-admin" replace />;
   } else {
@@ -56,6 +60,10 @@ function App() {
       children: [
         {
           path: "",
+          element: <Dashboard />,
+        },
+        {
+          path: "dashboard",
           element: <Dashboard />,
         },
         {

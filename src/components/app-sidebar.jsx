@@ -121,22 +121,22 @@ export function AppSidebar({ role }) {
   const routes = role === "admin" ? adminRoutes : superAdminRoutes;
 
   return (
-    <Sidebar className="bg-[#121212] border-none">
-      <SidebarHeader className="bg-[#121212] border-b border-zinc-800">
+    <Sidebar className="bg-primary border-none">
+      <SidebarHeader className="bg-primary border-b border-zinc-800">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-[#121212] data-[state=open]:text-white hover:bg-zinc-800 bg-zinc-800 text-white"
+              className="data-[state=open]:bg-primary/80 data-[state=open]:text-white hover:bg-primary bg-white/20 text-white py-7"
             >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-white text-black">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-white text-primary">
                 <Leaf className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold text-white">
+                <span className="truncate font-light text-white">
                   Green Guardian
                 </span>
-                <span className="truncate text-xs text-zinc-400">
+                <span className="truncate text-xs text-black">
                   {role === "super-admin" ? "Super Admin" : "Admin"}
                 </span>
               </div>
@@ -144,7 +144,7 @@ export function AppSidebar({ role }) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent className="bg-[#121212]">
+      <SidebarContent className="bg-primary">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -156,7 +156,7 @@ export function AppSidebar({ role }) {
                     cn(
                       "flex items-center gap-3 rounded-md px-3 py-2 text-[14px] font-medium transition-colors hover:cursor-pointer",
                       isActive
-                        ? "bg-[#fff]/12 text-[#FFFFFF]/80 border-1 border-[#EDEDED]/8"
+                        ? "bg-white/70 text-primary border-1 border-primary"
                         : "text-white/80 hover:text-white hover:bg-zinc-800/50"
                     )
                   }
@@ -169,7 +169,7 @@ export function AppSidebar({ role }) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="bg-[#121212] border-t border-zinc-800">
+      <SidebarFooter className="bg-primary border-t border-zinc-800">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
