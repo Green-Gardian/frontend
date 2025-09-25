@@ -74,9 +74,7 @@ const Alerts = () => {
     try {
       setIsLoading(true);
       const res = await getAlerts();
-      console.log("Alerts API response:", res);
       const alerts = res?.data?.alerts || [];
-      console.log("Extracted alerts:", alerts);
       setAlertRecords(alerts);
       await updateCardsData();
     } catch (error) {
@@ -104,10 +102,8 @@ const Alerts = () => {
   const updateCardsData = async () => {
     try {
       const stats = await getAlertStats();
-      console.log("Stats API response:", stats);
       if (stats?.data?.overall) {
         const overall = stats.data.overall;
-        console.log("Overall stats:", overall);
         setCardValues({
           total: parseInt(overall.total_alerts) || 0,
           pending: parseInt(overall.pending_alerts) || 0,
@@ -221,24 +217,11 @@ const Alerts = () => {
     alert.status.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  console.log("Alert records state:", alertRecords);
-  console.log("Filtered alerts:", filteredAlerts);
-
   const itemsPerPage = 10;
   const totalPages = Math.ceil(filteredAlerts.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentAlerts = filteredAlerts.slice(startIndex, endIndex);
-
-  console.log("Pagination calculation:", {
-    itemsPerPage,
-    totalPages,
-    startIndex,
-    endIndex,
-    currentAlertsLength: currentAlerts.length
-  });
-
-  console.log("Component render state:", { isLoading, alertRecordsLength: alertRecords.length });
 
   if (isLoading) {
     return (
