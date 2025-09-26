@@ -10,7 +10,7 @@ const Modal = ({ children, isOpen, onClose, title }) => {
       />
       
       {/* Modal Content */}
-      <div className="relative bg-white border border-gray-200 rounded-lg shadow-lg p-6 w-full max-w-md mx-4">
+      <div className="relative bg-white border border-gray-200 rounded-lg shadow-lg p-6 w-full max-w-lg mx-4">
         {/* Header */}
         {title && (
           <div className="mb-4 flex items-center justify-between">
