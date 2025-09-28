@@ -25,7 +25,6 @@ const signUp = async (credentials) => {
 };
 
 const signInFunc = async (credentials) => {
-
   try {
     const options = {
       method: "POST",
@@ -50,7 +49,7 @@ const signInFunc = async (credentials) => {
   }
 };
 
-const verifyEmail = async (token,credentials) => {
+const verifyEmail = async (token, credentials) => {
   try {
     const options = {
       method: "POST",
@@ -79,20 +78,20 @@ const verifyEmail = async (token,credentials) => {
 const getAllUsers = async (params = {}) => {
   try {
     const queryParams = new URLSearchParams();
-    if (params.page) queryParams.append('page', params.page);
-    if (params.limit) queryParams.append('limit', params.limit);
-    if (params.role) queryParams.append('role', params.role);
-    if (params.search) queryParams.append('search', params.search);
+    if (params.page) queryParams.append("page", params.page);
+    if (params.limit) queryParams.append("limit", params.limit);
+    if (params.role) queryParams.append("role", params.role);
+    if (params.search) queryParams.append("search", params.search);
 
-    const token = Cookies.get('access_token');
-    
+    const token = Cookies.get("access_token");
+
     const response = await fetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/users?${queryParams}`,
       {
         method: "GET",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -110,16 +109,23 @@ const getAllUsers = async (params = {}) => {
 };
 
 const blockUser = async (userId, isBlocked) => {
+  console.log(
+    "Block/Unblock user request initiated from frontend for userId:",
+    userId,
+    " to isBlocked:",
+    isBlocked
+  );
+
   try {
-    const token = Cookies.get('access_token');
-    
+    const token = Cookies.get("access_token");
+
     const response = await fetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/users/${userId}/block`,
       {
         method: "PATCH",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ isBlocked }),
       }
@@ -129,6 +135,8 @@ const blockUser = async (userId, isBlocked) => {
 
     if (!response.ok) {
       return { error: data.message };
+    } else {
+      return { success: true, data: data };
     }
 
     return data;
@@ -139,15 +147,15 @@ const blockUser = async (userId, isBlocked) => {
 
 const deleteUser = async (userId) => {
   try {
-    const token = Cookies.get('access_token');
-    
+    const token = Cookies.get("access_token");
+
     const response = await fetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/users/${userId}`,
       {
         method: "DELETE",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -166,19 +174,19 @@ const deleteUser = async (userId) => {
 
 const getSystemStats = async () => {
   try {
-    const token = Cookies.get('access_token');
-    
+    const token = Cookies.get("access_token");
+
     if (!token) {
       return { error: "No access token found" };
     }
-    
+
     const response = await fetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/system-stats`,
       {
         method: "GET",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -197,15 +205,15 @@ const getSystemStats = async () => {
 
 const addAdminAndStaff = async (userData) => {
   try {
-    const token = Cookies.get('access_token');
-    
+    const token = Cookies.get("access_token");
+
     const response = await fetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/add-admin-and-staff`,
       {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(userData),
       }
@@ -273,15 +281,116 @@ const resetPasswordFunc = async (token, credentials) => {
   }
 };
 
-export { 
-  signUp, 
-  signInFunc, 
-  verifyEmail, 
-  getAllUsers, 
-  blockUser, 
-  deleteUser, 
+const getProfileData = async () => {
+  try {
+    const token = Cookies.get("access_token");
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/profile`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+    return data;
+  } catch (err) {
+    return { error: "Error while fetching profile data!" };
+  }
+};
+
+const updateProfile = async (payload) => {
+  const jsonString = JSON.stringify(payload);
+  const sizeInBytes = new TextEncoder().encode(jsonString).length;
+  const sizeInKB = sizeInBytes / 1024;
+
+  console.log(`Payload size: ${sizeInBytes} bytes (${sizeInKB.toFixed(2)} KB)`);
+  try {
+    const token = Cookies.get("access_token");
+    const options = {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        first_name: payload.first_name,
+        last_name: payload.last_name,
+        email: payload.email,
+        phone_number: payload.phone_number,
+        profile_picture: payload.profile_picture,
+      }),
+    };
+
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/update-profile`,
+      options
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+    return { data: data, success: true };
+  } catch (err) {
+    return { error: "Error while updating profile!" };
+  }
+};
+
+const changePassword = async ({
+  currentPassword,
+  newPassword,
+  confirmNewPassword,
+}) => {
+  try {
+    const token = Cookies.get("access_token");
+    const options = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        currentPassword,
+        newPassword,
+        confirmNewPassword,
+      }),
+    };
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/change-password`,
+      options
+    );
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+    return data;
+  } catch (err) {
+    return { error: "Error while changing password!" };
+  }
+};
+
+export {
+  signUp,
+  signInFunc,
+  verifyEmail,
+  getAllUsers,
+  blockUser,
+  deleteUser,
   getSystemStats,
   addAdminAndStaff,
   forgotPasswordFunc,
-  resetPasswordFunc
+  resetPasswordFunc,
+  getProfileData,
+  updateProfile,
+  changePassword,
 };

@@ -34,39 +34,29 @@ import {
   Mail,
   TrendingUp,
   TrendingDown,
+  Loader2,
 } from "lucide-react";
 import Cookies from "js-cookie";
 import InfoCards from "@/components/info-cards";
 import { useParams } from "react-router-dom";
+import { getStaff } from "@/services/staff";
 
-// Mock staff data
-const staffData = {
-  1: {
-    employeeId: 1,
-    name: "Muhammad Hassan Amir",
-    role: "Driver",
-    workSchedule: "Morning",
-    contactInfo: "03001234567",
-    email: "hassan.amir@wastemanagement.com",
-    paymentMethod: "Cash on Delivery",
-    employeeStatus: "Active",
-    joinDate: "2023-01-15",
-    address: "Block 5, Gulshan-e-Iqbal, Karachi",
-    profileImage: "/placeholder.svg?height=100&width=100",
-  },
-  2: {
-    employeeId: 2,
-    name: "Ayesha Khan",
-    role: "Customer Support",
-    workSchedule: "Evening",
-    contactInfo: "03011234567",
-    email: "ayesha.khan@wastemanagement.com",
-    paymentMethod: "Bank Transfer",
-    employeeStatus: "Active",
-    joinDate: "2023-03-20",
-    address: "DHA Phase 2, Karachi",
-    profileImage: "/placeholder.svg?height=100&width=100",
-  },
+// Helper function to format role names
+const formatRoleName = (role) => {
+  const roleMap = {
+    'admin': 'Admin',
+    'customer_support': 'Customer Support',
+    'driver': 'Driver',
+    'super_admin': 'Super Admin'
+  };
+  return roleMap[role] || role;
+};
+
+// Helper function to get status text
+const getStatusText = (isBlocked, isVerified) => {
+  if (isBlocked) return "Blocked";
+  if (!isVerified) return "Pending";
+  return "Active";
 };
 
 const getPerformanceData = (employeeId) => {
@@ -125,6 +115,8 @@ const StaffPerformance = () => {
   const [username, setUsername] = useState("");
   const [staffMember, setStaffMember] = useState(null);
   const [performanceData, setPerformanceData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const { employeeId } = useParams();
 
@@ -139,19 +131,76 @@ const StaffPerformance = () => {
   }, []);
 
   useEffect(() => {
-    if (employeeId && staffData[employeeId]) {
-      setStaffMember(staffData[employeeId]);
-      setPerformanceData(getPerformanceData(employeeId));
-    }
+    const fetchStaffMember = async () => {
+      if (!employeeId) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch all staff data
+        const response = await getStaff();
+        const allStaff = response.users || [];
+        
+        // Find the specific staff member
+        const member = allStaff.find(staff => staff.id === parseInt(employeeId));
+        
+        if (member) {
+          setStaffMember(member);
+          setPerformanceData(getPerformanceData(employeeId));
+        } else {
+          setError("Staff member not found");
+        }
+      } catch (err) {
+        console.error("Error fetching staff member:", err);
+        setError("Failed to load staff member data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStaffMember();
   }, [employeeId]);
 
-  if (!staffMember || !performanceData) {
+  if (loading) {
     return (
       <div className="bg-white min-h-screen py-6 px-4 gap-y-6 flex flex-col w-auto">
         <div className="flex items-center gap-4">
-    
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.history.back()}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
           <h1 className="text-[#121212] text-[24px] leading-[32px]">
-            Staff member not found
+            Loading staff performance...
+          </h1>
+        </div>
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !staffMember || !performanceData) {
+    return (
+      <div className="bg-white min-h-screen py-6 px-4 gap-y-6 flex flex-col w-auto">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.history.back()}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+          <h1 className="text-[#121212] text-[24px] leading-[32px]">
+            {error || "Staff member not found"}
           </h1>
         </div>
       </div>
@@ -205,13 +254,75 @@ const StaffPerformance = () => {
     <div className="bg-white min-h-screen py-6 px-4 gap-y-6 flex flex-col w-auto">
       {/* Header */}
       <div className="flex items-center gap-4">
-      
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => window.history.back()}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Button>
         <h1 className="text-[#121212] text-[24px] leading-[32px]">
-          Employee Performance
+          Hello, <span className="font-semibold">{username}</span>
         </h1>
       </div>
 
-  
+      {/* Staff Member Info */}
+      <Card className="w-full">
+        <CardHeader>
+          <div className="flex items-center gap-4">
+            <Avatar className="h-20 w-20">
+              <AvatarImage src="/placeholder.svg?height=100&width=100" alt={`${staffMember.first_name} ${staffMember.last_name}`} />
+              <AvatarFallback className="text-lg">
+                {staffMember.first_name[0]}{staffMember.last_name[0]}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <CardTitle className="text-2xl">{staffMember.first_name} {staffMember.last_name}</CardTitle>
+              <CardDescription className="text-lg">
+                {formatRoleName(staffMember.role)} • Employee ID: #{staffMember.id}
+              </CardDescription>
+              <div className="flex items-center gap-4 mt-2">
+                <Badge variant={getStatusText(staffMember.is_blocked, staffMember.is_verified) === 'Active' ? 'default' : 'secondary'}>
+                  {getStatusText(staffMember.is_blocked, staffMember.is_verified)}
+                </Badge>
+                <span className="text-sm text-gray-600">
+                  Joined: {new Date(staffMember.created_at).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-gray-500" />
+                <span>{staffMember.phone_number}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-gray-500" />
+                <span>{staffMember.email}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-gray-500" />
+                <span>Username: {staffMember.username}</span>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-gray-500" />
+                <span>Role: {formatRoleName(staffMember.role)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-gray-500" />
+                <span>Verified: {staffMember.is_verified ? 'Yes' : 'No'}</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Performance Cards */}
       <div className="flex flex-wrap md:gap-4 gap-2 justify-center w-full">
