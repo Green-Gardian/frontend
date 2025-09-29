@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils"
 
 import {
   Settings,
-  MoreHorizontal,
   LogOut,
   Leaf,
   LayoutDashboard,
@@ -172,20 +171,21 @@ export function AppSidebar({ role }) {
   }, [role])
 
   return (
-    <Sidebar className="bg-[#121212] border-none">
-      <SidebarHeader className="bg-[#121212] border-b border-zinc-800">
+    <Sidebar className="bg-white border-r border-primary/20">
+      {/* Header */}
+      <SidebarHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-primary/20">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-[#121212] data-[state=open]:text-white hover:bg-zinc-800 bg-zinc-800 text-white"
+              className="data-[state=open]:bg-white data-[state=open]:text-slate-900 hover:bg-primary/5 bg-transparent text-slate-900"
             >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-white text-black">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Leaf className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold text-white">Green Guardian</span>
-                <span className="truncate text-xs text-zinc-400">
+                <span className="truncate font-semibold text-slate-900">Green Guardian</span>
+                <span className="truncate text-xs text-slate-600">
                   {role === "super-admin" ? "Super Admin" : "Admin"}
                 </span>
               </div>
@@ -193,10 +193,12 @@ export function AppSidebar({ role }) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent className="bg-[#121212]">
+
+      {/* Navigation Content */}
+      <SidebarContent className="bg-white">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-2 p-4">
               {(routes || []).map((route) => (
                 <NavLink
                   key={route.href}
@@ -205,8 +207,8 @@ export function AppSidebar({ role }) {
                     cn(
                       "flex items-center gap-3 rounded-md px-3 py-2 text-[14px] font-medium transition-colors hover:cursor-pointer",
                       isActive
-                        ? "bg-[#fff]/12 text-[#FFFFFF]/80 border-1 border-[#EDEDED]/8"
-                        : "text-white/80 hover:text-white hover:bg-zinc-800/50",
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                        : "text-slate-700 hover:text-slate-900 hover:bg-primary/20",
                     )
                   }
                 >
@@ -218,34 +220,33 @@ export function AppSidebar({ role }) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="bg-[#121212] border-t border-zinc-800">
+
+      {/* Footer with User Profile */}
+      <SidebarFooter className="bg-white border-t border-primary/20">
         <SidebarMenu>
           <SidebarMenuItem>
+            {/* User Profile Section */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  size="lg"
-                  className="data-[state=open]:bg-zinc-800 data-[state=open]:text-white hover:bg-zinc-800 text-white"
-                >
-                  <Avatar className="h-8 w-8 rounded-lg">
+                <div className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-primary/5 cursor-pointer transition-colors">
+                  <Avatar className="w-10 h-10">
                     <AvatarImage
                       src={userData.avatarUrl || "/placeholder.svg?height=32&width=32&query=default%20avatar"}
                       alt={userData.name || "User"}
                     />
-                    <AvatarFallback className="rounded-full bg-[#121212] text-zinc-300">
+                    <AvatarFallback className="bg-primary/10 text-primary">
                       {getInitials(userData.name) || "UU"}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold text-white">{userData.name || "User"}</span>
-                    <span className="truncate text-xs text-zinc-400">{userData.email || "user@example.com"}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-900 truncate">{userData.name || "User"}</p>
+                    <p className="text-xs text-slate-600 truncate">{userData.email || "user@example.com"}</p>
                   </div>
-                  <MoreHorizontal className="ml-auto size-4 text-zinc-400" />
-                </SidebarMenuButton>
+                </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg bg-[#121212] border-[#EDEDED]/8 text-zinc-300"
-                side="bottom"
+                className="w-56 rounded-lg bg-white border-primary/20 text-slate-700"
+                side="top"
                 align="end"
                 sideOffset={4}
               >
@@ -256,19 +257,19 @@ export function AppSidebar({ role }) {
                         src={userData.avatarUrl || "/placeholder.svg?height=32&width=32&query=default%20avatar"}
                         alt={userData.name || "User"}
                       />
-                      <AvatarFallback className="rounded-lg bg-[#121212] text-zinc-300">
+                      <AvatarFallback className="rounded-lg bg-primary/10 text-primary">
                         {getInitials(userData.name) || "UU"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold text-white">{userData.name || "User"}</span>
-                      <span className="truncate text-xs text-zinc-400">{userData.email || "user@example.com"}</span>
+                      <span className="truncate font-semibold text-slate-900">{userData.name || "User"}</span>
+                      <span className="truncate text-xs text-slate-600">{userData.email || "user@example.com"}</span>
                     </div>
                   </div>
                 </DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-white/12" />
+                <DropdownMenuSeparator className="bg-primary/20" />
                 <DropdownMenuItem
-                  className="text-white/80 hover:text-[#FFFFFF]/80 hover:bg-[#fff]/12 focus:bg-[#fff]/12 focus:text-[#FFFFFF]/80 cursor-pointer transition-colors"
+                  className="text-slate-700 hover:text-slate-900 hover:bg-primary/5 focus:bg-primary/5 focus:text-slate-900 cursor-pointer transition-colors"
                   onClick={() => {
                     const settingsPath = role === "super-admin" ? "/super-admin/settings" : "/admin/settings"
                     window.location.href = settingsPath
@@ -278,7 +279,7 @@ export function AppSidebar({ role }) {
                   Profile Settings
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  className="text-red-400 hover:text-red-300 focus:text-red-300 hover:bg-[#fff]/12 focus:bg-[#fff]/12 cursor-pointer transition-colors"
+                  className="text-red-600 hover:text-red-700 focus:text-red-700 hover:bg-red-50 focus:bg-red-50 cursor-pointer transition-colors"
                   onClick={() => {
                     Cookies.remove("access_token")
                     window.location.href = "/signin"
@@ -295,6 +296,3 @@ export function AppSidebar({ role }) {
     </Sidebar>
   )
 }
-
-
-
