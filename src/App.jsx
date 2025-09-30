@@ -27,7 +27,6 @@ import {
   UserManagement,
   SocietyManagement,
   SuperAdminAnalytics,
-  SuperAdminSettings,
 } from "./Pages";
 
 import "./index.css";
@@ -134,7 +133,7 @@ function App() {
         },
         {
           path: "settings",
-          element: <SuperAdminSettings />,
+          element: <Settings />,
         },
         {
           path: "*",

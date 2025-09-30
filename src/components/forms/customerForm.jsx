@@ -1,31 +1,22 @@
+"use client";
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { X } from "lucide-react";
 
 const CustomerForm = ({ onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
-    name: "",
+    first_name: "",
+    last_name: "",
     email: "",
-    phone: "",
-    address: "",
-    subscriptionPlan: "",
-    customerStatus: "Active",
-    notes: "",
+    phone_number: "",
   });
 
   const [errors, setErrors] = useState({});
 
-  const handleInputChange = () => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -59,8 +50,11 @@ const CustomerForm = ({ onClose, onSubmit }) => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
+    if (!formData.first_name.trim()) {
+      newErrors.first_name = "First name is required";
+    }
+    if (!formData.last_name.trim()) {
+      newErrors.last_name = "Last name is required";
     }
 
     if (!formData.email.trim()) {
@@ -69,18 +63,8 @@ const CustomerForm = ({ onClose, onSubmit }) => {
       newErrors.email = "Email is invalid";
     }
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
-    } else if (!/^03\d{9}$/.test(formData.phone)) {
-      newErrors.phone = "Phone number must be in format 03XXXXXXXXX";
-    }
-
-    if (!formData.address.trim()) {
-      newErrors.address = "Address is required";
-    }
-
-    if (!formData.subscriptionPlan) {
-      newErrors.subscriptionPlan = "Subscription plan is required";
+    if (!formData.phone_number.trim()) {
+      newErrors.phone_number = "Phone number is required";
     }
 
     setErrors(newErrors);
@@ -92,18 +76,16 @@ const CustomerForm = ({ onClose, onSubmit }) => {
 
     if (validateForm()) {
       console.log("Customer Form Data:", formData);
-      onSubmit();
+      onSubmit(formData);
       onClose();
 
       // Reset form
       setFormData({
-        name: "",
+        first_name: "",
+        last_name: "",
         email: "",
-        phone: "",
-        address: "",
-        subscriptionPlan: "",
-        customerStatus: "Active",
-        notes: "",
+        phone_number: "",
+        profile_picture: "",
       });
     }
   };
@@ -127,31 +109,44 @@ const CustomerForm = ({ onClose, onSubmit }) => {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="p-6 space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Name */}
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+          {/* First Name */}
           <div className="space-y-2">
-            <Label htmlFor="name">
-              Full Name <span className="text-red-500">*</span>
-            </Label>
+            <Label htmlFor="first_name">First Name</Label>
             <Input
-              id="name"
-              name="name"
+              id="first_name"
+              name="first_name"
               type="text"
-              placeholder="Enter customer name"
-              value={formData.name}
+              placeholder="Enter first name"
+              value={formData.first_name}
               onChange={handleInputChange}
-              className={errors.name ? "border-red-500" : ""}
+              className={errors.first_name ? "border-red-500" : ""}
             />
-            {errors.name && (
-              <p className="text-sm text-red-500">{errors.name}</p>
+            {errors.first_name && (
+              <p className="text-sm text-red-500">{errors.first_name}</p>
+            )}
+          </div>
+
+          {/* Last Name */}
+          <div className="space-y-2">
+            <Label htmlFor="last_name">Last Name</Label>
+            <Input
+              id="last_name"
+              name="last_name"
+              type="text"
+              placeholder="Enter last name"
+              value={formData.last_name}
+              onChange={handleInputChange}
+              className={errors.last_name ? "border-red-500" : ""}
+            />
+            {errors.last_name && (
+              <p className="text-sm text-red-500">{errors.last_name}</p>
             )}
           </div>
 
           {/* Email */}
           <div className="space-y-2">
-            <Label htmlFor="email">
-              Email Address <span className="text-red-500">*</span>
-            </Label>
+            <Label htmlFor="email">Email Address</Label>
             <Input
               id="email"
               name="email"
@@ -168,109 +163,29 @@ const CustomerForm = ({ onClose, onSubmit }) => {
 
           {/* Phone */}
           <div className="space-y-2">
-            <Label htmlFor="phone">
-              Phone Number <span className="text-red-500">*</span>
-            </Label>
+            <Label htmlFor="phone_number">Phone Number</Label>
             <Input
-              id="phone"
-              name="phone"
+              id="phone_number"
+              name="phone_number"
               type="tel"
               placeholder="03XXXXXXXXX"
-              value={formData.phone}
+              value={formData.phone_number}
               onChange={handleInputChange}
-              className={errors.phone ? "border-red-500" : ""}
+              className={errors.phone_number ? "border-red-500" : ""}
             />
-            {errors.phone && (
-              <p className="text-sm text-red-500">{errors.phone}</p>
+            {errors.phone_number && (
+              <p className="text-sm text-red-500">{errors.phone_number}</p>
             )}
           </div>
-
-          {/* Subscription Plan */}
-          <div className="space-y-2">
-            <Label htmlFor="subscriptionPlan">
-              Subscription Plan <span className="text-red-500">*</span>
-            </Label>
-            <Select
-              value={formData.subscriptionPlan}
-              onValueChange={(value) =>
-                handleSelectChange("subscriptionPlan", value)
-              }
-            >
-              <SelectTrigger
-                className={errors.subscriptionPlan ? "border-red-500" : ""}
-              >
-                <SelectValue placeholder="Select subscription plan" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Basic">Basic</SelectItem>
-                <SelectItem value="Standard">Standard</SelectItem>
-                <SelectItem value="Premium">Premium</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.subscriptionPlan && (
-              <p className="text-sm text-red-500">{errors.subscriptionPlan}</p>
-            )}
-          </div>
-
-          {/* Customer Status */}
-          <div className="space-y-2 md:col-span-1">
-            <Label htmlFor="customerStatus">Customer Status</Label>
-            <Select
-              value={formData.customerStatus}
-              onValueChange={(value) =>
-                handleSelectChange("customerStatus", value)
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Active">Active</SelectItem>
-                <SelectItem value="Inactive">Inactive</SelectItem>
-                <SelectItem value="Suspended">Suspended</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Address */}
-        <div className="space-y-2">
-          <Label htmlFor="address">
-            Address <span className="text-red-500">*</span>
-          </Label>
-          <Textarea
-            id="address"
-            name="address"
-            placeholder="Enter customer address"
-            value={formData.address}
-            onChange={handleInputChange}
-            className={`min-h-[80px] ${errors.address ? "border-red-500" : ""}`}
-          />
-          {errors.address && (
-            <p className="text-sm text-red-500">{errors.address}</p>
-          )}
-        </div>
-
-        {/* Notes */}
-        <div className="space-y-2">
-          <Label htmlFor="notes">Additional Notes</Label>
-          <Textarea
-            id="notes"
-            name="notes"
-            placeholder="Enter any additional notes about the customer"
-            value={formData.notes}
-            onChange={handleInputChange}
-            className="min-h-[80px]"
-          />
         </div>
 
         {/* Form Actions */}
-        <div className="flex flex-col sm:flex-row gap-3 pt-4">
+        <div className="w-full grid grid-cols-1 sm:flex sm:justify-end sm:space-x-2 space-y-2 sm:space-y-0 mt-6">
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto bg-transparent"
           >
             Cancel
           </Button>
