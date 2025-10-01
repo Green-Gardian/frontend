@@ -50,8 +50,10 @@ export const addStaff = async (staffData) => {
 
     const data = await response.json();
 
+    console.log("Add staff response data:", data);
+
     if (!response.ok) {
-      throw new Error(data.message || "Failed to add staff member");
+     return { error: data.message || "Failed to add staff" };
     }
 
     return data;

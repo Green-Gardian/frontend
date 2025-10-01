@@ -68,9 +68,17 @@ const SignIn = () => {
     e.preventDefault();
     const res = await signInFunc(credentials);
 
+    
+    if(res.role === 'resident' || res.role === 'driver'){
+    
+      setError("Access denied. ");
+      return;
+      
+    }
+    
+
     if (res.error) {
       setError(res.error);
-      // Show resend verification option if it's a verification error
       if (res.error.includes("verify your email")) {
         setShowResendVerification(true);
       }

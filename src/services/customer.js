@@ -43,10 +43,15 @@ export const addResident = async (residentData) => {
         }),
       }
     );
+
+    const data = await response.json();
+
+    console.log("Add resident response data:", data);
+
     if (!response.ok) {
-      throw new Error("Failed to add resident");
+      return { error: data.message || "Failed to add resident" };
     }
-    return await response.json();
+    return {success: true, data};  
   } catch (error) {
     console.error("Error adding resident:", error);
     throw error;

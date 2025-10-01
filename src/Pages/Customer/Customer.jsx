@@ -52,6 +52,7 @@ const Customer = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [customerRecords, setCustomerRecords] = useState([]);
   const [cardsData, setCardsData] = useState([]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     setUsername(Cookies.get("username"));
@@ -240,19 +241,17 @@ const Customer = () => {
 
   const onSubmit = async (formData) => {
     try {
-
       console.log("Submitting customer form data:", formData);
 
       const response = await addResident(formData);
       if (!response.success) {
-        console.log(response.error);
+        setError(response.error);
       } else {
         fetchCustomers();
         onClose();
       }
     } catch (error) {
       console.error("Error adding resident:", error);
-      // alert("Failed to add customer");
     }
   };
 
@@ -486,7 +485,12 @@ const Customer = () => {
       </div>
 
       <Modal isOpen={isModalOpen}>
-        <CustomerForm onClose={onClose} onSubmit={onSubmit} />
+        <CustomerForm
+          onClose={onClose}
+          onSubmit={onSubmit}
+          error={error}
+          setError={setError}
+        />
       </Modal>
     </div>
   );

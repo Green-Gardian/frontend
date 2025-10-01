@@ -187,9 +187,9 @@ const Messaging = () => {
             <div className="p-4 border-b flex items-center justify-between">
               <h1 className="text-xl font-semibold">Messages</h1>
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="md:flex hidden">
+                {/* <Button variant="ghost" size="icon" className="md:flex hidden">
                   <Plus className="h-5 w-5" />
-                </Button>
+                </Button> */}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -239,7 +239,7 @@ const Messaging = () => {
                               .join("")}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                        {/* <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span> */}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start">
@@ -298,19 +298,19 @@ const Messaging = () => {
                       {selectedConversation.chattitle}
                     </h2>
                     <div className="flex items-center gap-1">
-                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                      <span className="text-xs text-gray-500">Online</span>
+                      {/* <span className="w-2 h-2 bg-green-500 rounded-full"></span> */}
+                      {/* <span className="text-xs text-gray-500">Online</span> */}
                     </div>
                   </div>
                 </div>
-                <Button
+                {/* <Button
                   variant="outline"
                   size="sm"
                   className="gap-1 bg-transparent"
                 >
                   <Phone className="h-4 w-4" />
                   <span className="hidden sm:inline">Call</span>
-                </Button>
+                </Button> */}
               </div>
 
               {/* Messages */}

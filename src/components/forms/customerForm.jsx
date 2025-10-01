@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X } from "lucide-react";
 
-const CustomerForm = ({ onClose, onSubmit }) => {
+const CustomerForm = ({ onClose, onSubmit, error, setError }) => {
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -77,16 +77,7 @@ const CustomerForm = ({ onClose, onSubmit }) => {
     if (validateForm()) {
       console.log("Customer Form Data:", formData);
       onSubmit(formData);
-      onClose();
-
-      // Reset form
-      setFormData({
-        first_name: "",
-        last_name: "",
-        email: "",
-        phone_number: "",
-        profile_picture: "",
-      });
+      // onClose();
     }
   };
 
@@ -110,6 +101,15 @@ const CustomerForm = ({ onClose, onSubmit }) => {
       {/* Form */}
       <form onSubmit={handleSubmit} className="p-6 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+          {error && (
+            <div
+              className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg"
+              role="alert"
+            >
+              {error}
+            </div>
+          )}
+
           {/* First Name */}
           <div className="space-y-2">
             <Label htmlFor="first_name">First Name</Label>
