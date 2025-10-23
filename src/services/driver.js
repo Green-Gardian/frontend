@@ -165,7 +165,7 @@ const getDriverWorkAreas = async (driverId) => {
     };
 
     const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:3001"}/driver/${driverId}/work-areas`,
+      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:3001"}/driver/work-areas`,
       options
     );
 
