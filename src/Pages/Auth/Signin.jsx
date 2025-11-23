@@ -22,11 +22,14 @@ const SignIn = () => {
   const [credentials, setCredentials] = useState({
     email: "",
     password: "",
+    totpCode: "",
   });
   const [error, setError] = useState("");
   const [showResendVerification, setShowResendVerification] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [resendMessage, setResendMessage] = useState("");
+  const [requiresMFA, setRequiresMFA] = useState(false);
+  const [requiresMFASetup, setRequiresMFASetup] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -66,18 +69,44 @@ const SignIn = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // If MFA is required but no code provided, show MFA input
+    if (requiresMFA && !credentials.totpCode) {
+      setError("Please enter your TOTP code from your authenticator app");
+      return;
+    }
+
     const res = await signInFunc(credentials);
 
-    
-    if(res.role === 'resident' || res.role === 'driver'){
-    
+    if (typeof res === "string") {
+      setError("An error occurred. Please try again.");
+      return;
+    }
+
+    if (res && res.requiresMFASetup === true) {
+      Cookies.set("access_token", res.access_token ? res.access_token : null);
+      Cookies.set("refresh_token", res.refresh_token);
+      Cookies.set("username", res.username);
+      Cookies.set("user_role", res.role);
+      Cookies.set("user_society_id", res.society_id);
+      const redirectPath = res.role === 'super_admin' ? "/super-admin/settings?mfa_setup=true" : "/admin/settings?mfa_setup=true";
+      window.location.href = redirectPath;
+      return;
+    }
+
+    if (res.role === 'resident' || res.role === 'driver') {
       setError("Access denied. ");
       return;
-      
     }
-    
 
     if (res.error) {
+      // Check if MFA is required
+      if (res.requiresMFA || res.error.includes("TOTP code is required")) {
+        setRequiresMFA(true);
+        setError("Please enter your TOTP code from your authenticator app");
+        return;
+      }
+      
       setError(res.error);
       if (res.error.includes("verify your email")) {
         setShowResendVerification(true);
@@ -191,6 +220,32 @@ const SignIn = () => {
                   </button>
                 </div>
               </div>
+
+              {requiresMFA && (
+                <div className="space-y-2">
+                  <Label htmlFor="totpCode" className="text-sm font-medium">
+                    Authentication Code (TOTP)
+                  </Label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                      <Terminal size={18} />
+                    </div>
+                    <Input
+                      id="totpCode"
+                      placeholder="Enter 6-digit code from your authenticator app"
+                      onChange={handleChange}
+                      name="totpCode"
+                      type="text"
+                      maxLength={6}
+                      className="pl-10 py-5 bg-gray-50"
+                      autoComplete="one-time-code"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Enter the 6-digit code from your authenticator app
+                  </p>
+                </div>
+              )}
 
               <div className="flex items-center justify-between pt-2">
                 <div className="flex items-center space-x-2">

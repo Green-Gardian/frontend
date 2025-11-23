@@ -40,12 +40,12 @@ const signInFunc = async (credentials) => {
     const data = await response.json();
 
     if (!response.ok) {
-      return { error: data.message };
+      return { error: data.message, requiresMFA: data.requiresMFA };
     }
 
     return data;
   } catch (err) {
-    return "Error while fetching!";
+    return { error: "Error while fetching!" };
   }
 };
 
@@ -379,6 +379,137 @@ const changePassword = async ({
   }
 };
 
+// MFA Functions
+const getMFAStatus = async () => {
+  try {
+    const token = Cookies.get("access_token");
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/mfa/status`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+
+    return data;
+  } catch (err) {
+    return { error: "Error while fetching MFA status!" };
+  }
+};
+
+const generateMFASecret = async () => {
+  try {
+    const token = Cookies.get("access_token");
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/mfa/generate-secret`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+
+    return data;
+  } catch (err) {
+    return { error: "Error while generating MFA secret!" };
+  }
+};
+
+const enableMFA = async (totpCode) => {
+  try {
+    const token = Cookies.get("access_token");
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/mfa/enable`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ totpCode }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+
+    return data;
+  } catch (err) {
+    return { error: "Error while enabling MFA!" };
+  }
+};
+
+const disableMFA = async () => {
+  try {
+    const token = Cookies.get("access_token");
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/mfa/disable`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+
+    return data;
+  } catch (err) {
+    return { error: "Error while disabling MFA!" };
+  }
+};
+
+const verifyMFA = async (email, totpCode) => {
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/mfa/verify`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, totpCode }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+
+    return data;
+  } catch (err) {
+    return { error: "Error while verifying MFA!" };
+  }
+};
+
 export {
   signUp,
   signInFunc,
@@ -393,4 +524,9 @@ export {
   getProfileData,
   updateProfile,
   changePassword,
+  getMFAStatus,
+  generateMFASecret,
+  enableMFA,
+  disableMFA,
+  verifyMFA,
 };

@@ -11,6 +11,7 @@ import imageCompression from "browser-image-compression"
 
 import { getProfileData, changePassword, updateProfile } from "../../services/auth"
 import { uploadToCloudinary } from "../../utils/upload-to-cloudinary"
+import MFASetup from "../../components/MFASetup"
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("profile")
@@ -61,6 +62,14 @@ const Settings = () => {
       }
     }
     fetchProfileData()
+
+    // Check if MFA setup is required from URL parameter
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get("mfa_setup") === "true") {
+      setActiveTab("security")
+      // Clean up URL
+      window.history.replaceState({}, "", window.location.pathname)
+    }
   }, [])
 
   const handleProfileUpdate = async () => {
@@ -437,17 +446,22 @@ const Settings = () => {
           )}
 
           {activeTab === "security" && (
-            <Card className="bg-white border-gray-200 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-[#121212] flex items-center space-x-2">
-                  <Lock className="h-5 w-5" />
-                  <span>Security Settings</span>
-                </CardTitle>
-                <CardDescription className="text-gray-600">
-                  Manage your password and security preferences
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
+            <div className="space-y-6">
+              {/* MFA Section */}
+              <MFASetup />
+
+              {/* Password Change Section */}
+              <Card className="bg-white border-gray-200 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-[#121212] flex items-center space-x-2">
+                    <Lock className="h-5 w-5" />
+                    <span>Change Password</span>
+                  </CardTitle>
+                  <CardDescription className="text-gray-600">
+                    Update your account password
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="currentPassword" className="text-gray-700">
                     Current Password
@@ -555,6 +569,7 @@ const Settings = () => {
                 </div>
               </CardContent>
             </Card>
+            </div>
           )}
 
           {activeTab === "notifications" && (
