@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,7 +20,8 @@ import {
   Loader2,
 } from "lucide-react";
 import Cookies from "js-cookie";
-import { getAvailableRoles, getSocieties } from "@/services/staff";
+import { getAvailableRoles } from "@/services/staff";
+import { fetchSocietiesForStaff } from "@/redux/slices/staffSlice";
 
 const StaffForm = ({
   onClose,
@@ -40,8 +42,10 @@ const StaffForm = ({
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [availableRoles, setAvailableRoles] = useState([]);
-  const [societies, setSocieties] = useState([]);
   const [userRole, setUserRole] = useState("");
+  const dispatch = useDispatch();
+  const staffState = useSelector((state) => state.staff);
+  const societies = staffState?.societies || [];
 
   useEffect(() => {
     const role = propUserRole || Cookies.get("user_role") || "";
@@ -53,18 +57,9 @@ const StaffForm = ({
 
     // Only super admin needs to fetch societies
     if (role === "super_admin") {
-      fetchSocieties();
+      dispatch(fetchSocietiesForStaff());
     }
-  }, [propUserRole]);
-
-  const fetchSocieties = async () => {
-    try {
-      const response = await getSocieties();
-      setSocieties(response.societies || []);
-    } catch (error) {
-      console.error("Error fetching societies:", error);
-    }
-  };
+  }, [propUserRole, dispatch]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({

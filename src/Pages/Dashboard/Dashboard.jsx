@@ -9,7 +9,6 @@ import { RefreshCw, LocateFixed } from "lucide-react"
 import Cookies from "js-cookie"
 import InfoCards from "@/components/info-cards"
 
-// Fix for Leaflet icon issues in Next.js
 const fixLeafletIcons = () => {
   delete L.Icon.Default.prototype._getIconUrl
   L.Icon.Default.mergeOptions({
@@ -23,7 +22,7 @@ const fixLeafletIcons = () => {
 const dustbins = [
   {
     id: 1,
-    location: [24.8607, 67.0011], // Karachi coordinates
+    location: [24.8607, 67.0011],
     fillLevel: 75,
     lastEmptied: "2024-06-01",
     status: "Normal",

@@ -156,11 +156,14 @@ export const getAvailableRoles = (currentUserRole) => {
       { value: "admin", label: "Admin" },
       { value: "customer_support", label: "Customer Support" },
       { value: "driver", label: "Driver" },
+      { value: "sub_admin", label: "Sub_Admin" },
+
     ];
   } else if (currentUserRole === 'admin') {
     return [
       { value: "customer_support", label: "Customer Support" },
       { value: "driver", label: "Driver" },
+      { value: "sub_admin", label: "Sub_Admin" },
     ];
   }
   return [];

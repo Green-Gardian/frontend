@@ -1,63 +1,61 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useDispatch, useSelector } from "react-redux";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bell, Mail, MessageSquare, Smartphone } from "lucide-react";
-import { getUserNotificationPreferences, updateUserNotificationPreferences } from "@/services/alerts";
+import { fetchNotificationPreferences, updateNotificationPreferences } from "@/redux/slices/alertsSlice";
 
 const NotificationPreferences = () => {
-  const [preferences, setPreferences] = useState([]);
+  const dispatch = useDispatch();
+  const preferences = useSelector((state) => state.alerts.preferences) || [];
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [updatingPreferenceId, setUpdatingPreferenceId] = useState(null);
 
   useEffect(() => {
-    fetchPreferences();
-  }, []);
-
-  const fetchPreferences = async () => {
-    try {
-      setIsLoading(true);
-      const response = await getUserNotificationPreferences();
-      if (response.success && response.preferences) {
-        setPreferences(response.preferences);
+    const loadPreferences = async () => {
+      try {
+        setIsLoading(true);
+        await dispatch(fetchNotificationPreferences()).unwrap();
+      } catch (error) {
+        console.error("Error fetching preferences:", error);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching preferences:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+    loadPreferences();
+  }, [dispatch]);
 
   const handleToggle = async (alertTypeId, channel) => {
     try {
-      const updatedPreferences = preferences.map(pref => {
-        if (pref.alert_type_id === alertTypeId) {
-          return {
-            ...pref,
-            [channel]: !pref[channel]
-          };
-        }
-        return pref;
-      });
+      const preferenceToUpdate = preferences.find(
+        (pref) => pref.alert_type_id === alertTypeId
+      );
+      if (!preferenceToUpdate) return;
 
-      setPreferences(updatedPreferences);
+      const payload = {
+        alertTypeId,
+        emailEnabled:
+          channel === "email_enabled"
+            ? !preferenceToUpdate.email_enabled
+            : preferenceToUpdate.email_enabled,
+        smsEnabled:
+          channel === "sms_enabled"
+            ? !preferenceToUpdate.sms_enabled
+            : preferenceToUpdate.sms_enabled,
+        pushEnabled:
+          channel === "push_enabled"
+            ? !preferenceToUpdate.push_enabled
+            : preferenceToUpdate.push_enabled,
+      };
 
-      // Update backend
-      const preferenceToUpdate = updatedPreferences.find(p => p.alert_type_id === alertTypeId);
-      if (preferenceToUpdate) {
-        await updateUserNotificationPreferences({
-          alertTypeId,
-          emailEnabled: preferenceToUpdate.email_enabled,
-          smsEnabled: preferenceToUpdate.sms_enabled,
-          pushEnabled: preferenceToUpdate.push_enabled
-        });
-      }
+      setUpdatingPreferenceId(alertTypeId);
+      await dispatch(updateNotificationPreferences(payload)).unwrap();
     } catch (error) {
       console.error("Error updating preference:", error);
-      // Revert on error
-      fetchPreferences();
+    } finally {
+      setUpdatingPreferenceId(null);
     }
   };
 
@@ -130,6 +128,7 @@ const NotificationPreferences = () => {
                     id={`email-${preference.alert_type_id}`}
                     checked={preference.email_enabled}
                     onCheckedChange={() => handleToggle(preference.alert_type_id, "email_enabled")}
+                    disabled={updatingPreferenceId === preference.alert_type_id}
                   />
                 </div>
 
@@ -147,6 +146,7 @@ const NotificationPreferences = () => {
                     id={`sms-${preference.alert_type_id}`}
                     checked={preference.sms_enabled}
                     onCheckedChange={() => handleToggle(preference.alert_type_id, "sms_enabled")}
+                    disabled={updatingPreferenceId === preference.alert_type_id}
                   />
                 </div>
 
@@ -164,6 +164,7 @@ const NotificationPreferences = () => {
                     id={`push-${preference.alert_type_id}`}
                     checked={preference.push_enabled}
                     onCheckedChange={() => handleToggle(preference.alert_type_id, "push_enabled")}
+                    disabled={updatingPreferenceId === preference.alert_type_id}
                   />
                 </div>
               </div>

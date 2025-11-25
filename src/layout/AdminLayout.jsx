@@ -93,7 +93,7 @@ const AdminLayout = () => {
             <div className="block md:hidden absolute right-3 top-5 ">
               <SidebarTrigger />
             </div>
-            <div className="flex flex-1 flex-col gap-4  bg-whiteF">
+            <div className="flex flex-1 flex-col  bg-white">
               <Outlet className="rounded-3xl" />
             </div>
           </SidebarInset>

@@ -67,11 +67,11 @@ const superAdminRoutes = [
     icon: <MessageCircleMore className="h-5 w-5" />,
     href: "/super-admin/messages",
   },
-  {
-    title: "Settings",
-    icon: <Settings className="h-5 w-5" />,
-    href: "/super-admin/settings",
-  },
+  // {
+  //   title: "Settings",
+  //   icon: <Settings className="h-5 w-5" />,
+  //   href: "/super-admin/settings",
+  // },
 ]
 
 const adminRoutes = [
@@ -100,21 +100,21 @@ const adminRoutes = [
     icon: <BarChart3 className="h-5 w-5" />,
     href: "/admin/analytics",
   },
-  {
-    title: "Payment",
-    icon: <CreditCard className="h-5 w-5" />,
-    href: "/admin/payment",
-  },
+  // {
+  //   title: "Payment",
+  //   icon: <CreditCard className="h-5 w-5" />,
+  //   href: "/admin/payment",
+  // },
   {
     title: "Messaging",
     icon: <MessageCircleMore className="h-5 w-5" />,
     href: "/admin/messaging",
   },
-  {
-    title: "Settings",
-    icon: <Settings className="h-5 w-5" />,
-    href: "/admin/settings",
-  },
+  // {
+  //   title: "Settings",
+  //   icon: <Settings className="h-5 w-5" />,
+  //   href: "/admin/settings",
+  // },
 ]
 
 function getInitials(name) {

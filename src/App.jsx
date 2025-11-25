@@ -29,6 +29,9 @@ import {
   SuperAdminAnalytics,
 } from "./Pages";
 
+import { Provider } from "react-redux";
+import store from "./redux/store";
+
 import "./index.css";
 
 // Component to redirect based on user role
@@ -151,7 +154,7 @@ function App() {
     },
     {
       path: "reset-password",
-      element: <ResetPassword />,
+      element: <ResetPassword />, 
     },
     {
       path: "verify-email",
@@ -163,7 +166,11 @@ function App() {
     },
   ]);
 
-  return <RouterProvider router={router} />;
+  return (
+    <Provider store={store}>
+      <RouterProvider router={router} />;
+    </Provider>
+  );
 }
 
 export default App;
