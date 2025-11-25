@@ -74,17 +74,21 @@ const Customer = () => {
       console.log("Fetched customers:", data);
 
       setCustomerRecords(
-        data.users.map((user, index) => ({
-          customerId: user.id,
-          name: `${user.first_name} ${user.last_name}`,
-          email: user.email,
-          phone: user.phone_number,
-          customerStatus: user.is_blocked ? "Inactive" : "Active",
-          is_blocked: user.is_blocked,
-          created_at: user.created_at,
-        }))
+        data.users
+          .filter((user) => user.role !== "admin")   
+          .map((user) => ({
+            customerId: user.id,
+            name: `${user.first_name} ${user.last_name}`,
+            email: user.email,
+            phone: user.phone_number,
+            customerStatus: user.is_blocked ? "Inactive" : "Active",
+            is_blocked: user.is_blocked,
+            created_at: user.created_at,
+          }))
       );
-    } catch (error) {
+
+      
+      } catch (error) {
       console.error("Error fetching customers:", error);
       setCustomerRecords([]);
     }
