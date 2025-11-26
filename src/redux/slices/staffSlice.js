@@ -16,10 +16,10 @@ export const fetchStaff = createAsyncThunk(
   async (params, thunkAPI) => {
     try {
 
-      console.log("params", params);
+      console.log("params : ", params);
 
       const res = await getStaff(params);
-      
+
       console.log("res", res);
       if (res?.error) return thunkAPI.rejectWithValue(res.error);
       return res;

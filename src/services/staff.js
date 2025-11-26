@@ -12,6 +12,9 @@ const getAuthHeaders = () => ({
 export const getStaff = async (params = {}) => {
   try {
     const queryParams = new URLSearchParams();
+
+
+    console.log("params : ", params);
     
     if (params.page) queryParams.append('page', params.page);
     if (params.limit) queryParams.append('limit', params.limit);

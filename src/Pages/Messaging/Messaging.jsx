@@ -19,8 +19,7 @@ const Messaging = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const messagesEndRef = useRef(null)
 
-  const { isConnected, error, joinRoom, sendMessage, onReceiveMessage, onMessageSent, onConnect, onDisconnect } =
-    useChatWebSocket()
+  const { joinRoom, sendMessage, onReceiveMessage, onMessageSent, onConnect, onDisconnect } = useChatWebSocket()
 
   useEffect(() => {
     const storedUsername = Cookies.get("username")

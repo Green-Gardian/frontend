@@ -27,6 +27,7 @@ import {
   UserManagement,
   SocietyManagement,
   SuperAdminAnalytics,
+  ActivityLogs,
 } from "./Pages";
 
 import { Provider } from "react-redux";
@@ -95,6 +96,10 @@ function App() {
         {
           path: "alerts",
           element: <Alerts />,
+        },
+        {
+          path: "activity-logs",
+          element: <ActivityLogs />,
         },
         {
           path: "analytics",

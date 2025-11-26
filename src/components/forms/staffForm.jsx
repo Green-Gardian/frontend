@@ -165,7 +165,7 @@ const StaffForm = ({
   };
 
   return (
-    <div className="w-full bg-white rounded-lg shadow-xl">
+    <div className="w-full bg-white rounded-lg ">
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-gray-200">
         <div className="flex items-center gap-2">

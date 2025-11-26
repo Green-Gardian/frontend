@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 import {
   Table,
@@ -41,20 +42,24 @@ import CustomerForm from "../../components/forms/customerForm";
 
 import Cookies from "js-cookie";
 
-import { getUsersBySociety, addResident } from "../../services/customer";
+import {
+  fetchSocietyUsers,
+  addNewResident,
+} from "../../redux/slices/customerSlice";
 import { blockUser } from "../../services/auth";
 
 const Customer = () => {
+  const dispatch = useDispatch();
+  const { users, loading, error } = useSelector((state) => state.customer);
+
   const [username, setUsername] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [customerRecords, setCustomerRecords] = useState([]);
   const [cardsData, setCardsData] = useState([]);
-  const [error, setError] = useState("");
 
-  useEffect(() => {
+  useEffect(() => {   
     setUsername(Cookies.get("username"));
   }, []);
 
@@ -68,35 +73,27 @@ const Customer = () => {
     document.title = "Customers - Admin Dashboard";
   }, []);
 
-  const fetchCustomers = async () => {
-    try {
-      const data = await getUsersBySociety();
-      console.log("Fetched customers:", data);
-
-      setCustomerRecords(
-        data.users
-          .filter((user) => user.role !== "admin")   
-          .map((user) => ({
-            customerId: user.id,
-            name: `${user.first_name} ${user.last_name}`,
-            email: user.email,
-            phone: user.phone_number,
-            customerStatus: user.is_blocked ? "Inactive" : "Active",
-            is_blocked: user.is_blocked,
-            created_at: user.created_at,
-          }))
-      );
-
-      
-      } catch (error) {
-      console.error("Error fetching customers:", error);
-      setCustomerRecords([]);
-    }
-  };
-
+  // Fetch customers via Redux on mount
   useEffect(() => {
-    fetchCustomers();
-  }, []);
+    dispatch(fetchSocietyUsers());
+  }, [dispatch]);
+
+  // Derive customer records from Redux state
+  const customerRecords = useMemo(
+    () =>
+      (users || [])
+        .filter((user) => user.role !== "admin" && user.role !== "sub_admin" && user.role !== "customer_support" && user.role !== "driver" && user.role !== "super_admin")
+        .map((user) => ({
+          customerId: user.id,
+          name: `${user.first_name} ${user.last_name}`,
+          email: user.email,
+          phone: user.phone_number,
+          customerStatus: user.is_blocked ? "Inactive" : "Active",
+          is_blocked: user.is_blocked,
+          created_at: user.created_at,
+        })),
+    [users]
+  );
 
   useEffect(() => {
     const totalCustomers = customerRecords?.length;
@@ -226,9 +223,10 @@ const Customer = () => {
       if (!response.success) {
         alert(response.error);
       } else {
-        fetchCustomers();
+        // Refresh customers from Redux after blocking/unblocking
+        dispatch(fetchSocietyUsers());
       }
-    } catch (err) {
+    } catch {
       alert("Failed to update user status");
     }
   };
@@ -247,15 +245,14 @@ const Customer = () => {
     try {
       console.log("Submitting customer form data:", formData);
 
-      const response = await addResident(formData);
-      if (!response.success) {
-        setError(response.error);
-      } else {
-        fetchCustomers();
-        onClose();
-      }
+      // Use Redux thunk to add a new resident
+      await dispatch(addNewResident(formData)).unwrap();
+
+      // No need to refetch; slice already updates users list
+      onClose();
     } catch (error) {
       console.error("Error adding resident:", error);
+      // Error message will be reflected in Redux state `error`
     }
   };
 
@@ -272,18 +269,18 @@ const Customer = () => {
     }
   };
 
-  const getPlanBadgeStyle = (plan) => {
-    switch (plan) {
-      case "Premium":
-        return "bg-[#F0F9FF] text-[#0369A1]";
-      case "Standard":
-        return "bg-[#F7FEE7] text-[#365314]";
-      case "Basic":
-        return "bg-[#FEF3E2] text-[#B54708]";
-      default:
-        return "bg-gray-100 text-gray-600";
-    }
-  };
+  // const getPlanBadgeStyle = (plan) => {
+  //   switch (plan) {
+  //     case "Premium":
+  //       return "bg-[#F0F9FF] text-[#0369A1]";
+  //     case "Standard":
+  //       return "bg-[#F7FEE7] text-[#365314]";
+  //     case "Basic":
+  //       return "bg-[#FEF3E2] text-[#B54708]";
+  //     default:
+  //       return "bg-gray-100 text-gray-600";
+  //   }
+  // };
 
   return (
     <div className="bg-white min-h-screen py-6 px-4 gap-y-6 flex flex-col w-auto">
@@ -352,7 +349,13 @@ const Customer = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {currentRecords.length > 0 ? (
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      Loading customer records...
+                    </TableCell>
+                  </TableRow>
+                ) : currentRecords.length > 0 ? (
                   currentRecords.map((record, index) => (
                     <TableRow
                       key={index}
@@ -420,11 +423,23 @@ const Customer = () => {
                     </TableRow>
                   ))
                 ) : (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
-                      No customer records found matching your search.
-                    </TableCell>
-                  </TableRow>
+                  <>
+                    {error && (
+                      <TableRow>
+                        <TableCell
+                          colSpan={8}
+                          className="text-center py-4 text-red-600"
+                        >
+                          {error}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8">
+                        No customer records found matching your search.
+                      </TableCell>
+                    </TableRow>
+                  </>
                 )}
               </TableBody>
             </Table>
@@ -446,7 +461,7 @@ const Customer = () => {
               </PaginationItem>
 
               <div className="hidden sm:flex">
-                {getPageNumbers().map((pageNum, index) => (
+                {getPageNumbers().map((pageNum) => (
                   <PaginationItem key={pageNum}>
                     <PaginationLink
                       onClick={() => handlePageChange(pageNum)}
@@ -489,12 +504,7 @@ const Customer = () => {
       </div>
 
       <Modal isOpen={isModalOpen}>
-        <CustomerForm
-          onClose={onClose}
-          onSubmit={onSubmit}
-          error={error}
-          setError={setError}
-        />
+        <CustomerForm onClose={onClose} onSubmit={onSubmit} error={error} />
       </Modal>
     </div>
   );

@@ -14,6 +14,7 @@ import {
   UserCircle,
   MessageCircleMore,
   Building2,
+  FileClock,
 } from "lucide-react"
 
 import {
@@ -110,6 +111,11 @@ const adminRoutes = [
     icon: <MessageCircleMore className="h-5 w-5" />,
     href: "/admin/messaging",
   },
+  {
+    title: "Activity Logs",
+    icon: <FileClock className="h-5 w-5" />,
+    href: "/admin/activity-logs",
+  },
   // {
   //   title: "Settings",
   //   icon: <Settings className="h-5 w-5" />,
@@ -195,7 +201,7 @@ export function AppSidebar({ role }) {
       </SidebarHeader>
 
       {/* Navigation Content */}
-      <SidebarContent className="bg-white">
+      <SidebarContent className="bg-white hide-scrollbar">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2 p-4">

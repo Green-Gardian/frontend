@@ -285,7 +285,7 @@ const Vehicle = () => {
           </div>
 
           <div className="flex gap-2 w-full sm:w-auto">
-            <Button
+            {/* <Button
               variant="outline"
               className="w-full sm:w-auto"
               onClick={() => (window.location.href = "/admin/staff")}
@@ -293,7 +293,7 @@ const Vehicle = () => {
               <Users className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Manage Drivers</span>
               <span className="sm:hidden">Drivers</span>
-            </Button>
+            </Button> */}
 
             <Button className="w-full sm:w-auto " onClick={() => openModal()}>
               <Plus className="h-4 w-4 mr-2" />

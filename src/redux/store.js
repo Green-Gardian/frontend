@@ -10,6 +10,7 @@ import driverSlice from "./slices/driverSlice";
 import societyReducer from "./slices/societySlice";
 import staffReducer from "./slices/staffSlice";
 import vehicleSlice from "./slices/vehicleSlice";
+import activityLogsReducer from "./slices/activityLogsSlice";
 
 const store = configureStore({
   reducer: {
@@ -22,6 +23,7 @@ const store = configureStore({
     societies: societyReducer,
     staff: staffReducer,
     vehicles: vehicleSlice,
+    activityLogs: activityLogsReducer,
 },
 });
 

@@ -254,13 +254,17 @@ const authSlice = createSlice({
       // SUPER ADMIN — BLOCK USER
       .addCase(toggleBlockUser.fulfilled, (state, action) => {
         const { userId, isBlocked } = action.payload;
-        const user = state.users.find((u) => u._id === userId);
-        if (user) user.isBlocked = isBlocked;
+        const user = state.users.find((u) => u.id === userId || u._id === userId);
+        if (user) {
+          user.is_blocked = isBlocked;
+          // Also update isBlocked for backward compatibility
+          user.isBlocked = isBlocked;
+        }
       })
 
       // SUPER ADMIN — DELETE USER
       .addCase(deleteUserAccount.fulfilled, (state, action) => {
-        state.users = state.users.filter((u) => u._id !== action.payload);
+        state.users = state.users.filter((u) => u.id !== action.payload && u._id !== action.payload);
       })
 
       // SYSTEM STATS

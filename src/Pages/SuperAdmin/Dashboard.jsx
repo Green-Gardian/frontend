@@ -5,10 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Users, Building2, Activity, TrendingUp, Shield, UserCheck, AlertTriangle, CheckCircle } from "lucide-react"
-import { getSystemStats } from "@/services/auth"
+// Redux
+import { useDispatch, useSelector } from "react-redux"
+import { fetchSystemStats as fetchSystemStatsThunk } from "@/redux/slices/authSlice"
 
 const SuperAdminDashboard = () => {
-  const [stats, setStats] = useState(null)
+  const dispatch = useDispatch()
+  const { stats } = useSelector((state) => state.authSlice || {})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -19,12 +22,11 @@ const SuperAdminDashboard = () => {
   const fetchSystemStats = async () => {
     try {
       setLoading(true)
-      const response = await getSystemStats()
-
-      if (response.error) {
-        setError(response.error)
+      const action = await dispatch(fetchSystemStatsThunk())
+      if (fetchSystemStatsThunk.rejected.match(action)) {
+        setError(action.payload || "Failed to fetch system statistics")
       } else {
-        setStats(response)
+        setError(null)
       }
     } catch (err) {
       setError("Failed to fetch system statistics")

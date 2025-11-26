@@ -11,6 +11,7 @@ import { Analytics } from "./Analytics";
 import { Messaging } from "./Messaging";
 import { VerifyAndSetToken } from "./VerifyAndSetToken";
 import { Alerts } from "./Alerts";
+import { ActivityLogs } from "./ActivityLogs";
 
 // SuperAdmin exports
 export * from "./SuperAdmin";
@@ -30,5 +31,6 @@ export {
   Messaging,
   NotFound,
   VerifyAndSetToken,
-  Alerts
+  Alerts,
+  ActivityLogs,
 };

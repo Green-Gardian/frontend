@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useMemo, useCallback } from "react"
-import { useDispatch, useSelector } from "react-redux"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   Pagination,
@@ -22,14 +21,15 @@ import Modal from "@/components/modal"
 import StaffForm from "@/components/forms/staffForm"
 import EditStaffForm from "@/components/forms/editStaffForm"
 import Cookies from "js-cookie"
-
+// Redux
+import { useDispatch, useSelector } from "react-redux"
 import {
   fetchStaff,
   createStaff,
-  editUser,
+  editUser as editUserThunk,
   toggleBlockStatus,
   removeUser,
-  fetchSystemStats,
+  fetchSystemStats as fetchSystemStatsThunk,
 } from "@/redux/slices/staffSlice"
 
 // Helper function to format role names
@@ -62,25 +62,30 @@ const getStatusText = (isBlocked, isVerified) => {
 }
 
 const Staff = () => {
-  const [username, setUsername] = useState("")
+  const dispatch = useDispatch()
+  const staffState = useSelector((state) => state.staff || {})
+  const staffData = useMemo(() => staffState.list || [], [staffState.list])
+
+  // Initialize from cookies immediately so first fetch uses correct role/society
+  const [username] = useState(() => Cookies.get("username") || "")
   const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState(null)
-  const [userRole, setUserRole] = useState("")
-  const [societyId, setSocietyId] = useState(null)
+  const [userRole] = useState(() => Cookies.get("user_role") || "")
+  const [societyId] = useState(() => Cookies.get("society_id") || null)
   const [actionLoading, setActionLoading] = useState({})
   const [error, setError] = useState("")
-  const dispatch = useDispatch()
-  const { list: staffList, stats, pagination: paginationData, loading } = useSelector((state) => state.staff)
-  const staffData = staffList || []
-  const pagination = paginationData || {
+  const stats = staffState.stats
+  const loading = staffState.loading
+  const pagination = staffState.pagination || {
     currentPage: 1,
     totalPages: 1,
     limit: 7,
     totalUsers: staffData.length,
   }
+
   const cardsData = useMemo(() => {
     if (userRole === "super_admin") {
       const totalEmployees = stats?.userStats?.reduce((sum, role) => sum + (role.count || 0), 0) || 0
@@ -150,43 +155,40 @@ const Staff = () => {
   }, [stats, staffData, userRole])
 
   useEffect(() => {
-    setUsername(Cookies.get("username"))
-    setUserRole(Cookies.get("user_role") || "")
-    setSocietyId(Cookies.get("society_id") || null)
-  }, [])
-
-  useEffect(() => {
     if (!Cookies.get("access_token")) {
       window.location.href = "/signin"
     }
   }, [])
 
-  // Fetch staff data via Redux thunk
   const fetchStaffData = useCallback(async () => {
-    try {
-      const params = {
-        page: currentPage,
-        limit: 7,
-        search: searchTerm || undefined,
-        societyId: userRole === "admin" ? societyId : undefined,
-        role: userRole === "admin" ? "customer_support,driver,sub_admin" : undefined,
-      }
-      await dispatch(fetchStaff(params)).unwrap()
-    } catch (error) {
-      console.error("Error fetching staff:", error)
+    const params = {
+      page: currentPage,
+      limit: 7,
+      search: searchTerm || undefined,
+      societyId: userRole === "admin" ? societyId : undefined,
+      role: userRole === "admin" ? "customer_support,driver,sub_admin" : undefined,
     }
+    await dispatch(fetchStaff(params))
   }, [dispatch, currentPage, searchTerm, userRole, societyId])
 
-  // Fetch system stats (only for super admin)
-  useEffect(() => {
-    const loadData = async () => {
-      await fetchStaffData()
-      if (userRole === "super_admin") {
-        dispatch(fetchSystemStats())
+  const fetchSystemStats = useCallback(async () => {
+    try {
+      if (userRole !== "super_admin") {
+        return
       }
+      await dispatch(fetchSystemStatsThunk())
+    } catch (error) {
+      console.error("Error fetching stats:", error)
     }
-    loadData()
-  }, [dispatch, fetchStaffData, userRole])
+  }, [dispatch, userRole])
+
+  useEffect(() => {
+    fetchStaffData()
+  }, [fetchStaffData])
+
+  useEffect(() => {
+    fetchSystemStats()
+  }, [fetchSystemStats])
 
   // Reset to first page when search changes
   useEffect(() => {
@@ -236,6 +238,7 @@ const Staff = () => {
   }
 
   const openModal = () => {
+    setError("")
     setIsModalOpen(true)
   }
 
@@ -254,24 +257,20 @@ const Staff = () => {
       setError("")
       setIsModalOpen(false)
       await fetchStaffData()
-      if (userRole === "super_admin") {
-        dispatch(fetchSystemStats())
-      }
-    } catch (error) {
-      console.error("Error adding staff:", error)
-      setError(error?.message || "Failed to add staff")
+      await fetchSystemStats()
+    } catch (err) {
+      console.error("Error adding staff:", err)
+      setError(typeof err === "string" ? err : err?.message || "Failed to add staff")
     }
   }
 
   const onEditSubmit = async (formData) => {
     try {
-      await dispatch(editUser({ userId: selectedUser.id, data: formData })).unwrap()
+      await dispatch(editUserThunk({ userId: selectedUser.id, data: formData }))
       setIsEditModalOpen(false)
       setSelectedUser(null)
       await fetchStaffData()
-      if (userRole === "super_admin") {
-        dispatch(fetchSystemStats())
-      }
+      await fetchSystemStats()
     } catch (error) {
       console.error("Error updating staff:", error)
     }
@@ -280,22 +279,9 @@ const Staff = () => {
   const handleToggleBlock = async (userId, isBlocked) => {
     try {
       setActionLoading((prev) => ({ ...prev, [userId]: true }))
-      // First, dispatch the toggle action
-      await dispatch(toggleBlockStatus({ userId, isBlocked: !isBlocked })).unwrap()
-
-      // Then fetch fresh data from the server without depending on stale callback
-      const params = {
-        page: 1, // Reset to first page to ensure data consistency
-        limit: 7,
-        search: searchTerm || undefined,
-        societyId: userRole === "admin" ? societyId : undefined,
-        role: userRole === "admin" ? "customer_support,driver,sub_admin" : undefined,
-      }
-      await dispatch(fetchStaff(params)).unwrap()
-
-      if (userRole === "super_admin") {
-        dispatch(fetchSystemStats())
-      }
+      await dispatch(toggleBlockStatus({ userId, isBlocked: !isBlocked }))
+      await fetchStaffData()
+      await fetchSystemStats()
     } catch (error) {
       console.error("Error toggling user block:", error)
     } finally {
@@ -307,30 +293,15 @@ const Staff = () => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
         setActionLoading((prev) => ({ ...prev, [userId]: true }))
-        await dispatch(removeUser(userId)).unwrap()
-
-        const params = {
-          page: 1,
-          limit: 7,
-          search: searchTerm || undefined,
-          societyId: userRole === "admin" ? societyId : undefined,
-          role: userRole === "admin" ? "customer_support,driver,sub_admin" : undefined,
-        }
-        await dispatch(fetchStaff(params)).unwrap()
-
-        if (userRole === "super_admin") {
-          dispatch(fetchSystemStats())
-        }
+        await dispatch(removeUser(userId))
+        await fetchStaffData()
+        await fetchSystemStats()
       } catch (error) {
         console.error("Error deleting user:", error)
       } finally {
         setActionLoading((prev) => ({ ...prev, [userId]: false }))
       }
     }
-  }
-
-  const handleViewPerformance = (userId) => {
-    window.location.href = `/admin/staff-performance/${userId}`
   }
 
   const handleEditUser = (userId) => {
@@ -437,11 +408,6 @@ const Staff = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-x-2 justify-start">
-                          {/* <Eye
-                            className="h-4 w-4 cursor-pointer text-blue-600"
-                            onClick={() => handleViewPerformance(user.id)}
-                            title="View Performance"
-                          /> */}
                           <SquarePen
                             className="h-4 w-4 cursor-pointer text-primary"
                             onClick={() => handleEditUser(user.id)}
@@ -460,11 +426,11 @@ const Staff = () => {
                               title="Block User"
                             />
                           )}
-                          <Trash2
+                          {/* <Trash2
                             className="h-4 w-4 cursor-pointer text-[#A30D11]"
                             onClick={() => handleDeleteUser(user.id)}
                             title="Delete User"
-                          />
+                          /> */}
                           {actionLoading[user.id] && <Loader2 className="h-4 w-4 animate-spin text-gray-500" />}
                         </div>
                       </TableCell>
