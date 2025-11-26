@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Users, Search, Plus, Shield, UserCheck, Trash2, Ban, CheckCircle, AlertTriangle } from "lucide-react"
-import { getAllUsers, blockUser, deleteUser, addAdminAndStaff } from "@/services/auth"
+import { Users, Search, Plus, Shield, UserCheck, Edit, Ban, Unlock, CheckCircle, AlertTriangle } from "lucide-react"
+import { getAllUsers, blockUser, addAdminAndStaff, updateUser } from "@/services/auth"
 import { getSocieties } from "@/services/society"
 import Modal from "@/components/modal"
 
@@ -26,8 +26,18 @@ const UserManagement = () => {
     societyId: "all",
   })
   const [showAddModal, setShowAddModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showBlockModal, setShowBlockModal] = useState(false)
+  const [showUnblockModal, setShowUnblockModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState(null)
+  const [editUser, setEditUser] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    role: "admin",
+    societyId: "",
+  })
   const [newUser, setNewUser] = useState({
     firstName: "",
     lastName: "",
@@ -78,26 +88,13 @@ const UserManagement = () => {
       if (response.error) {
         alert(response.error)
       } else {
-        fetchUsers()
-      }
-    } catch (err) {
-      alert("Failed to update user status")
-    }
-  }
-
-  const handleDeleteUser = async (userId) => {
-    try {
-      const response = await deleteUser(userId)
-
-      if (response.error) {
-        alert(response.error)
-      } else {
-        setShowDeleteModal(false)
+        setShowBlockModal(false)
+        setShowUnblockModal(false)
         setSelectedUser(null)
         fetchUsers()
       }
     } catch (err) {
-      alert("Failed to delete user")
+      alert("Failed to update user status")
     }
   }
 
@@ -121,6 +118,52 @@ const UserManagement = () => {
       }
     } catch (err) {
       alert("Failed to add user")
+    }
+  }
+
+  const handleEditUserClick = (user) => {
+    setSelectedUser(user)
+    setEditUser({
+      firstName: user.first_name || "",
+      lastName: user.last_name || "",
+      email: user.email || "",
+      phone: user.phone_number || "",
+      role: user.role || "admin",
+      societyId: user.society_id || "",
+    })
+    setShowEditModal(true)
+  }
+
+  const handleUpdateUser = async () => {
+    try {
+      // Only send fields that the backend accepts
+      const updateData = {
+        firstName: editUser.firstName,
+        lastName: editUser.lastName,
+        email: editUser.email,
+        phone: editUser.phone,
+        role: editUser.role,
+      }
+      
+      const response = await updateUser(selectedUser.id, updateData)
+
+      if (response.error) {
+        alert(response.error)
+      } else {
+        setShowEditModal(false)
+        setSelectedUser(null)
+        setEditUser({
+          firstName: "",
+          lastName: "",
+          email: "",
+          phone: "",
+          role: "admin",
+          societyId: "",
+        })
+        fetchUsers()
+      }
+    } catch (err) {
+      alert("Failed to update user")
     }
   }
 
@@ -275,11 +318,20 @@ const UserManagement = () => {
                           <div className="h-8 w-8 rounded-full bg-[#EDEEFC] flex items-center justify-center">
                             {getRoleIcon(user.role)}
                           </div>
-                          <div>
-                            <p className="text-[#121212] font-medium">
-                              {user.first_name} {user.last_name}
-                            </p>
-                            <p className="text-gray-500 text-sm">{user.email}</p>
+                          <div className="flex items-center space-x-2">
+                            <div>
+                              <div className="flex items-center space-x-2">
+                                <p className="text-[#121212] font-medium">
+                                  {user.first_name} {user.last_name}
+                                </p>
+                                {user.is_blocked && (
+                                  <span className="px-2 py-0.5 text-xs font-semibold text-red-600 bg-red-50 border border-red-200 rounded">
+                                    Blocked
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-gray-500 text-sm">{user.email}</p>
+                            </div>
                           </div>
                         </div>
                       </TableCell>
@@ -311,26 +363,39 @@ const UserManagement = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleBlockUser(user.id, !user.is_blocked)}
-                                className={
-                                  user.is_blocked
-                                    ? "text-[#1F9254] border-[#1F9254]"
-                                    : "text-[#A30D11] border-[#A30D11]"
-                                }
+                                onClick={() => handleEditUserClick(user)}
+                                className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                                title="Edit User"
                               >
-                                {user.is_blocked ? <CheckCircle className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
+                                <Edit className="h-4 w-4" />
                               </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedUser(user)
-                                  setShowDeleteModal(true)
-                                }}
-                                className="text-[#A30D11] border-[#A30D11]"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              {!user.is_blocked ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedUser(user)
+                                    setShowBlockModal(true)
+                                  }}
+                                  className="text-red-600 border-red-200 hover:bg-red-50"
+                                  title="Block User"
+                                >
+                                  <Ban className="h-4 w-4" />
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedUser(user)
+                                    setShowUnblockModal(true)
+                                  }}
+                                  className="text-green-600 border-green-200 hover:bg-green-50"
+                                  title="Unblock User"
+                                >
+                                  <Unlock className="h-4 w-4" />
+                                </Button>
+                              )}
                             </>
                           )}
                         </div>
@@ -540,27 +605,124 @@ const UserManagement = () => {
         </div>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
-      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Delete User">
+      {/* Block Confirmation Modal */}
+      <Modal isOpen={showBlockModal} onClose={() => setShowBlockModal(false)} title="Block User">
         <div className="space-y-4">
           <p className="text-gray-700">
-            Are you sure you want to delete{" "}
+            Are you sure you want to block{" "}
             <span className="font-semibold text-[#121212]">
               {selectedUser?.first_name} {selectedUser?.last_name}
             </span>
             ?
           </p>
           <p className="text-gray-500 text-sm">
-            This action cannot be undone. All user data will be permanently removed.
+            This will block the user and prevent them from logging in. The user data will be preserved but access will be restricted.
           </p>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button variant="outline" onClick={() => setShowDeleteModal(false)}>
+            <Button variant="outline" onClick={() => setShowBlockModal(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={() => handleDeleteUser(selectedUser?.id)}>
-              Delete User
+            <Button variant="destructive" onClick={() => handleBlockUser(selectedUser?.id, true)}>
+              Block User
             </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Unblock Confirmation Modal */}
+      <Modal isOpen={showUnblockModal} onClose={() => setShowUnblockModal(false)} title="Unblock User">
+        <div className="space-y-4">
+          <p className="text-gray-700">
+            Are you sure you want to unblock{" "}
+            <span className="font-semibold text-[#121212]">
+              {selectedUser?.first_name} {selectedUser?.last_name}
+            </span>
+            ?
+          </p>
+          <p className="text-gray-500 text-sm">
+            This will unblock the user and allow them to log in again.
+          </p>
+
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button variant="outline" onClick={() => setShowUnblockModal(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="default" 
+              onClick={() => handleBlockUser(selectedUser?.id, false)}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              Unblock User
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit User Modal */}
+      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit User">
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">First Name</label>
+              <Input
+                value={editUser.firstName}
+                onChange={(e) => setEditUser({ ...editUser, firstName: e.target.value })}
+                className="mt-1 bg-white border-gray-200 text-gray-900"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">Last Name</label>
+              <Input
+                value={editUser.lastName}
+                onChange={(e) => setEditUser({ ...editUser, lastName: e.target.value })}
+                className="mt-1 bg-white border-gray-200 text-gray-900"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-gray-700">Email</label>
+            <Input
+              type="email"
+              value={editUser.email}
+              onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
+              className="mt-1 bg-white border-gray-200 text-gray-900"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-gray-700">Phone</label>
+            <Input
+              value={editUser.phone}
+              onChange={(e) => setEditUser({ ...editUser, phone: e.target.value })}
+              className="mt-1 bg-white border-gray-200 text-gray-900"
+            />
+          </div>
+
+          <div className="w-full">
+            <label className="text-sm font-medium text-gray-700">Role</label>
+            <Select value={editUser.role} onValueChange={(value) => setEditUser({ ...editUser, role: value })}>
+              <SelectTrigger className="mt-1 bg-white border-gray-200 text-gray-900">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-white border-gray-200">
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="customer_support">Customer Support</SelectItem>
+                <SelectItem value="driver">Driver</SelectItem>
+                <SelectItem value="resident">Resident</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-gray-500 mt-1">
+              Note: Only super admin can change user roles. Society cannot be changed here.
+            </p>
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button variant="outline" onClick={() => setShowEditModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateUser}>Update User</Button>
           </div>
         </div>
       </Modal>

@@ -145,6 +145,35 @@ const blockUser = async (userId, isBlocked) => {
   }
 };
 
+const updateUser = async (userId, userData) => {
+  try {
+    const token = Cookies.get("access_token");
+
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/users/${userId}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(userData),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+
+    return { success: true, data: data };
+  } catch (err) {
+    console.log("Error updating user: ", err.message);
+    return { error: "Error while updating user!" };
+  }
+};
+
 const deleteUser = async (userId) => {
   try {
     const token = Cookies.get("access_token");
@@ -516,7 +545,7 @@ export {
   verifyEmail,
   getAllUsers,
   blockUser,
-  deleteUser,
+  updateUser,
   getSystemStats,
   addAdminAndStaff,
   forgotPasswordFunc,

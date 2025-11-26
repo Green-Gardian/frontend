@@ -9,7 +9,8 @@ import {
   Building2,
   Plus,
   Edit,
-  Trash2,
+  Ban,
+  Unlock,
   MapPin,
   Calendar,
   AlertTriangle,
@@ -17,7 +18,7 @@ import {
   Search,
   Loader2,
 } from "lucide-react"
-import { getSocieties, addSociety, updateSociety, deleteSociety } from "@/services/society"
+import { getSocieties, addSociety, updateSociety, blockSociety, unblockSociety } from "@/services/society"
 import Modal from "@/components/modal"
 
 const SocietyManagement = () => {
@@ -26,7 +27,8 @@ const SocietyManagement = () => {
   const [error, setError] = useState(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showBlockModal, setShowBlockModal] = useState(false)
+  const [showUnblockModal, setShowUnblockModal] = useState(false)
   const [selectedSociety, setSelectedSociety] = useState(null)
   const [searchLoading, setSearchLoading] = useState(false)
   const [newSociety, setNewSociety] = useState({
@@ -187,13 +189,23 @@ const SocietyManagement = () => {
     }
   }
 
-  const handleDeleteSociety = async (id) => {
+  const handleBlockSociety = async (id) => {
     try {
-      await deleteSociety(id)
+      await blockSociety(id)
       fetchSocieties()
-      setShowDeleteModal(false)
+      setShowBlockModal(false)
     } catch (error) {
-      console.error("Error deleting society:", error)
+      console.error("Error blocking society:", error)
+    }
+  }
+
+  const handleUnblockSociety = async (id) => {
+    try {
+      await unblockSociety(id)
+      fetchSocieties()
+      setShowUnblockModal(false)
+    } catch (error) {
+      console.error("Error unblocking society:", error)
     }
   }
 
@@ -312,8 +324,10 @@ const SocietyManagement = () => {
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{(societies || []).length}</div>
-            <p className="text-xs text-gray-500">All societies active</p>
+            <div className="text-2xl font-bold text-green-600">
+              {(societies || []).filter(s => !s.is_blocked).length}
+            </div>
+            <p className="text-xs text-gray-500">Active societies</p>
           </CardContent>
         </Card>
 
@@ -350,6 +364,7 @@ const SocietyManagement = () => {
               <TableRow className="border-gray-200">
                 <TableHead className="text-gray-700 font-semibold">Society</TableHead>
                 <TableHead className="text-gray-700 font-semibold">Location</TableHead>
+                <TableHead className="text-gray-700 font-semibold">Status</TableHead>
                 <TableHead className="text-gray-700 font-semibold">Created</TableHead>
                 <TableHead className="text-gray-700 font-semibold">Actions</TableHead>
               </TableRow>
@@ -366,7 +381,14 @@ const SocietyManagement = () => {
                         <Building2 className="h-4 w-4 text-blue-600" />
                       </div>
                       <div>
-                        <p className="text-[#121212] font-medium">{society.society_name}</p>
+                        <div className="flex items-center space-x-2">
+                          <p className="text-[#121212] font-medium">{society.society_name}</p>
+                          {society.is_blocked && (
+                            <span className="px-2 py-0.5 text-xs font-semibold text-red-600 bg-red-50 border border-red-200 rounded">
+                              Blocked
+                            </span>
+                          )}
+                        </div>
                         <p className="text-gray-500 text-sm">ID: {society.id}</p>
                       </div>
                     </div>
@@ -382,6 +404,17 @@ const SocietyManagement = () => {
                       </div>
                     </div>
                   </TableCell>
+                  <TableCell>
+                    {society.is_blocked ? (
+                      <span className="px-2 py-1 text-xs font-semibold text-red-600 bg-red-50 border border-red-200 rounded">
+                        Blocked
+                      </span>
+                    ) : (
+                      <span className="px-2 py-1 text-xs font-semibold text-green-600 bg-green-50 border border-green-200 rounded">
+                        Active
+                      </span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-gray-600">{formatDate(society.created_at)}</TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
@@ -393,17 +426,34 @@ const SocietyManagement = () => {
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedSociety(society)
-                          setShowDeleteModal(true)
-                        }}
-                        className="text-red-600 border-red-200 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {!society.is_blocked && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedSociety(society)
+                            setShowBlockModal(true)
+                          }}
+                          className="text-red-600 border-red-200 hover:bg-red-50"
+                          title="Block Society"
+                        >
+                          <Ban className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {society.is_blocked && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedSociety(society)
+                            setShowUnblockModal(true)
+                          }}
+                          className="text-green-600 border-green-200 hover:bg-green-50"
+                          title="Unblock Society"
+                        >
+                          <Unlock className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -577,23 +627,50 @@ const SocietyManagement = () => {
         </form>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
-      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Delete Society">
+      {/* Block Confirmation Modal */}
+      <Modal isOpen={showBlockModal} onClose={() => setShowBlockModal(false)} title="Block Society">
         <div className="space-y-4">
           <p className="text-gray-700">
-            Are you sure you want to delete{" "}
+            Are you sure you want to block{" "}
             <span className="font-semibold text-[#121212]">{selectedSociety?.society_name}</span>?
           </p>
           <p className="text-gray-500 text-sm">
-            This action cannot be undone. All society data will be permanently removed.
+            This will block the society and all users associated with it. Blocked users will not be able to log in. 
+            The society data will be preserved but access will be restricted.
           </p>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button variant="outline" onClick={() => setShowDeleteModal(false)}>
+            <Button variant="outline" onClick={() => setShowBlockModal(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={() => handleDeleteSociety(selectedSociety?.id)}>
-              Delete Society
+            <Button variant="destructive" onClick={() => handleBlockSociety(selectedSociety?.id)}>
+              Block Society
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Unblock Confirmation Modal */}
+      <Modal isOpen={showUnblockModal} onClose={() => setShowUnblockModal(false)} title="Unblock Society">
+        <div className="space-y-4">
+          <p className="text-gray-700">
+            Are you sure you want to unblock{" "}
+            <span className="font-semibold text-[#121212]">{selectedSociety?.society_name}</span>?
+          </p>
+          <p className="text-gray-500 text-sm">
+            This will unblock the society and all users associated with it. Unblocked users will be able to log in again.
+          </p>
+
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button variant="outline" onClick={() => setShowUnblockModal(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="default" 
+              onClick={() => handleUnblockSociety(selectedSociety?.id)}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              Unblock Society
             </Button>
           </div>
         </div>
