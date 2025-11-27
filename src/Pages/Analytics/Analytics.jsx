@@ -1,3 +1,4 @@
+"use client"
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,8 +12,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  AreaChart,
-  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -22,48 +21,25 @@ import {
 } from "recharts"
 import { ArrowUpRight, ArrowDownRight, Download } from "lucide-react"
 import Cookies from "js-cookie"
+import { getCustomerAnalytics, getStaffAnalytics, getVehicleAnalytics } from "@/services/analytics"
 
-
-const paymentData = [
-  { month: "Jan", collected: 125000, outstanding: 15000 },
-  { month: "Feb", collected: 132000, outstanding: 18000 },
-  { month: "Mar", collected: 141000, outstanding: 9000 },
-  { month: "Apr", collected: 138000, outstanding: 12000 },
-  { month: "May", collected: 143000, outstanding: 7000 },
-  { month: "Jun", collected: 147500, outstanding: 2500 },
-]
-
-const customerData = [
-  { month: "Jan", customers: 950 },
-  { month: "Feb", customers: 1050 },
-  { month: "Mar", customers: 1100 },
-  { month: "Apr", customers: 1180 },
-  { month: "May", customers: 1220 },
-  { month: "Jun", customers: 1247 },
-]
-
-const staffData = [
-  { name: "Drivers", value: 28 },
-  { name: "Support", value: 22 },
-  { name: "Maintenance", value: 15 },
-  { name: "Management", value: 7 },
-]
-
-const vehicleData = [
-  { day: "Mon", utilization: 85 },
-  { day: "Tue", utilization: 78 },
-  { day: "Wed", utilization: 92 },
-  { day: "Thu", utilization: 88 },
-  { day: "Fri", utilization: 76 },
-  { day: "Sat", utilization: 65 },
-  { day: "Sun", utilization: 45 },
-]
+// const paymentData = [
+//   { month: "Jan", collected: 125000, outstanding: 15000 },
+//   { month: "Feb", collected: 132000, outstanding: 18000 },
+//   { month: "Mar", collected: 141000, outstanding: 9000 },
+//   { month: "Apr", collected: 138000, outstanding: 12000 },
+//   { month: "May", collected: 143000, outstanding: 7000 },
+//   { month: "Jun", collected: 147500, outstanding: 2500 },
+// ]
 
 const COLORS = ["#4F46E5", "#0EA5E9", "#10B981", "#F59E0B"]
 
 const Analytics = () => {
   const [username, setUsername] = useState("")
-  const [selectedAnalytic, setSelectedAnalytic] = useState("payments")
+  const [selectedAnalytic, setSelectedAnalytic] = useState("customers")
+  const [customerAnalytics, setCustomerAnalytics] = useState(null)
+  const [staffAnalytics, setStaffAnalytics] = useState(null)
+  const [vehicleAnalytics, setVehicleAnalytics] = useState(null)
 
   useEffect(() => {
     setUsername(Cookies.get("username"))
@@ -73,6 +49,39 @@ const Analytics = () => {
     if (!Cookies.get("access_token")) {
       window.location.href = "/signin"
     }
+  }, [])
+
+  const fetchCustomerAnalytics = async () => {
+    const response = await getCustomerAnalytics()
+    if (response.error) {
+      console.error("Error fetching customer analytics:", response.error)
+    } else {
+      setCustomerAnalytics(response)
+    }
+  }
+
+  const fetchStaffAnalytics = async () => {
+    const response = await getStaffAnalytics()
+    if (response.error) {
+      console.error("Error fetching staff analytics:", response.error)
+    } else {
+      setStaffAnalytics(response)
+    }
+  }
+
+  const fetchVehicleAnalytics = async () => {
+    const response = await getVehicleAnalytics()
+    if (response.error) {
+      console.error("Error fetching vehicle analytics:", response.error)
+    } else {
+      setVehicleAnalytics(response)
+    }
+  }
+
+  useEffect(() => {
+    fetchCustomerAnalytics()
+    fetchStaffAnalytics()
+    fetchVehicleAnalytics()
   }, [])
 
   const formatCurrency = (value) => {
@@ -97,121 +106,6 @@ const Analytics = () => {
 
   const renderAnalytics = () => {
     switch (selectedAnalytic) {
-      case "payments":
-        return (
-          <div className="space-y-6">
-            {/* Payment Overview Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-[#EDEEFC] bg-opacity-30 border-none shadow-sm rounded-lg">
-                <div className="p-6">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Total Revenue</p>
-                      <h3 className="text-2xl font-bold mt-1">Rs. 2,47,500</h3>
-                      <div className="flex items-center mt-1 text-[#1F9254]">
-                        <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">12.5% increase</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-[#E6F1FD] bg-opacity-30 border-none shadow-sm rounded-lg">
-                <div className="p-6">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Outstanding</p>
-                      <h3 className="text-2xl font-bold mt-1">Rs. 57,900</h3>
-                      <div className="flex items-center mt-1 text-[#A30D11]">
-                        <ArrowDownRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">15.2% decrease</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-[#EDEEFC] bg-opacity-30 border-none shadow-sm rounded-lg">
-                <div className="p-6">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Collection Rate</p>
-                      <h3 className="text-2xl font-bold mt-1">76.6%</h3>
-                      <div className="flex items-center mt-1 text-[#1F9254]">
-                        <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">5.1% increase</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-[#E6F1FD] bg-opacity-30 border-none shadow-sm rounded-lg">
-                <div className="p-6">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Paid This Month</p>
-                      <h3 className="text-2xl font-bold mt-1">Rs. 1,89,600</h3>
-                      <div className="flex items-center mt-1 text-[#1F9254]">
-                        <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">8.3% increase</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Payment Chart */}
-            <Card className="shadow-sm">
-              <CardHeader>
-                <CardTitle>Monthly Payment Collection</CardTitle>
-                <CardDescription>Revenue collected vs outstanding amounts over time</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={paymentData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="colorCollected" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.8} />
-                          <stop offset="95%" stopColor="#4F46E5" stopOpacity={0.1} />
-                        </linearGradient>
-                        <linearGradient id="colorOutstanding" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#EF4444" stopOpacity={0.8} />
-                          <stop offset="95%" stopColor="#EF4444" stopOpacity={0.1} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="month" />
-                      <YAxis tickFormatter={(value) => `Rs. ${value / 1000}k`} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend />
-                      <Area
-                        type="monotone"
-                        dataKey="collected"
-                        name="Collected"
-                        stroke="#4F46E5"
-                        fillOpacity={1}
-                        fill="url(#colorCollected)"
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="outstanding"
-                        name="Outstanding"
-                        stroke="#EF4444"
-                        fillOpacity={1}
-                        fill="url(#colorOutstanding)"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )
-
       case "customers":
         return (
           <div className="space-y-6">
@@ -222,10 +116,14 @@ const Analytics = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-sm font-medium text-gray-500">Total Customers</p>
-                      <h3 className="text-2xl font-bold mt-1">1,247</h3>
+                      <h3 className="text-2xl font-bold mt-1">
+                        {customerAnalytics?.metrics?.totalCustomers?.value || 0}
+                      </h3>
                       <div className="flex items-center mt-1 text-[#1F9254]">
                         <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">8.2% increase</span>
+                        <span className="text-xs font-medium">
+                          {customerAnalytics?.metrics?.totalCustomers?.change || "0"}% increase
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -237,10 +135,14 @@ const Analytics = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-sm font-medium text-gray-500">Active Customers</p>
-                      <h3 className="text-2xl font-bold mt-1">1,089</h3>
+                      <h3 className="text-2xl font-bold mt-1">
+                        {customerAnalytics?.metrics?.activeCustomers?.value || 0}
+                      </h3>
                       <div className="flex items-center mt-1 text-[#1F9254]">
                         <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">12.5% increase</span>
+                        <span className="text-xs font-medium">
+                          {customerAnalytics?.metrics?.activeCustomers?.change || "0"}% increase
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -252,10 +154,14 @@ const Analytics = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-sm font-medium text-gray-500">New This Month</p>
-                      <h3 className="text-2xl font-bold mt-1">156</h3>
+                      <h3 className="text-2xl font-bold mt-1">
+                        {customerAnalytics?.metrics?.newThisMonth?.value || 0}
+                      </h3>
                       <div className="flex items-center mt-1 text-[#1F9254]">
                         <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">15.3% increase</span>
+                        <span className="text-xs font-medium">
+                          {customerAnalytics?.metrics?.newThisMonth?.change || "0"}% increase
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -267,10 +173,14 @@ const Analytics = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-sm font-medium text-gray-500">Premium Users</p>
-                      <h3 className="text-2xl font-bold mt-1">423</h3>
+                      <h3 className="text-2xl font-bold mt-1">
+                        {customerAnalytics?.metrics?.premiumUsers?.value || 0}
+                      </h3>
                       <div className="flex items-center mt-1 text-[#1F9254]">
                         <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">6.8% increase</span>
+                        <span className="text-xs font-medium">
+                          {customerAnalytics?.metrics?.premiumUsers?.change || "0"}% increase
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -287,10 +197,13 @@ const Analytics = () => {
               <CardContent>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={customerData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                    <LineChart
+                      data={customerAnalytics?.chartData || []}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    >
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis dataKey="month" />
-                      <YAxis domain={[900, (dataMax) => Math.ceil(dataMax * 1.1)]} />
+                      <YAxis domain={[0, (dataMax) => Math.ceil(dataMax * 1.1)]} />
                       <Tooltip />
                       <Legend />
                       <Line
@@ -320,10 +233,12 @@ const Analytics = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-sm font-medium text-gray-500">Total Staff</p>
-                      <h3 className="text-2xl font-bold mt-1">72</h3>
+                      <h3 className="text-2xl font-bold mt-1">{staffAnalytics?.metrics?.totalStaff?.value || 0}</h3>
                       <div className="flex items-center mt-1 text-[#1F9254]">
                         <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">6.08% increase</span>
+                        <span className="text-xs font-medium">
+                          {staffAnalytics?.metrics?.totalStaff?.change || "0"}% increase
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -335,10 +250,12 @@ const Analytics = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-sm font-medium text-gray-500">On Duty</p>
-                      <h3 className="text-2xl font-bold mt-1">36</h3>
+                      <h3 className="text-2xl font-bold mt-1">{staffAnalytics?.metrics?.onDuty?.value || 0}</h3>
                       <div className="flex items-center mt-1 text-[#1F9254]">
                         <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">6.08% increase</span>
+                        <span className="text-xs font-medium">
+                          {staffAnalytics?.metrics?.onDuty?.change || "0"}% increase
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -350,10 +267,12 @@ const Analytics = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-sm font-medium text-gray-500">On Leave</p>
-                      <h3 className="text-2xl font-bold mt-1">1</h3>
+                      <h3 className="text-2xl font-bold mt-1">{staffAnalytics?.metrics?.onLeave?.value || 0}</h3>
                       <div className="flex items-center mt-1 text-[#1F9254]">
                         <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">6.08% increase</span>
+                        <span className="text-xs font-medium">
+                          {staffAnalytics?.metrics?.onLeave?.change || "0"}% increase
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -365,10 +284,12 @@ const Analytics = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-sm font-medium text-gray-500">Drivers</p>
-                      <h3 className="text-2xl font-bold mt-1">28</h3>
+                      <h3 className="text-2xl font-bold mt-1">{staffAnalytics?.metrics?.drivers?.value || 0}</h3>
                       <div className="flex items-center mt-1 text-[#1F9254]">
                         <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">6.08% increase</span>
+                        <span className="text-xs font-medium">
+                          {staffAnalytics?.metrics?.drivers?.change || "0"}% increase
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -387,7 +308,7 @@ const Analytics = () => {
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={staffData}
+                        data={staffAnalytics?.distributionData || []}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
@@ -397,7 +318,7 @@ const Analytics = () => {
                         nameKey="name"
                         label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                       >
-                        {staffData.map((entry, index) => (
+                        {staffAnalytics?.distributionData?.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
@@ -421,10 +342,14 @@ const Analytics = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-sm font-medium text-gray-500">Total Vehicles</p>
-                      <h3 className="text-2xl font-bold mt-1">25</h3>
+                      <h3 className="text-2xl font-bold mt-1">
+                        {vehicleAnalytics?.metrics?.totalVehicles?.value || 0}
+                      </h3>
                       <div className="flex items-center mt-1 text-[#1F9254]">
                         <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">4.5% increase</span>
+                        <span className="text-xs font-medium">
+                          {vehicleAnalytics?.metrics?.totalVehicles?.change || "0"}% increase
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -436,10 +361,12 @@ const Analytics = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-sm font-medium text-gray-500">Operational</p>
-                      <h3 className="text-2xl font-bold mt-1">18</h3>
+                      <h3 className="text-2xl font-bold mt-1">{vehicleAnalytics?.metrics?.operational?.value || 0}</h3>
                       <div className="flex items-center mt-1 text-[#1F9254]">
                         <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">2.1% increase</span>
+                        <span className="text-xs font-medium">
+                          {vehicleAnalytics?.metrics?.operational?.change || "0"}% increase
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -451,10 +378,14 @@ const Analytics = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-sm font-medium text-gray-500">In Maintenance</p>
-                      <h3 className="text-2xl font-bold mt-1">4</h3>
+                      <h3 className="text-2xl font-bold mt-1">
+                        {vehicleAnalytics?.metrics?.inMaintenance?.value || 0}
+                      </h3>
                       <div className="flex items-center mt-1 text-[#A30D11]">
                         <ArrowDownRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">1.2% increase</span>
+                        <span className="text-xs font-medium">
+                          {vehicleAnalytics?.metrics?.inMaintenance?.change || "0"}% increase
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -466,10 +397,14 @@ const Analytics = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-sm font-medium text-gray-500">Avg. Utilization</p>
-                      <h3 className="text-2xl font-bold mt-1">78%</h3>
+                      <h3 className="text-2xl font-bold mt-1">
+                        {vehicleAnalytics?.metrics?.avgUtilization?.value || 0}%
+                      </h3>
                       <div className="flex items-center mt-1 text-[#1F9254]">
                         <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">3.2% increase</span>
+                        <span className="text-xs font-medium">
+                          {vehicleAnalytics?.metrics?.avgUtilization?.change || "0"}% increase
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -486,7 +421,10 @@ const Analytics = () => {
               <CardContent>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={vehicleData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                    <BarChart
+                      data={vehicleAnalytics?.chartData || []}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    >
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis dataKey="day" />
                       <YAxis tickFormatter={(value) => `${value}%`} domain={[0, 100]} />
@@ -517,7 +455,6 @@ const Analytics = () => {
               <SelectValue placeholder="Select Analytics" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="payments">Payment Analytics</SelectItem>
               <SelectItem value="customers">Customer Analytics</SelectItem>
               <SelectItem value="staff">Staff Analytics</SelectItem>
               <SelectItem value="vehicles">Vehicle Analytics</SelectItem>

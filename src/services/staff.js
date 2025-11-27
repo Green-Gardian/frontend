@@ -12,6 +12,9 @@ const getAuthHeaders = () => ({
 export const getStaff = async (params = {}) => {
   try {
     const queryParams = new URLSearchParams();
+
+
+    console.log("params : ", params);
     
     if (params.page) queryParams.append('page', params.page);
     if (params.limit) queryParams.append('limit', params.limit);
@@ -156,11 +159,14 @@ export const getAvailableRoles = (currentUserRole) => {
       { value: "admin", label: "Admin" },
       { value: "customer_support", label: "Customer Support" },
       { value: "driver", label: "Driver" },
+      { value: "sub_admin", label: "Sub_Admin" },
+
     ];
   } else if (currentUserRole === 'admin') {
     return [
       { value: "customer_support", label: "Customer Support" },
       { value: "driver", label: "Driver" },
+      { value: "sub_admin", label: "Sub_Admin" },
     ];
   }
   return [];

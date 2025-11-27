@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
 import {
   Card,
   CardContent,
@@ -39,7 +40,7 @@ import {
 import Cookies from "js-cookie";
 import InfoCards from "@/components/info-cards";
 import { useParams } from "react-router-dom";
-import { getStaff } from "@/services/staff";
+import { fetchStaff } from "@/redux/slices/staffSlice";
 
 // Helper function to format role names
 const formatRoleName = (role) => {
@@ -119,6 +120,7 @@ const StaffPerformance = () => {
   const [error, setError] = useState(null);
 
   const { employeeId } = useParams();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     setUsername(Cookies.get("username"));
@@ -139,8 +141,11 @@ const StaffPerformance = () => {
         setError(null);
         
         // Fetch all staff data
-        const response = await getStaff();
-        const allStaff = response.users || [];
+        const response = await dispatch(fetchStaff()).unwrap();
+        const allStaff =
+          response?.users ||
+          response?.data?.users ||
+          (Array.isArray(response) ? response : []);
         
         // Find the specific staff member
         const member = allStaff.find(staff => staff.id === parseInt(employeeId));

@@ -14,6 +14,7 @@ import {
   UserCircle,
   MessageCircleMore,
   Building2,
+  FileClock,
 } from "lucide-react"
 
 import {
@@ -67,11 +68,11 @@ const superAdminRoutes = [
     icon: <MessageCircleMore className="h-5 w-5" />,
     href: "/super-admin/messages",
   },
-  {
-    title: "Settings",
-    icon: <Settings className="h-5 w-5" />,
-    href: "/super-admin/settings",
-  },
+  // {
+  //   title: "Settings",
+  //   icon: <Settings className="h-5 w-5" />,
+  //   href: "/super-admin/settings",
+  // },
 ]
 
 const adminRoutes = [
@@ -100,21 +101,26 @@ const adminRoutes = [
     icon: <BarChart3 className="h-5 w-5" />,
     href: "/admin/analytics",
   },
-  {
-    title: "Payment",
-    icon: <CreditCard className="h-5 w-5" />,
-    href: "/admin/payment",
-  },
+  // {
+  //   title: "Payment",
+  //   icon: <CreditCard className="h-5 w-5" />,
+  //   href: "/admin/payment",
+  // },
   {
     title: "Messaging",
     icon: <MessageCircleMore className="h-5 w-5" />,
     href: "/admin/messaging",
   },
   {
-    title: "Settings",
-    icon: <Settings className="h-5 w-5" />,
-    href: "/admin/settings",
+    title: "Activity Logs",
+    icon: <FileClock className="h-5 w-5" />,
+    href: "/admin/activity-logs",
   },
+  // {
+  //   title: "Settings",
+  //   icon: <Settings className="h-5 w-5" />,
+  //   href: "/admin/settings",
+  // },
 ]
 
 function getInitials(name) {
@@ -195,7 +201,7 @@ export function AppSidebar({ role }) {
       </SidebarHeader>
 
       {/* Navigation Content */}
-      <SidebarContent className="bg-white">
+      <SidebarContent className="bg-white hide-scrollbar">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2 p-4">
