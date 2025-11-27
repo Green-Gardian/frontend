@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-import { Plus, SquarePen, Trash2, Users } from "lucide-react";
+import { Plus, SquarePen, Users } from "lucide-react";
 
 import InfoCards from "@/components/info-cards";
 import Modal from "@/components/modal";
@@ -33,7 +33,7 @@ import VehicleForm from "@/components/forms/vehicleForm";
 
 import Cookies from "js-cookie";
 
-import { fetchVehicles, removeVehicle } from "@/redux/slices/vehicleSlice";
+import { fetchVehicles } from "@/redux/slices/vehicleSlice";
 import { fetchDrivers } from "@/redux/slices/driverSlice";
 
 const Vehicle = () => {
@@ -132,15 +132,6 @@ const Vehicle = () => {
   const handleRefreshVehicles = useCallback(() => {
     dispatch(fetchVehicles());
   }, [dispatch]);
-
-  const deleteRecord = async (vehicleId) => {
-    try {
-      await dispatch(removeVehicle(vehicleId)).unwrap();
-      handleRefreshVehicles();
-    } catch (error) {
-      console.error("Error deleting vehicle:", error);
-    }
-  };
 
   const itemsPerPage = 7;
 
@@ -297,7 +288,7 @@ const Vehicle = () => {
 
             <Button className="w-full sm:w-auto " onClick={() => openModal()}>
               <Plus className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Add Vehicle</span>
+              <span className="hidden sm:inline">Assign Vehicle</span>
               <span className="sm:hidden">Add</span>
             </Button>
           </div>
@@ -373,10 +364,6 @@ const Vehicle = () => {
                           <SquarePen
                             className="h-4 w-4 cursor-pointer text-primary"
                             onClick={() => openModal(record)}
-                          />
-                          <Trash2
-                            className="h-4 w-4 cursor-pointer text-[#A30D11]"
-                            onClick={() => deleteRecord(record.id)}
                           />
                         </div>
                       </TableCell>

@@ -546,6 +546,7 @@ export {
   getAllUsers,
   blockUser,
   updateUser,
+  deleteUser,
   getSystemStats,
   addAdminAndStaff,
   forgotPasswordFunc,

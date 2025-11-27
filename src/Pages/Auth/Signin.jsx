@@ -73,6 +73,8 @@ const SignIn = () => {
       password: credentials.password,
     })
 
+    console.log('res : ',res)
+
     if (typeof res === "string") {
       setError("An error occurred. Please try again.")
       setIsLoading(false)

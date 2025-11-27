@@ -59,6 +59,7 @@ const UserManagement = () => {
   const [showBlockModal, setShowBlockModal] = useState(false)
   const [showUnblockModal, setShowUnblockModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState(null)
   const [editUser, setEditUser] = useState({
     firstName: "",

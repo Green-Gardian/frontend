@@ -4,7 +4,6 @@ import {
   getVehicles as apiGetVehicles,
   addVehicle as apiAddVehicle,
   updateVehicle as apiUpdateVehicle,
-  deleteVehicle as apiDeleteVehicle,
 } from "@/services/vehicle"; // adjust path
 
 // Async thunks
@@ -32,15 +31,6 @@ export const editVehicle = createAsyncThunk(
     const response = await apiUpdateVehicle(id, vehicleData);
     if (response?.error) return rejectWithValue(response.error);
     return response;
-  }
-);
-
-export const removeVehicle = createAsyncThunk(
-  "vehicles/removeVehicle",
-  async (vehicleId, { rejectWithValue }) => {
-    const response = await apiDeleteVehicle(vehicleId);
-    if (response?.error) return rejectWithValue(response.error);
-    return vehicleId; // return id to remove from state
   }
 );
 
@@ -105,19 +95,7 @@ const vehicleSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Delete Vehicle
-      .addCase(removeVehicle.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(removeVehicle.fulfilled, (state, action) => {
-        state.loading = false;
-        state.vehicles = state.vehicles.filter(v => v.id !== action.payload);
-      })
-      .addCase(removeVehicle.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      });
+      // Delete Vehicle removed (feature deprecated)
   },
 });
 

@@ -3,7 +3,7 @@ import {
   getSocieties,
   addSociety,
   updateSociety,
-  deleteSociety,
+  // deleteSociety,
   getSocietyById,
 } from "@/services/society";
 

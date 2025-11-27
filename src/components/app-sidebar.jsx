@@ -59,6 +59,11 @@ const superAdminRoutes = [
     href: "/super-admin/users",
   },
   {
+    title: "Vehicle Inventory",
+    icon: <Car className="h-5 w-5" />,
+    href: "/super-admin/vehicles",
+  },
+  {
     title: "Societies",
     icon: <Building2 className="h-5 w-5" />,
     href: "/super-admin/societies",

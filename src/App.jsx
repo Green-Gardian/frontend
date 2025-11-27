@@ -25,6 +25,7 @@ import {
   Alerts,
   SuperAdminDashboard,
   UserManagement,
+  VehicleInventory,
   SocietyManagement,
   SuperAdminAnalytics,
   ActivityLogs,
@@ -130,6 +131,10 @@ function App() {
         {
           path: "users",
           element: <UserManagement />,
+        },
+        {
+          path: "vehicles",
+          element: <VehicleInventory />,
         },
         {
           path: "societies",
