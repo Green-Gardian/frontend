@@ -246,7 +246,7 @@ const Vehicle = () => {
   return (
     <div className="bg-white min-h-screen py-6 px-4 gap-y-6 flex flex-col w-auto">
       <h1 className="text-[#121212] text-[24px] leading-[32px]">
-        Hello,<span className="font-semibold">{username || "User"}</span>
+        Hello,<span className="font-semibold">{Cookies.get('society')} - {username}</span>
       </h1>
 
       {/*Cards Section */}

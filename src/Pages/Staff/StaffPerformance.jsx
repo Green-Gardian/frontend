@@ -269,7 +269,7 @@ const StaffPerformance = () => {
           Back
         </Button>
         <h1 className="text-[#121212] text-[24px] leading-[32px]">
-          Hello, <span className="font-semibold">{username}</span>
+          Hello, <span className="font-semibold">{Cookies.get('society')} - {username}</span>
         </h1>
       </div>
 

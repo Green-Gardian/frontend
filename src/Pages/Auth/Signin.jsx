@@ -87,6 +87,7 @@ const SignIn = () => {
       Cookies.set("username", res.username)
       Cookies.set("user_role", res.role)
       Cookies.set("user_society_id", res.society_id)
+      Cookies.set("society", res.society)
       const redirectPath =
         res.role === "super_admin" ? "/super-admin/settings?mfa_setup=true" : "/admin/settings?mfa_setup=true"
       window.location.href = redirectPath
@@ -157,6 +158,7 @@ const SignIn = () => {
     Cookies.set("username", res.username)
     Cookies.set("user_role", res.role)
     Cookies.set("user_society_id", res.society_id)
+    Cookies.set("society", res.society)
 
     // Redirect based on user role
     if (res.role === "super_admin") {
