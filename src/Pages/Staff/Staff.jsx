@@ -437,11 +437,11 @@ const Staff = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-x-2 justify-start">
-                          {/* <SquarePen
+                          <SquarePen
                             className="h-4 w-4 cursor-pointer text-primary"
                             onClick={() => handleEditUser(user.id)}
                             title="Edit User"
-                          /> */}
+                          />
                           {user.is_blocked ? (
                             <ShieldCheck
                               className="h-4 w-4 cursor-pointer text-green-600"

@@ -292,7 +292,7 @@ const VehicleInventoryFormEnhanced = ({ onClose, onSubmit, vehicleToEdit = null 
                     </TabsList>
 
                     {/* Basic Info Tab */}
-                    <TabsContent value="basic" className="space-y-4 mt-4">
+                    <TabsContent value="basic" className="space-y-4 mt-4 min-h-[420px]">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="plateNo" className="text-sm font-medium text-gray-700 flex items-center gap-2">
@@ -463,7 +463,7 @@ const VehicleInventoryFormEnhanced = ({ onClose, onSubmit, vehicleToEdit = null 
                     </TabsContent>
 
                     {/* Registration Tab */}
-                    <TabsContent value="registration" className="space-y-4 mt-4">
+                    <TabsContent value="registration" className="space-y-4 mt-4 min-h-[420px]">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="purchasedDate">Purchased Date</Label>
@@ -552,7 +552,7 @@ const VehicleInventoryFormEnhanced = ({ onClose, onSubmit, vehicleToEdit = null 
                     </TabsContent>
 
                     {/* Operational Tab */}
-                    <TabsContent value="operational" className="space-y-4 mt-4">
+                    <TabsContent value="operational" className="space-y-4 mt-4 min-h-[420px]">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="odometerReading">Current Odometer (km)</Label>
@@ -599,7 +599,7 @@ const VehicleInventoryFormEnhanced = ({ onClose, onSubmit, vehicleToEdit = null 
                     </TabsContent>
 
                     {/* Additional Tab */}
-                    <TabsContent value="additional" className="space-y-4 mt-4">
+                    <TabsContent value="additional" className="space-y-4 mt-4 min-h-[420px]">
                         <div className="space-y-2">
                             <Label htmlFor="notes">Notes</Label>
                             <Textarea

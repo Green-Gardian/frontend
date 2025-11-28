@@ -26,9 +26,11 @@ const ActivityLogs = () => {
   const { list, stats, loading, pagination } = useSelector((state) => state.activityLogs || {});
 
   const [username] = useState(() => Cookies.get("username") || "");
-  const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [activityTypeFilter, setActivityTypeFilter] = useState("");
+
+  // Sync currentPage with Redux pagination state
+  const currentPage = pagination?.currentPage || 1;
 
   const logs = useMemo(() => list || [], [list]);
 
@@ -75,23 +77,23 @@ const ActivityLogs = () => {
   }, [stats]);
 
   const fetchLogs = useCallback(
-    async (pageOverride) => {
-      const pageToUse = pageOverride || currentPage;
+    async (page) => {
       const params = {
-        page: pageToUse,
+        page: page || 1,
         limit: pagination?.limit || 10,
         search: searchTerm || undefined,
         activityType: activityTypeFilter || undefined,
       };
       await dispatch(fetchActivityLogs(params));
     },
-    [dispatch, currentPage, pagination?.limit, searchTerm, activityTypeFilter]
+    [dispatch, pagination?.limit, searchTerm, activityTypeFilter]
   );
 
   const fetchStats = useCallback(async () => {
     await dispatch(fetchActivityLogStats({}));
   }, [dispatch]);
 
+  // Initial load
   useEffect(() => {
     if (!Cookies.get("access_token")) {
       window.location.href = "/signin";
@@ -99,16 +101,19 @@ const ActivityLogs = () => {
     }
     fetchLogs(1);
     fetchStats();
-  }, [fetchLogs, fetchStats]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  // Reset to page 1 when filters change
   useEffect(() => {
-    setCurrentPage(1);
     fetchLogs(1);
-  }, [searchTerm, activityTypeFilter, fetchLogs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, activityTypeFilter]);
 
   const handlePageChange = (page) => {
-    setCurrentPage(page);
-    fetchLogs(page);
+    if (page >= 1 && page <= (pagination?.totalPages || 1)) {
+      fetchLogs(page);
+    }
   };
 
   const handlePrevious = () => {
@@ -163,9 +168,9 @@ const ActivityLogs = () => {
         <Activity className="h-6 w-6 text-primary" />
         <span>
           Activity Logs{" "}
-          {username && (
+          {/* {username && (
             <span className="text-sm text-gray-500 font-normal">for {username}</span>
-          )}
+          )} */}
         </span>
       </h1>
 
@@ -206,14 +211,14 @@ const ActivityLogs = () => {
               <option value="CREATED_STAFF">Created Staff</option>
               <option value="CREATED_RESIDENT">Created Resident</option>
               <option value="LOGIN">Login</option>
-              <option value="SIGNED_OUT">Signed Out</option>
+              {/* <option value="SIGNED_OUT">Signed Out</option> */}
               <option value="UPDATED_PROFILE">Updated Profile</option>
               <option value="UPDATE_USER">Update User</option>
               <option value="BLOCK_USER">Block User</option>
               <option value="UPDATE_VEHICLE">Update Vehicle</option>
               <option value="UPDATE_DRIVER">Update Driver</option>
-              <option value="UPDATE_TASK_STATUS">Update Task Status</option>
-              <option value="UPDATE_DRIVER_LOCATION">Update Driver Location</option>
+              {/* <option value="UPDATE_TASK_STATUS">Update Task Status</option> */}
+              {/* <option value="UPDATE_DRIVER_LOCATION">Update Driver Location</option> */}
             </select>
           </div>
         </div>
@@ -230,8 +235,6 @@ const ActivityLogs = () => {
                   <TableHead className="min-w-[160px]">Sub-Admin</TableHead>
                   <TableHead className="min-w-[140px]">Activity Type</TableHead>
                   <TableHead className="min-w-[260px]">Description</TableHead>
-                  <TableHead className="min-w-[140px] hidden md:table-cell">IP Address</TableHead>
-                  <TableHead className="min-w-[160px] hidden lg:table-cell">User Agent</TableHead>
                   <TableHead className="min-w-[160px]">Timestamp</TableHead>
                 </TableRow>
               </TableHeader>
@@ -273,16 +276,7 @@ const ActivityLogs = () => {
                           {log.activity_description || log.description || "No description"}
                         </div>
                       </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <span className="text-sm text-gray-700">
-                          {log.ip_address || "N/A"}
-                        </span>
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell">
-                        <span className="text-xs text-gray-600 line-clamp-2">
-                          {log.user_agent || "N/A"}
-                        </span>
-                      </TableCell>
+                     
                       <TableCell>
                         <div className="flex flex-col text-sm text-gray-700">
                           <span className="flex items-center gap-1">
@@ -320,24 +314,76 @@ const ActivityLogs = () => {
               </PaginationItem>
 
               <div className="hidden sm:flex">
-                {getPageNumbers().map((pageNum) => (
-                  <PaginationItem key={pageNum}>
-                    <PaginationLink
-                      onClick={() => handlePageChange(pageNum)}
-                      className={`cursor-pointer  ${
-                        currentPage === pageNum ? "bg-primary text-white" : "bg-white"
-                      }`}
-                    >
-                      {pageNum}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
+                {(() => {
+                  const pageNumbers = getPageNumbers();
+                  const firstVisiblePage = pageNumbers[0];
+                  const lastVisiblePage = pageNumbers[pageNumbers.length - 1];
+                  const totalPages = pagination?.totalPages || 1;
+                  
+                  return (
+                    <>
+                      {/* Show ellipsis at the beginning if we're not showing page 1 */}
+                      {totalPages > 5 && firstVisiblePage > 1 && (
+                        <>
+                          <PaginationItem>
+                            <PaginationLink
+                              onClick={() => handlePageChange(1)}
+                              className="cursor-pointer bg-white"
+                            >
+                              1
+                            </PaginationLink>
+                          </PaginationItem>
+                          {firstVisiblePage > 2 && (
+                            <PaginationItem>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          )}
+                        </>
+                      )}
+                      
+                      {/* Show visible page numbers (excluding 1 and last if they're shown separately) */}
+                      {pageNumbers
+                        .filter(pageNum => {
+                          // Don't show page 1 if we're showing it separately
+                          if (totalPages > 5 && firstVisiblePage > 1 && pageNum === 1) return false;
+                          // Don't show last page if we're showing it separately
+                          if (totalPages > 5 && lastVisiblePage < totalPages && pageNum === totalPages) return false;
+                          return true;
+                        })
+                        .map((pageNum) => (
+                          <PaginationItem key={pageNum}>
+                            <PaginationLink
+                              onClick={() => handlePageChange(pageNum)}
+                              className={`cursor-pointer  ${
+                                currentPage === pageNum ? "bg-primary text-white" : "bg-white"
+                              }`}
+                            >
+                              {pageNum}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
 
-                {pagination.totalPages > 5 && currentPage < pagination.totalPages - 2 && (
-                  <PaginationItem>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                )}
+                      {/* Show ellipsis at the end if we're not showing the last page */}
+                      {totalPages > 5 && lastVisiblePage < totalPages && (
+                        <>
+                          {lastVisiblePage < totalPages - 1 && (
+                            <PaginationItem>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          )}
+                          <PaginationItem>
+                            <PaginationLink
+                              onClick={() => handlePageChange(totalPages)}
+                              className="cursor-pointer bg-white"
+                            >
+                              {totalPages}
+                            </PaginationLink>
+                          </PaginationItem>
+                        </>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
 
               {/* Mobile: Show only current page */}

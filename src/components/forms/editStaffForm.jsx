@@ -89,9 +89,9 @@ const EditStaffForm = ({ user, onSubmit, onCancel, error, setError }) => {
       newErrors.phone = "Please enter a valid phone number"
     }
 
-    if (!formData.role) {
-      newErrors.role = "Role is required"
-    }
+    // if (!formData.role) {
+    //   newErrors.role = "Role is required"
+    // }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -218,27 +218,7 @@ const EditStaffForm = ({ user, onSubmit, onCancel, error, setError }) => {
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="role">Role</Label>
-        <Select
-          value={formData.role}
-          onValueChange={(value) => handleChange("role", value)}
-        >
-          <SelectTrigger className={errors.role ? "border-red-500" : ""}>
-            <SelectValue placeholder="Select role" />
-          </SelectTrigger>
-          <SelectContent>
-            {availableRoles.map((role) => (
-              <SelectItem key={role.value} value={role.value}>
-                {role.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.role && (
-          <p className="text-sm text-red-500">{errors.role}</p>
-        )}
-      </div>
+
 
       <div className="flex justify-end space-x-2 pt-4">
         <Button

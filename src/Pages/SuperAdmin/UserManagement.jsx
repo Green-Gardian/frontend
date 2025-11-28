@@ -19,19 +19,23 @@ import {
   CheckCircle,
   AlertTriangle,
   CheckCheck,
+  PenBox,
 } from "lucide-react"
 import { getSocieties } from "@/services/society"
+import { updateUser as updateUserService } from "@/services/staff"
 import Modal from "@/components/modal"
 import InfoCards from "@/components/info-cards"
 
 // Redux
 import { useDispatch, useSelector } from "react-redux"
+
 import {
   fetchAllUsers,
   toggleBlockUser as toggleBlockUserThunk,
   deleteUserAccount,
   addAdminStaff,
 } from "@/redux/slices/authSlice"
+
 import { selectUserList } from "@/redux/slices/userManagementSelectors"
 
 const UserManagement = () => {
@@ -56,7 +60,6 @@ const UserManagement = () => {
   })
   const [searchQuery, setSearchQuery] = useState("")
   const [showAddModal, setShowAddModal] = useState(false)
-  const [showBlockModal, setShowBlockModal] = useState(false)
   const [showUnblockModal, setShowUnblockModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -77,6 +80,8 @@ const UserManagement = () => {
     role: "admin",
     societyId: "",
   })
+  const [isUpdatingUser, setIsUpdatingUser] = useState(false)
+
   const cardsData = useMemo(() => {
     const totalUsers = users.length
     const verifiedUsers = users.filter((user) => user.is_verified).length
@@ -124,7 +129,7 @@ const UserManagement = () => {
           setSocieties(response.societies || [])
         }
       } catch (err) {
-        console.log("Failed to fetch societies")
+        console.log("Failed to fetch societies", err)
       }
     }
     fetchSocietiesData()
@@ -228,35 +233,38 @@ const UserManagement = () => {
   }
 
   const handleUpdateUser = async () => {
-    try {
-      // Only send fields that the backend accepts
-      const updateData = {
-        firstName: editUser.firstName,
-        lastName: editUser.lastName,
-        email: editUser.email,
-        phone: editUser.phone,
-        role: editUser.role,
-      }
-      
-      const response = await updateUser(selectedUser.id, updateData)
+    if (!selectedUser?.id) {
+      alert("No user selected for update")
+      return
+    }
 
-      if (response.error) {
-        alert(response.error)
-      } else {
-        setShowEditModal(false)
-        setSelectedUser(null)
-        setEditUser({
-          firstName: "",
-          lastName: "",
-          email: "",
-          phone: "",
-          role: "admin",
-          societyId: "",
-        })
-        fetchUsers()
-      }
+    const updateData = {
+      firstName: editUser.firstName,
+      lastName: editUser.lastName,
+      email: editUser.email,
+      phone: editUser.phone,
+      role: editUser.role,
+    }
+
+    try {
+      setIsUpdatingUser(true)
+      await updateUserService(selectedUser.id, updateData)
+
+      setShowEditModal(false)
+      setSelectedUser(null)
+      setEditUser({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        role: "admin",
+        societyId: "",
+      })
+      dispatch(fetchAllUsers(apiFilters))
     } catch (err) {
-      alert("Failed to update user")
+      alert(err?.message || "Failed to update user")
+    } finally {
+      setIsUpdatingUser(false)
     }
   }
 
@@ -288,14 +296,6 @@ const UserManagement = () => {
       default:
         return <Users className="h-4 w-4" />
     }
-  }
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    })
   }
 
   const getFilteredUsers = () => {
@@ -515,6 +515,7 @@ const UserManagement = () => {
                               onClick={() => handleBlockUser(user.id, true)}
                             />
                           )}
+                          <PenBox className="h-4 w-4 cursor-pointer text-blue-500" onClick={() => handleEditUserClick(user)} />
                           {/* <Trash2
                             className="h-4 w-4 cursor-pointer text-[#A30D11]"
                             onClick={() => {
@@ -802,7 +803,9 @@ const UserManagement = () => {
             <Button variant="outline" onClick={() => setShowEditModal(false)}>
               Cancel
             </Button>
-            <Button onClick={handleUpdateUser}>Update User</Button>
+            <Button onClick={handleUpdateUser} disabled={isUpdatingUser}>
+              {isUpdatingUser ? "Updating..." : "Update User"}
+            </Button>
           </div>
         </div>
       </Modal>

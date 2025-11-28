@@ -82,7 +82,7 @@ const CustomerForm = ({ onClose, onSubmit, error, setError }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl mx-auto">
+    <div className="bg-white rounded-lg    w-full max-w-2xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b">
         <h2 className="text-xl font-semibold text-gray-900">

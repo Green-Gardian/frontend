@@ -11,6 +11,12 @@ export const fetchActivityLogs = createAsyncThunk(
     try {
       const res = await apiGetActivityLogs(params);
       if (res?.error) return rejectWithValue(res.error);
+      // Ensure currentPage is included in pagination from request params
+      if (res?.pagination && params.page) {
+        res.pagination.currentPage = params.page;
+      } else if (res?.data?.pagination && params.page) {
+        res.data.pagination.currentPage = params.page;
+      }
       return res;
     } catch (err) {
       return rejectWithValue(err.message || "Failed to fetch activity logs");
@@ -67,10 +73,17 @@ const activityLogsSlice = createSlice({
           payload?.data?.logs ||
           (Array.isArray(payload) ? payload : []);
         state.list = extractedLogs;
-        state.pagination =
-          payload?.pagination ||
-          payload?.data?.pagination ||
-          state.pagination;
+        
+        // Merge pagination from response, preserving currentPage from request if needed
+        const responsePagination = payload?.pagination || payload?.data?.pagination;
+        if (responsePagination) {
+          state.pagination = {
+            ...state.pagination,
+            ...responsePagination,
+            // Ensure currentPage is set from response or keep existing
+            currentPage: responsePagination.currentPage || state.pagination.currentPage || 1,
+          };
+        }
       })
       .addCase(fetchActivityLogs.rejected, (state, action) => {
         state.loading = false;
