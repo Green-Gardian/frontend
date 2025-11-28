@@ -103,7 +103,7 @@ const SignIn = () => {
 
     if (res.error) {
       // Check if MFA is required - move to step 2
-      if (res.requiresMFA || res.error.includes("TOTP code is required")) {
+      if (res.requiresMFA === true || res.error.includes("TOTP code is required")) {
         setStep(2) // Move to step 2 for TOTP entry
         setError("")
         setIsLoading(false)

@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react"
 import Cookies from "js-cookie"
 import { getAvailableRoles } from "@/services/staff"
 
-const EditStaffForm = ({ user, onSubmit, onCancel }) => {
+const EditStaffForm = ({ user, onSubmit, onCancel, error, setError }) => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -18,22 +18,38 @@ const EditStaffForm = ({ user, onSubmit, onCancel }) => {
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
   const [availableRoles, setAvailableRoles] = useState([])
-  const [userRole, setUserRole] = useState("")
 
   useEffect(() => {
     const role = Cookies.get("user_role")
-    setUserRole(role)
-    setAvailableRoles(getAvailableRoles(role))
+    const roles = getAvailableRoles(role)
+    setAvailableRoles(roles)
   }, [])
 
+
+  
   useEffect(() => {
     if (user) {
+      const userRole = user.role || ""
+      
+      // Ensure the user's current role is in availableRoles so it can be displayed
+      setAvailableRoles(prevRoles => {
+        const roleExists = prevRoles.some(r => r.value === userRole)
+        if (userRole && !roleExists) {
+          // Add the user's current role to the list with a label
+          const roleLabel = userRole.split('_').map(word => 
+            word.charAt(0).toUpperCase() + word.slice(1)
+          ).join(' ')
+          return [...prevRoles, { value: userRole, label: roleLabel }]
+        }
+        return prevRoles
+      })
+      
       setFormData({
         firstName: user.first_name || "",
         lastName: user.last_name || "",
         email: user.email || "",
         phone: user.phone_number || "",
-        role: user.role || "",
+        role: user.role,
       })
     }
   }, [user])
@@ -43,6 +59,10 @@ const EditStaffForm = ({ user, onSubmit, onCancel }) => {
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: "" }))
+    }
+    // Clear API error when user makes changes
+    if (error && setError) {
+      setError("")
     }
   }
 
@@ -95,8 +115,19 @@ const EditStaffForm = ({ user, onSubmit, onCancel }) => {
         role: formData.role,
       }
 
-      await onSubmit(submitData)
+      const result = await onSubmit(submitData)
       
+      // Check if submission was successful (no error returned)
+      if (result?.error) {
+        // Error is handled by parent component, don't reset form
+        setLoading(false)
+        return
+      }
+      
+      // Only clear form and errors on successful submission
+      if (setError) {
+        setError("")
+      }
       setFormData({
         firstName: "",
         lastName: "",
@@ -107,6 +138,7 @@ const EditStaffForm = ({ user, onSubmit, onCancel }) => {
       setErrors({})
     } catch (error) {
       console.error("Error submitting edit form:", error)
+      // Don't reset form on error
     } finally {
       setLoading(false)
     }
@@ -114,6 +146,16 @@ const EditStaffForm = ({ user, onSubmit, onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg border border-red-200" role="alert">
+          <div className="flex items-start">
+            
+            <div>
+              <p>{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="firstName">First Name</Label>

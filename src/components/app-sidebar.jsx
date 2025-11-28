@@ -178,7 +178,15 @@ export function AppSidebar({ role }) {
   }, [role])
 
   useEffect(() => {
-    setRoutes(role === "admin" ? adminRoutes : superAdminRoutes)
+    let routesToSet = role === "admin" ? adminRoutes : superAdminRoutes
+    
+    // Filter out Activity Logs for sub_admin users
+    const currentUserRole = Cookies.get("user_role")
+    if (currentUserRole === "sub_admin") {
+      routesToSet = routesToSet.filter(route => route.title !== "Activity Logs")
+    }
+    
+    setRoutes(routesToSet)
   }, [role])
 
   return (

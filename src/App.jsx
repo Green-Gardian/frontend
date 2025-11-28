@@ -41,6 +41,8 @@ const RootRedirect = () => {
   const userRole = Cookies.get("user_role");
   const accessToken = Cookies.get("access_token");
 
+  alert(userRole);
+
   if (!accessToken) {
     return <Navigate to="/signin" replace />;
   }

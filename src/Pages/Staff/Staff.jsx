@@ -77,6 +77,7 @@ const Staff = () => {
   const [societyId] = useState(() => Cookies.get("society_id") || null)
   const [actionLoading, setActionLoading] = useState({})
   const [error, setError] = useState("")
+  const [editError, setEditError] = useState("")
   const stats = staffState.stats
   const loading = staffState.loading
   const pagination = staffState.pagination || {
@@ -249,6 +250,7 @@ const Staff = () => {
   const onEditClose = () => {
     setIsEditModalOpen(false)
     setSelectedUser(null)
+    setEditError("")
   }
 
   const onSubmit = async (formData) => {
@@ -266,13 +268,39 @@ const Staff = () => {
 
   const onEditSubmit = async (formData) => {
     try {
-      await dispatch(editUserThunk({ userId: selectedUser.id, data: formData }))
+      setEditError("")
+      const response = await dispatch(editUserThunk({ userId: selectedUser.id, data: formData })).unwrap()
+      console.log("Edit user response:", response)
+      
+      // Check if response has an error property
+      if (response?.error) {
+        console.error("Error in response:", response.error)
+        const errorMessage = typeof response.error === "string" ? response.error : response.error?.message || "Failed to update staff"
+        setEditError(errorMessage)
+        // Return error object so form knows submission failed
+        return { error: errorMessage }
+      }
+      
+      // Success - no error
       setIsEditModalOpen(false)
       setSelectedUser(null)
+      setEditError("")
       await fetchStaffData()
       await fetchSystemStats()
+      // Return success indicator
+      return { success: true }
     } catch (error) {
       console.error("Error updating staff:", error)
+      console.log("Error details:", {
+        message: error?.message,
+        error: error,
+        type: typeof error,
+        stringified: typeof error === "string" ? error : JSON.stringify(error, null, 2)
+      })
+      const errorMessage = typeof error === "string" ? error : error?.message || "Failed to update staff"
+      setEditError(errorMessage)
+      // Return error object so form knows submission failed
+      return { error: errorMessage }
     }
   }
 
@@ -308,6 +336,7 @@ const Staff = () => {
     const user = staffData.find((u) => u.id === userId)
     if (user) {
       setSelectedUser(user)
+      setEditError("")
       setIsEditModalOpen(true)
     }
   }
@@ -408,18 +437,18 @@ const Staff = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-x-2 justify-start">
-                          <SquarePen
+                          {/* <SquarePen
                             className="h-4 w-4 cursor-pointer text-primary"
                             onClick={() => handleEditUser(user.id)}
                             title="Edit User"
-                          />
+                          /> */}
                           {user.is_blocked ? (
                             <ShieldCheck
                               className="h-4 w-4 cursor-pointer text-green-600"
                               onClick={() => handleToggleBlock(user.id, user.is_blocked)}
                               title="Unblock User"
                             />
-                          ) : (
+                          ) : ( 
                             <Shield
                               className="h-4 w-4 cursor-pointer text-orange-600"
                               onClick={() => handleToggleBlock(user.id, user.is_blocked)}
@@ -504,7 +533,13 @@ const Staff = () => {
       <Modal isOpen={isEditModalOpen} onClose={onEditClose}>
         <div className="p-6">
           <h2 className="text-xl font-semibold mb-4">Edit Staff Member</h2>
-          <EditStaffForm user={selectedUser} onSubmit={onEditSubmit} onCancel={onEditClose} />
+          <EditStaffForm 
+            user={selectedUser} 
+            onSubmit={onEditSubmit} 
+            onCancel={onEditClose}
+            error={editError}
+            setError={setEditError}
+          />
         </div>
       </Modal>
     </div>

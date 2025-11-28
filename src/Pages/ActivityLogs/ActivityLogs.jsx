@@ -203,15 +203,17 @@ const ActivityLogs = () => {
               className="h-10 px-3 rounded-md border text-sm text-gray-700 bg-white focus:outline-none focus:ring-0 focus:border-gray-200"
             >
               <option value="">All Activity Types</option>
-              <option value="CREATE_USER">Create User</option>
+              <option value="CREATED_STAFF">Created Staff</option>
+              <option value="CREATED_RESIDENT">Created Resident</option>
+              <option value="LOGIN">Login</option>
+              <option value="SIGNED_OUT">Signed Out</option>
+              <option value="UPDATED_PROFILE">Updated Profile</option>
               <option value="UPDATE_USER">Update User</option>
-              <option value="DELETE_USER">Delete User</option>
-              <option value="CREATE_VEHICLE">Create Vehicle</option>
+              <option value="BLOCK_USER">Block User</option>
               <option value="UPDATE_VEHICLE">Update Vehicle</option>
-              <option value="DELETE_VEHICLE">Delete Vehicle</option>
-              <option value="CREATE_ALERT">Create Alert</option>
-              <option value="UPDATE_ALERT">Update Alert</option>
-              <option value="DELETE_ALERT">Delete Alert</option>
+              <option value="UPDATE_DRIVER">Update Driver</option>
+              <option value="UPDATE_TASK_STATUS">Update Task Status</option>
+              <option value="UPDATE_DRIVER_LOCATION">Update Driver Location</option>
             </select>
           </div>
         </div>

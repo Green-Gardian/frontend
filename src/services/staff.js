@@ -169,7 +169,16 @@ export const getAvailableRoles = (currentUserRole) => {
       { value: "sub_admin", label: "Sub_Admin" },
     ];
   }
-  return [];
+  else if (currentUserRole === 'sub_admin') {
+    return [
+      { value: "customer_support", label: "Customer Support" },
+      { value: "driver", label: "Driver" },
+      // { value: "sub_admin", label: "Sub_Admin" },
+    ];
+  }
+  else {
+    return [];
+  }
 };
 
 // Get societies for admin (if needed)

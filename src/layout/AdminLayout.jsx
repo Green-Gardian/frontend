@@ -19,7 +19,7 @@ const AdminLayout = () => {
 
   useEffect(() => {
     const checkMFAStatus = async () => {
-      if (accessToken && (userRole === "admin" || userRole === "super_admin")) {
+      if (accessToken && (userRole === "admin" || userRole === "super_admin" || userRole === "sub_admin")) {
         try {
           const res = await getMFAStatus();
           if (!res.error) {
@@ -45,12 +45,12 @@ const AdminLayout = () => {
     return <Navigate to="/signin" replace />;
   }
 
-  // Only allow admin, customer_support, and driver roles
+  // Only allow admin, sub_admin, customer_support, and driver roles
   if (userRole === "super_admin") {
     return <Navigate to="/super-admin" replace />;
   }
 
-  if (!["admin", "customer_support"].includes(userRole)) {
+  if (!["admin", "sub_admin", "customer_support"].includes(userRole)) {
     return <Navigate to="/signin" replace />;
   }
 
