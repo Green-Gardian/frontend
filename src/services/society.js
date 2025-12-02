@@ -86,14 +86,14 @@ const updateSociety = async (societyId, societyData) => {
   }
 };
 
-const deleteSociety = async (societyId) => {
+const blockSociety = async (societyId) => {
   try {
     const token = Cookies.get('access_token');
     
     const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/society/delete-society/${societyId}`,
+      `${import.meta.env.VITE_BACKEND_URL}/society/block-society/${societyId}`,
       {
-        method: "DELETE",
+        method: "PUT",
         headers: { 
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
@@ -109,8 +109,36 @@ const deleteSociety = async (societyId) => {
 
     return data;
   } catch (err) {
-    console.log("Error deleting society: ", err.message);
-    return { error: "Error while deleting society!" };
+    console.log("Error blocking society: ", err.message);
+    return { error: "Error while blocking society!" };
+  }
+};
+
+const unblockSociety = async (societyId) => {
+  try {
+    const token = Cookies.get('access_token');
+    
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/society/unblock-society/${societyId}`,
+      {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+
+    return data;
+  } catch (err) {
+    console.log("Error unblocking society: ", err.message);
+    return { error: "Error while unblocking society!" };
   }
 };
 
@@ -146,6 +174,7 @@ export {
   getSocieties, 
   addSociety, 
   updateSociety, 
-  deleteSociety, 
+  blockSociety, 
+  unblockSociety,
   getSocietyById 
 };

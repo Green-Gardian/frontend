@@ -13,7 +13,7 @@ const getVehicles = async () => {
     };
 
     const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/vehicle/get-vehicles`,
+      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:3001"}/vehicle/get-vehicles/`,
       options
     );
 
@@ -47,7 +47,7 @@ const addVehicle = async (vehicleData) => {
     };
 
     const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/vehicle/add-vehicle`,
+      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:3001"}/vehicle/add-vehicle/`,
       options
     );
 
@@ -80,7 +80,7 @@ const updateVehicle = async (id, vehicleData) => {
     };
 
     const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/vehicle/update-vehicle/${id}`,
+      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:3001"}/vehicle/update-vehicle/${id}/`,
       options
     );
 
@@ -99,39 +99,4 @@ const updateVehicle = async (id, vehicleData) => {
   }
 };
 
-const deleteVehicle = async (vehicleId) => {
-  console.log("delete vehicle function!");
-  console.log("vehicle id : ", vehicleId);
-
-  const access_token = Cookies.get("access_token");
-
-  try {
-    const options = {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${access_token}`,
-      },
-    };
-
-    const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/vehicle/delete-vehicle/${vehicleId}`,
-      options
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      return { error: data.message };
-    }
-
-    console.log("data : ", data);
-
-    return data;
-  } catch (err) {
-    console.log("Error : ", err.message);
-    return "Error while deleting!";
-  }
-};
-
-export { getVehicles, addVehicle, updateVehicle, deleteVehicle };
+export { getVehicles, addVehicle, updateVehicle };

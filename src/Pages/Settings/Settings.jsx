@@ -1,78 +1,28 @@
-<<<<<<< HEAD
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import {
-  User,
-  Lock,
-  Camera,
-  Save,
-  Eye,
-  EyeOff,
-  Clock,
-  Shield,
-  Trash2,
-} from "lucide-react";
-import Cookies from "js-cookie";
-
-const Settings = () => {
-  const [username, setUsername] = useState("");
-  const [activeTab, setActiveTab] = useState("profile");
-=======
-
-import { useState, useEffect } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { User, Lock, Camera, Save, Eye, EyeOff, Clock, Shield, Trash2 } from "lucide-react"
-import Cookies from "js-cookie"
+import { User, Bell, Lock, Save, Eye, EyeOff, Loader2, ImagePlus, X, Mail, Phone, KeyRound, Shield } from "lucide-react"
+import imageCompression from "browser-image-compression"
 
-const Settings = () => {
-  const [username, setUsername] = useState("")
-  const [activeTab, setActiveTab] = useState("profile")
+import { getProfileData, changePassword, updateProfile } from "../../services/auth"
+import { uploadToCloudinary } from "../../utils/upload-to-cloudinary"
+import MFASetup from "../../components/MFASetup"
 
+export default function SettingsPage() {
   // Profile state
-  const [profileData, setProfileData] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@wastemanagement.com",
-    phone: "03001234567",
-    role: "Super Admin",
-    department: "Operations",
-    bio: "Experienced waste management administrator with 5+ years in IoT systems.",
-    location: "Karachi, Pakistan",
-    timezone: "Asia/Karachi",
-    language: "English",
-  })
+  const [profileData, setProfileData] = useState({})
+  const [profileImageFile, setProfileImageFile] = useState(null)
+  const [profileImagePreview, setProfileImagePreview] = useState("")
+  const [initialProfileImageUrl, setInitialProfileImageUrl] = useState("")
+  const [hasNewProfileImage, setHasNewProfileImage] = useState(false)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const fileInputRef = useRef(null)
 
   // Password state
   const [passwordData, setPasswordData] = useState({
@@ -80,395 +30,627 @@ const Settings = () => {
     newPassword: "",
     confirmPassword: "",
   })
-  const [showPasswords, setShowPasswords] = useState({
-    current: false,
-    new: false,
-    confirm: false,
+  const [showPassword, setShowPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  // Security state
+  const [securityBtnLoading, setSecurityBtnLoading] = useState(false)
+  const [profileBtnLoading, setProfileBtnLoading] = useState(false)
+  const [securityBtnDisabled, setSecurityBtnDisabled] = useState(false)
+  const [profileBtnDisabled, setProfileBtnDisabled] = useState(false)
+
+  // Notification state
+  const [notifications, setNotifications] = useState({
+    emailNotifications: true,
+    systemAlerts: true,
+    userReports: true,
+    securityAlerts: true,
   })
 
-  const [profileImage, setProfileImage] = useState("/placeholder.svg?height=100&width=100")
-  const [errors, setErrors] = useState({})
+  // Error and success messages
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
+
+  // Default tab state
+  const [defaultTab, setDefaultTab] = useState("profile")
 
   useEffect(() => {
-    setUsername(Cookies.get("username"))
-  }, [])
+    const fetchProfileData = async () => {
+      const data = await getProfileData()
 
-  useEffect(() => {
-    if (!Cookies.get("access_token")) {
-      window.location.href = "/signin"
-    }
-  }, [])
+      console.log("Profile data fetched:", data.user)
 
-  const handleProfileChange = (field, value) => {
-    setProfileData((prev) => ({
-      ...prev,
-      [field]: value,
-    }))
-
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors((prev) => ({
-        ...prev,
-        [field]: "",
-      }))
-    }
-  }
-
-  const handlePasswordChange = (field, value) => {
-    setPasswordData((prev) => ({
-      ...prev,
-      [field]: value,
-    }))
-
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors((prev) => ({
-        ...prev,
-        [field]: "",
-      }))
-    }
-  }
-
-  const handleImageUpload = (event) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setProfileImage(e.target?.result)
+      if (!data.error) {
+        setProfileData(data.user)
+        const backendImageUrl = (data.user && (data.user.profile_picture || data.user.avatar_url)) || ""
+        setInitialProfileImageUrl(backendImageUrl)
+        setProfileImagePreview(backendImageUrl)
       }
-      reader.readAsDataURL(file)
     }
+    fetchProfileData()
+
+    // Check if MFA setup is required from URL parameter
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get("mfa_setup") === "true") {
+      setDefaultTab("security")
+      // Clean up URL
+      window.history.replaceState({}, "", window.location.pathname)
+    }
+  }, [])
+
+  const handleProfileUpdate = async () => {
+    if (profileBtnLoading || profileBtnDisabled || isUploadingImage) return
+
+    setProfileBtnLoading(true)
+    setProfileBtnDisabled(true)
+
+    let compressedFile = profileImageFile
+    if (profileImageFile) {
+      try {
+        compressedFile = await imageCompression(profileImageFile, { quality: 0.6 })
+      } catch (error) {
+        console.error("Error compressing image:", error)
+        setError("Failed to compress image.")
+        setProfileBtnLoading(false)
+        setProfileBtnDisabled(false)
+        return
+      }
+    }
+
+    const response = await updateProfile({
+      ...profileData,
+      profile_picture: compressedFile ? await uploadToCloudinary(compressedFile) : initialProfileImageUrl,
+    })
+
+    if (response.error) {
+      setError(response.error)
+    } else {
+      setError("")
+      setSuccess("Profile updated successfully!")
+      setTimeout(() => setSuccess(""), 3000)
+      setHasNewProfileImage(false)
+      setIsUploadingImage(false)
+    }
+
+    setProfileBtnLoading(false)
+    setProfileBtnDisabled(false)
   }
 
-  const validateProfile = () => {
-    const newErrors = {}
-
-    if (!profileData.firstName.trim()) {
-      newErrors.firstName = "First name is required"
+  const handlePasswordChange = () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setError("New password and confirm password do not match!")
+      return
     }
 
-    if (!profileData.lastName.trim()) {
-      newErrors.lastName = "Last name is required"
-    }
+    const changePasswordFunc = async () => {
+      setSecurityBtnLoading(true)
+      setSecurityBtnDisabled(true)
 
-    if (!profileData.email.trim()) {
-      newErrors.email = "Email is required"
-    } else if (!/\S+@\S+\.\S+/.test(profileData.email)) {
-      newErrors.email = "Email is invalid"
-    }
-
-    if (!profileData.phone.trim()) {
-      newErrors.phone = "Phone number is required"
-    } else if (!/^03\d{9}$/.test(profileData.phone)) {
-      newErrors.phone = "Phone number must be in format 03XXXXXXXXX"
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const validatePassword = () => {
-    const newErrors = {}
-
-    if (!passwordData.currentPassword) {
-      newErrors.currentPassword = "Current password is required"
-    }
-
-    if (!passwordData.newPassword) {
-      newErrors.newPassword = "New password is required"
-    } else if (passwordData.newPassword.length < 8) {
-      newErrors.newPassword = "Password must be at least 8 characters"
-    }
-
-    if (!passwordData.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password"
-    } else if (passwordData.newPassword !== passwordData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match"
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleProfileSave = () => {
-    if (validateProfile()) {
-      console.log("Profile updated:", profileData)
-      // Here you would make an API call to update the profile
-      alert("Profile updated successfully!")
-    }
-  }
-
-  const handlePasswordSave = () => {
-    if (validatePassword()) {
-      console.log("Password updated")
-      // Here you would make an API call to update the password
-      alert("Password updated successfully!")
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
+      const response = await changePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+        confirmNewPassword: passwordData.confirmPassword,
       })
+
+      if (response.error) {
+        setError(response.error)
+      } else {
+        setError("")
+        setSuccess("Password changed successfully!")
+        setTimeout(() => setSuccess(""), 3000)
+        setPasswordData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        })
+        setShowPassword(false)
+        setShowNewPassword(false)
+        setShowConfirmPassword(false)
+      }
+
+      setSecurityBtnLoading(false)
+      setSecurityBtnDisabled(false)
     }
+    changePasswordFunc()
+  }
+
+  const handleNotificationToggle = (key) => {
+    setNotifications((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }))
+  }
+
+  const handleImageChange = (e) => {
+    const file = e.target.files && e.target.files[0]
+    if (!file) return
+
+    // Basic validation: limit to 5MB
+    const MAX_SIZE = 5 * 1024 * 1024
+    if (file.size > MAX_SIZE) {
+      setError("Please choose an image smaller than 5MB.")
+      setTimeout(() => setError(""), 3000)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+      return
+    }
+
+    setProfileImageFile(file)
+    setHasNewProfileImage(true)
+
+    // Create preview URL for immediate display
+    const previewUrl = URL.createObjectURL(file)
+    setProfileImagePreview(previewUrl)
+  }
+
+  const handleRemoveImage = () => {
+    setProfileImageFile(null)
+    setHasNewProfileImage(false)
+    setProfileImagePreview(initialProfileImageUrl || "")
+    if (fileInputRef.current) fileInputRef.current.value = ""
   }
 
   return (
-    <div className="bg-white min-h-screen py-4 sm:py-6 px-4 gap-y-4 sm:gap-y-6 flex flex-col w-auto">
-      <h1 className="text-[#121212] text-[24px] leading-[32px]">Settings</h1>
+    <div className="space-y-6 p-6 bg-white min-h-screen">
+      <div>
+        <h1 className="text-3xl font-bold text-[#121212]">Settings</h1>
+        <p className="text-gray-600 mt-2">Manage your account and system preferences</p>
+      </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
+      {error && <div className="p-4 text-sm text-red-700 bg-red-100 rounded-lg border border-red-200">{error}</div>}
+
+      {success && (
+        <div className="p-4 text-sm text-green-700 bg-green-100 rounded-lg border border-green-200">{success}</div>
+      )}
+
+      <Tabs defaultValue={defaultTab} className="w-full">
+        <TabsList className="w-full justify-start">
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <User className="h-4 w-4" />
-            <span>Profile</span>
+            Profile
+          </TabsTrigger>
+          <TabsTrigger value="password" className="flex items-center gap-2">
+            <KeyRound className="h-4 w-4" />
+            Password
           </TabsTrigger>
           <TabsTrigger value="security" className="flex items-center gap-2">
-            <Lock className="h-4 w-4" />
-            <span>Security</span>
-          </TabsTrigger>
-          <TabsTrigger value="system" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
-            <span>System</span>
+            Security
           </TabsTrigger>
+          {/* <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            Notifications
+          </TabsTrigger>
+          <TabsTrigger value="preferences" className="flex items-center gap-2">
+            <Lock className="h-4 w-4" />
+            Preferences
+          </TabsTrigger> */}
         </TabsList>
 
-        {/* Profile Tab */}
-        <TabsContent value="profile" className="space-y-6">
-          <Card>
+        <TabsContent value="profile" className="mt-6">
+          <Card className="bg-white border-gray-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="text-[#121212] flex items-center space-x-2">
                 <User className="h-5 w-5" />
-                Profile Information
+                <span>Profile Settings</span>
               </CardTitle>
-              <CardDescription>Update your personal information and profile settings.</CardDescription>
+              <CardDescription className="text-gray-600">
+                Update your personal information and profile details
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6 pt-6">
-              {/* Profile Picture */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <Avatar className="h-24 w-24">
-                  <AvatarImage src={profileImage || "/placeholder.svg"} alt="Profile" />
-                  <AvatarFallback className="text-lg">
-                    {profileData.firstName[0]}
-                    {profileData.lastName[0]}
-                  </AvatarFallback>
-                </Avatar>
+            <CardContent className="space-y-6">
+              <div className="space-y-3">
+                <Label className="text-gray-700">Profile Picture</Label>
+                <div className="flex items-center gap-4">
+                  <div className="relative h-24 w-24 rounded-full overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center">
+                    {(profileBtnLoading || isUploadingImage) && (
+                      <div aria-hidden="true" className="absolute inset-0 bg-white/60 backdrop-blur-sm" />
+                    )}
+                    {profileImagePreview ? (
+                      <img
+                        src={profileImagePreview || "/placeholder.svg"}
+                        alt="Current profile"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <img
+                        src="/diverse-user-avatars.png"
+                        alt="Default avatar"
+                        className="h-full w-full object-cover"
+                      />
+                    )}
+                    {(profileBtnLoading || isUploadingImage) && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Loader2 className="h-6 w-6 text-gray-700 animate-spin" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      ref={fileInputRef}
+                      id="profilePictureInput"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageChange}
+                    />
+                    <Label
+                      htmlFor="profilePictureInput"
+                      className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm cursor-pointer transition-colors ${
+                        profileBtnLoading || isUploadingImage
+                          ? "opacity-60 pointer-events-none"
+                          : "bg-primary text-primary-foreground hover:opacity-90"
+                      }`}
+                    >
+                      <ImagePlus className="h-4 w-4" />
+                      {hasNewProfileImage ? "Change" : "Upload"}
+                    </Label>
+
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      disabled={profileBtnLoading || isUploadingImage}
+                      className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm border transition-colors ${
+                        profileBtnLoading || isUploadingImage
+                          ? "opacity-60 pointer-events-none"
+                          : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      <X className="h-4 w-4" />
+                      Remove
+                    </button>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">
+                  PNG or JPG, up to 5MB. {isUploadingImage && "Uploading to Cloudinary..."}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="profile-image" className="cursor-pointer">
-                    <Button variant="outline" className="flex items-center gap-2">
-                      <Camera className="h-4 w-4" />
-                      Change Photo
-                    </Button>
+                  <Label htmlFor="firstName" className="text-gray-700 flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    First Name
                   </Label>
                   <Input
-                    id="profile-image"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                  <p className="text-sm text-gray-500">JPG, PNG or GIF. Max size 2MB.</p>
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Basic Information */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name *</Label>
-                  <Input
                     id="firstName"
-                    value={profileData.firstName}
-                    onChange={(e) => handleProfileChange("firstName", e.target.value)}
-                    className={errors.firstName ? "border-red-500" : ""}
+                    value={profileData.first_name || ""}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        first_name: e.target.value,
+                      })
+                    }
+                    className="bg-white border-gray-300 text-[#121212] focus:border-blue-500 focus:ring-blue-500"
                   />
-                  {errors.firstName && <p className="text-sm text-red-500">{errors.firstName}</p>}
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name *</Label>
+                  <Label htmlFor="lastName" className="text-gray-700 flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Last Name
+                  </Label>
                   <Input
                     id="lastName"
-                    value={profileData.lastName}
-                    onChange={(e) => handleProfileChange("lastName", e.target.value)}
-                    className={errors.lastName ? "border-red-500" : ""}
+                    value={profileData.last_name || ""}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        last_name: e.target.value,
+                      })
+                    }
+                    className="bg-white border-gray-300 text-[#121212] focus:border-blue-500 focus:ring-blue-500"
                   />
-                  {errors.lastName && <p className="text-sm text-red-500">{errors.lastName}</p>}
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={profileData.email}
-                    onChange={(e) => handleProfileChange("email", e.target.value)}
-                    className={errors.email ? "border-red-500" : ""}
-                  />
-                  {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number *</Label>
-                  <Input
-                    id="phone"
-                    value={profileData.phone}
-                    onChange={(e) => handleProfileChange("phone", e.target.value)}
-                    className={errors.phone ? "border-red-500" : ""}
-                  />
-                  {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Input id="role" value={profileData.role} disabled className="" />
-                </div>
-
-     
-
-
-
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-gray-700 flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  Email Address
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={profileData.email || ""}
+                  onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                  className="bg-white border-gray-300 text-[#121212] focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
 
-              <Button onClick={handleProfileSave} className="w-full sm:w-auto">
-                <Save className="h-4 w-4 mr-2" />
-                Save Profile
-              </Button>
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-gray-700 flex items-center gap-2">
+                  <Phone className="h-4 w-4" />
+                  Phone Number
+                </Label>
+                <Input
+                  id="phone"
+                  value={profileData.phone_number || ""}
+                  onChange={(e) => setProfileData({ ...profileData, phone_number: e.target.value })}
+                  className="bg-white border-gray-300 text-[#121212] focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+
+              <Separator className="bg-gray-200" />
+
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleProfileUpdate}
+                  className="flex items-center space-x-2"
+                  disabled={profileBtnLoading || profileBtnDisabled || isUploadingImage}
+                  aria-busy={profileBtnLoading ? "true" : "false"}
+                >
+                  {profileBtnLoading || isUploadingImage ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>{isUploadingImage ? "Uploading..." : "Saving..."}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      <span>Save Changes</span>
+                    </>
+                  )}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Security Tab */}
-        <TabsContent value="security" className="space-y-6">
-          {/* Change Password */}
-          <Card>
+        {/* Password tab content */}
+        <TabsContent value="password" className="mt-6">
+          <Card className="bg-white border-gray-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Lock className="h-5 w-5" />
-                Change Password
+              <CardTitle className="text-[#121212] flex items-center space-x-2">
+                <KeyRound className="h-5 w-5" />
+                <span>Change Password</span>
               </CardTitle>
-              <CardDescription>Update your password to keep your account secure.</CardDescription>
+              <CardDescription className="text-gray-600">
+                Update your account password to keep it secure
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 pt-6">
+            <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="currentPassword">Current Password *</Label>
+                <Label htmlFor="currentPassword" className="text-gray-700">
+                  Current Password
+                </Label>
                 <div className="relative">
                   <Input
                     id="currentPassword"
-                    type={showPasswords.current ? "text" : "password"}
+                    type={showPassword ? "text" : "password"}
                     value={passwordData.currentPassword}
-                    onChange={(e) => handlePasswordChange("currentPassword", e.target.value)}
-                    className={errors.currentPassword ? "border-red-500" : ""}
+                    onChange={(e) =>
+                      setPasswordData({
+                        ...passwordData,
+                        currentPassword: e.target.value,
+                      })
+                    }
+                    className="bg-white border-gray-300 text-[#121212] focus:border-blue-500 focus:ring-blue-500 pr-10"
+                    placeholder="Enter your current password"
                   />
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
-                    onClick={() => setShowPasswords((prev) => ({ ...prev, current: !prev.current }))}
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-[#121212]"
                   >
-                    {showPasswords.current ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
-                {errors.currentPassword && <p className="text-sm text-red-500">{errors.currentPassword}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password *</Label>
+                <Label htmlFor="newPassword" className="text-gray-700">
+                  New Password
+                </Label>
                 <div className="relative">
                   <Input
                     id="newPassword"
-                    type={showPasswords.new ? "text" : "password"}
+                    type={showNewPassword ? "text" : "password"}
                     value={passwordData.newPassword}
-                    onChange={(e) => handlePasswordChange("newPassword", e.target.value)}
-                    className={errors.newPassword ? "border-red-500" : ""}
+                    onChange={(e) =>
+                      setPasswordData({
+                        ...passwordData,
+                        newPassword: e.target.value,
+                      })
+                    }
+                    className="bg-white border-gray-300 text-[#121212] focus:border-blue-500 focus:ring-blue-500 pr-10"
+                    placeholder="Enter your new password"
                   />
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
-                    onClick={() => setShowPasswords((prev) => ({ ...prev, new: !prev.new }))}
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-[#121212]"
                   >
-                    {showPasswords.new ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
+                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
-                {errors.newPassword && <p className="text-sm text-red-500">{errors.newPassword}</p>}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm New Password *</Label>
+                <Label htmlFor="confirmPassword" className="text-gray-700">
+                  Confirm New Password
+                </Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
-                    type={showPasswords.confirm ? "text" : "password"}
+                    type={showConfirmPassword ? "text" : "password"}
                     value={passwordData.confirmPassword}
-                    onChange={(e) => handlePasswordChange("confirmPassword", e.target.value)}
-                    className={errors.confirmPassword ? "border-red-500" : ""}
+                    onChange={(e) =>
+                      setPasswordData({
+                        ...passwordData,
+                        confirmPassword: e.target.value,
+                      })
+                    }
+                    className="bg-white border-gray-300 text-[#121212] focus:border-blue-500 focus:ring-blue-500 pr-10"
+                    placeholder="Confirm your new password"
                   />
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
-                    onClick={() => setShowPasswords((prev) => ({ ...prev, confirm: !prev.confirm }))}
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-[#121212]"
                   >
-                    {showPasswords.confirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
-                {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword}</p>}
               </div>
 
-              <Button onClick={handlePasswordSave} className="w-full sm:w-auto">
-                <Save className="h-4 w-4 mr-2" />
-                Update Password
-              </Button>
+              <Separator className="bg-gray-200" />
+
+              <div className="flex justify-end">
+                <Button
+                  onClick={handlePasswordChange}
+                  className="flex items-center space-x-2"
+                  disabled={securityBtnLoading || securityBtnDisabled}
+                >
+                  {securityBtnLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Changing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <KeyRound className="h-4 w-4" />
+                      <span>Change Password</span>
+                    </>
+                  )}
+                </Button>
+              </div>
             </CardContent>
           </Card>
-
-         
         </TabsContent>
 
-        <TabsContent value="system" className="space-y-6">
-          {/* Account Information */}
-          <Card>
+        {/* Security tab content */}
+        <TabsContent value="security" className="mt-6">
+          <MFASetup />
+        </TabsContent>
+
+        {/* Notifications tab content */}
+        <TabsContent value="notifications" className="mt-6">
+          <Card className="bg-white border-gray-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Account Information
+              <CardTitle className="text-[#121212] flex items-center space-x-2">
+                <Bell className="h-5 w-5" />
+                <span>Notification Preferences</span>
               </CardTitle>
+              <CardDescription className="text-gray-600">
+                Manage how you receive notifications and updates
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 pt-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 rounded-lg">
-                  <Label className="text-sm font-medium text-gray-500">Account Created</Label>
-                  <p className="text-lg font-medium">January 15, 2024</p>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <h4 className="font-medium">Email Notifications</h4>
+                      <p className="text-sm text-muted-foreground">Receive notifications via email</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant={notifications.emailNotifications ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleNotificationToggle("emailNotifications")}
+                  >
+                    {notifications.emailNotifications ? "Enabled" : "Disabled"}
+                  </Button>
                 </div>
-                <div className="p-4 rounded-lg">
-                  <Label className="text-sm font-medium text-gray-500">Last Login</Label>
-                  <p className="text-lg font-medium">Today at 2:30 PM</p>
+
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <Bell className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <h4 className="font-medium">System Alerts</h4>
+                      <p className="text-sm text-muted-foreground">Receive system alerts</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant={notifications.systemAlerts ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleNotificationToggle("systemAlerts")}
+                  >
+                    {notifications.systemAlerts ? "Enabled" : "Disabled"}
+                  </Button>
                 </div>
-                <div className="p-4 rounded-lg">
-                  <Label className="text-sm font-medium text-gray-500">Account Status</Label>
-                  <Badge className="bg-[#EBF9F1] text-[#1F9254] mt-1">Active</Badge>
+
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <Bell className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <h4 className="font-medium">User Reports</h4>
+                      <p className="text-sm text-muted-foreground">Receive user reports</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant={notifications.userReports ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleNotificationToggle("userReports")}
+                  >
+                    {notifications.userReports ? "Enabled" : "Disabled"}
+                  </Button>
                 </div>
-                <div className="p-4 rounded-lg">
-                  <Label className="text-sm font-medium text-gray-500">Account Type</Label>
-                  <Badge className="mt-1">Administrator</Badge>
+
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <Bell className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <h4 className="font-medium">Security Alerts</h4>
+                      <p className="text-sm text-muted-foreground">Receive security alerts</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant={notifications.securityAlerts ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleNotificationToggle("securityAlerts")}
+                  >
+                    {notifications.securityAlerts ? "Enabled" : "Disabled"}
+                  </Button>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-              <div className="border border-red-200 rounded-lg p-4 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                  <div className="flex-1">
-                    <Label className="text-red-600">Delete Account</Label>
-                    <p className="text-sm text-gray-500">
-                      Permanently delete your account and all associated data. This action cannot be undone.
-                    </p>
+        {/* Preferences tab content */}
+        <TabsContent value="preferences" className="mt-6">
+          <Card className="bg-white border-gray-200 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-[#121212] flex items-center space-x-2">
+                <Lock className="h-5 w-5" />
+                <span>Display Preferences</span>
+              </CardTitle>
+              <CardDescription className="text-gray-600">
+                Customize how the application looks and behaves
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <h4 className="font-medium">Theme</h4>
+                    <p className="text-sm text-muted-foreground">Choose your preferred color theme</p>
                   </div>
-                  <Button variant="destructive" size="sm" className="w-full sm:w-auto">
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Account
+                  <Button variant="outline" size="sm">
+                    System
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <h4 className="font-medium">Language</h4>
+                    <p className="text-sm text-muted-foreground">Select your preferred language</p>
+                  </div>
+                  <Button variant="outline" size="sm">
+                    English
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <h4 className="font-medium">Time Zone</h4>
+                    <p className="text-sm text-muted-foreground">Set your local time zone</p>
+                  </div>
+                  <Button variant="outline" size="sm">
+                    UTC-5
                   </Button>
                 </div>
               </div>
@@ -479,508 +661,3 @@ const Settings = () => {
     </div>
   )
 }
->>>>>>> origin/main
-
-  // Profile state
-  const [profileData, setProfileData] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@wastemanagement.com",
-    phone: "03001234567",
-    role: "Super Admin",
-    department: "Operations",
-    bio: "Experienced waste management administrator with 5+ years in IoT systems.",
-    location: "Karachi, Pakistan",
-    timezone: "Asia/Karachi",
-    language: "English",
-  });
-
-  // Password state
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
-  const [showPasswords, setShowPasswords] = useState({
-    current: false,
-    new: false,
-    confirm: false,
-  });
-
-  const [profileImage, setProfileImage] = useState(
-    "/placeholder.svg?height=100&width=100"
-  );
-  const [errors, setErrors] = useState({});
-
-  useEffect(() => {
-    setUsername(Cookies.get("username"));
-  }, []);
-
-  useEffect(() => {
-    if (!Cookies.get("access_token")) {
-      window.location.href = "/signin";
-    }
-  }, []);
-
-  const handleProfileChange = (field, value) => {
-    setProfileData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors((prev) => ({
-        ...prev,
-        [field]: "",
-      }));
-    }
-  };
-
-  const handlePasswordChange = (field, value) => {
-    setPasswordData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors((prev) => ({
-        ...prev,
-        [field]: "",
-      }));
-    }
-  };
-
-  const handleImageUpload = (event) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setProfileImage(e.target?.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const validateProfile = () => {
-    const newErrors = {};
-
-    if (!profileData.firstName.trim()) {
-      newErrors.firstName = "First name is required";
-    }
-
-    if (!profileData.lastName.trim()) {
-      newErrors.lastName = "Last name is required";
-    }
-
-    if (!profileData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(profileData.email)) {
-      newErrors.email = "Email is invalid";
-    }
-
-    if (!profileData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
-    } else if (!/^03\d{9}$/.test(profileData.phone)) {
-      newErrors.phone = "Phone number must be in format 03XXXXXXXXX";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const validatePassword = () => {
-    const newErrors = {};
-
-    if (!passwordData.currentPassword) {
-      newErrors.currentPassword = "Current password is required";
-    }
-
-    if (!passwordData.newPassword) {
-      newErrors.newPassword = "New password is required";
-    } else if (passwordData.newPassword.length < 8) {
-      newErrors.newPassword = "Password must be at least 8 characters";
-    }
-
-    if (!passwordData.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
-    } else if (passwordData.newPassword !== passwordData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleProfileSave = () => {
-    if (validateProfile()) {
-      console.log("Profile updated:", profileData);
-      // Here you would make an API call to update the profile
-      alert("Profile updated successfully!");
-    }
-  };
-
-  const handlePasswordSave = () => {
-    if (validatePassword()) {
-      console.log("Password updated");
-      // Here you would make an API call to update the password
-      alert("Password updated successfully!");
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-    }
-  };
-
-  return (
-    <div className="bg-white min-h-screen py-4 sm:py-6 px-4 gap-y-4 sm:gap-y-6 flex flex-col w-auto">
-      <h1 className="text-[#121212] text-[24px] leading-[32px]">Settings</h1>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="profile" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
-            <span>Profile</span>
-          </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center gap-2">
-            <Lock className="h-4 w-4" />
-            <span>Security</span>
-          </TabsTrigger>
-          <TabsTrigger value="system" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            <span>System</span>
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Profile Tab */}
-        <TabsContent value="profile" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Profile Information
-              </CardTitle>
-              <CardDescription>
-                Update your personal information and profile settings.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6 pt-6">
-              {/* Profile Picture */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <Avatar className="h-24 w-24">
-                  <AvatarImage
-                    src={profileImage || "/placeholder.svg"}
-                    alt="Profile"
-                  />
-                  <AvatarFallback className="text-lg">
-                    {profileData.firstName[0]}
-                    {profileData.lastName[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="space-y-2">
-                  <Label htmlFor="profile-image" className="cursor-pointer">
-                    <Button
-                      variant="outline"
-                      className="flex items-center gap-2"
-                    >
-                      <Camera className="h-4 w-4" />
-                      Change Photo
-                    </Button>
-                  </Label>
-                  <Input
-                    id="profile-image"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                  <p className="text-sm text-gray-500">
-                    JPG, PNG or GIF. Max size 2MB.
-                  </p>
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Basic Information */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name *</Label>
-                  <Input
-                    id="firstName"
-                    value={profileData.firstName}
-                    onChange={(e) =>
-                      handleProfileChange("firstName", e.target.value)
-                    }
-                    className={errors.firstName ? "border-red-500" : ""}
-                  />
-                  {errors.firstName && (
-                    <p className="text-sm text-red-500">{errors.firstName}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name *</Label>
-                  <Input
-                    id="lastName"
-                    value={profileData.lastName}
-                    onChange={(e) =>
-                      handleProfileChange("lastName", e.target.value)
-                    }
-                    className={errors.lastName ? "border-red-500" : ""}
-                  />
-                  {errors.lastName && (
-                    <p className="text-sm text-red-500">{errors.lastName}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={profileData.email}
-                    onChange={(e) =>
-                      handleProfileChange("email", e.target.value)
-                    }
-                    className={errors.email ? "border-red-500" : ""}
-                  />
-                  {errors.email && (
-                    <p className="text-sm text-red-500">{errors.email}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number *</Label>
-                  <Input
-                    id="phone"
-                    value={profileData.phone}
-                    onChange={(e) =>
-                      handleProfileChange("phone", e.target.value)
-                    }
-                    className={errors.phone ? "border-red-500" : ""}
-                  />
-                  {errors.phone && (
-                    <p className="text-sm text-red-500">{errors.phone}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Input
-                    id="role"
-                    value={profileData.role}
-                    disabled
-                    className=""
-                  />
-                </div>
-              </div>
-
-              <Button onClick={handleProfileSave} className="w-full sm:w-auto">
-                <Save className="h-4 w-4 mr-2" />
-                Save Profile
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Security Tab */}
-        <TabsContent value="security" className="space-y-6">
-          {/* Change Password */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Lock className="h-5 w-5" />
-                Change Password
-              </CardTitle>
-              <CardDescription>
-                Update your password to keep your account secure.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-6">
-              <div className="space-y-2">
-                <Label htmlFor="currentPassword">Current Password *</Label>
-                <div className="relative">
-                  <Input
-                    id="currentPassword"
-                    type={showPasswords.current ? "text" : "password"}
-                    value={passwordData.currentPassword}
-                    onChange={(e) =>
-                      handlePasswordChange("currentPassword", e.target.value)
-                    }
-                    className={errors.currentPassword ? "border-red-500" : ""}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
-                    onClick={() =>
-                      setShowPasswords((prev) => ({
-                        ...prev,
-                        current: !prev.current,
-                      }))
-                    }
-                  >
-                    {showPasswords.current ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-                {errors.currentPassword && (
-                  <p className="text-sm text-red-500">
-                    {errors.currentPassword}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password *</Label>
-                <div className="relative">
-                  <Input
-                    id="newPassword"
-                    type={showPasswords.new ? "text" : "password"}
-                    value={passwordData.newPassword}
-                    onChange={(e) =>
-                      handlePasswordChange("newPassword", e.target.value)
-                    }
-                    className={errors.newPassword ? "border-red-500" : ""}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
-                    onClick={() =>
-                      setShowPasswords((prev) => ({ ...prev, new: !prev.new }))
-                    }
-                  >
-                    {showPasswords.new ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-                {errors.newPassword && (
-                  <p className="text-sm text-red-500">{errors.newPassword}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm New Password *</Label>
-                <div className="relative">
-                  <Input
-                    id="confirmPassword"
-                    type={showPasswords.confirm ? "text" : "password"}
-                    value={passwordData.confirmPassword}
-                    onChange={(e) =>
-                      handlePasswordChange("confirmPassword", e.target.value)
-                    }
-                    className={errors.confirmPassword ? "border-red-500" : ""}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
-                    onClick={() =>
-                      setShowPasswords((prev) => ({
-                        ...prev,
-                        confirm: !prev.confirm,
-                      }))
-                    }
-                  >
-                    {showPasswords.confirm ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-                {errors.confirmPassword && (
-                  <p className="text-sm text-red-500">
-                    {errors.confirmPassword}
-                  </p>
-                )}
-              </div>
-
-              <Button onClick={handlePasswordSave} className="w-full sm:w-auto">
-                <Save className="h-4 w-4 mr-2" />
-                Update Password
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="system" className="space-y-6">
-          {/* Account Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Account Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 rounded-lg">
-                  <Label className="text-sm font-medium text-gray-500">
-                    Account Created
-                  </Label>
-                  <p className="text-lg font-medium">January 15, 2024</p>
-                </div>
-                <div className="p-4 rounded-lg">
-                  <Label className="text-sm font-medium text-gray-500">
-                    Last Login
-                  </Label>
-                  <p className="text-lg font-medium">Today at 2:30 PM</p>
-                </div>
-                <div className="p-4 rounded-lg">
-                  <Label className="text-sm font-medium text-gray-500">
-                    Account Status
-                  </Label>
-                  <Badge className="bg-[#EBF9F1] text-[#1F9254] mt-1">
-                    Active
-                  </Badge>
-                </div>
-                <div className="p-4 rounded-lg">
-                  <Label className="text-sm font-medium text-gray-500">
-                    Account Type
-                  </Label>
-                  <Badge className="mt-1">Administrator</Badge>
-                </div>
-              </div>
-
-              <div className="border border-red-200 rounded-lg p-4 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                  <div className="flex-1">
-                    <Label className="text-red-600">Delete Account</Label>
-                    <p className="text-sm text-gray-500">
-                      Permanently delete your account and all associated data.
-                      This action cannot be undone.
-                    </p>
-                  </div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Account
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-};
-
-export default Settings;

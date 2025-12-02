@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -11,24 +12,61 @@ import Modal from "@/components/modal";
 import AlertForm from "@/components/forms/alertForm";
 import AlertNotificationContainer from "@/components/AlertNotification";
 import { useAlertWebSocket } from "@/hooks/useWebSocket";
-import { getAlerts, createAlert, updateAlert, cancelAlert, getAlertStats, getAlertTypes } from "@/services/alerts";
+import {
+  fetchAlerts,
+  fetchAlertTypes,
+  fetchAlertStats,
+  createNewAlert,
+  updateExistingAlert,
+  cancelExistingAlert,
+} from "@/redux/slices/alertsSlice";
 
 const Alerts = () => {
   const [username, setUsername] = useState("");
-  const [alertRecords, setAlertRecords] = useState([]);
-  const [alertTypes, setAlertTypes] = useState(null); // null means loading, [] means loaded but empty
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [alertToEdit, setAlertToEdit] = useState(null);
   const [selectedAlert, setSelectedAlert] = useState(null);
-  const [cardValues, setCardValues] = useState({
-    total: 0,
-    pending: 0,
-    sent: 0,
-    failed: 0,
-  });
+  const dispatch = useDispatch();
+  const { list, types, stats, loading } = useSelector((state) => state.alerts);
+
+  const normalizeAlerts = useCallback((data) => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.data?.alerts)) return data.data.alerts;
+    if (Array.isArray(data?.alerts)) return data.alerts;
+    return [];
+  }, []);
+
+  const alertRecords = useMemo(
+    () => normalizeAlerts(list),
+    [list, normalizeAlerts]
+  );
+
+  const alertTypesList = useMemo(() => {
+    if (!types) return [];
+    if (Array.isArray(types)) return types;
+    if (Array.isArray(types?.data)) return types.data;
+    if (Array.isArray(types?.data?.types)) return types.data.types;
+    return [];
+  }, [types]);
+
+  const alertTypesLoading = types === null;
+
+  const cardValues = useMemo(() => {
+    const overall =
+      stats?.data?.overall ??
+      stats?.overall ??
+      (stats && !stats.data ? stats : null);
+
+    return {
+      total: parseInt(overall?.total_alerts ?? overall?.total ?? 0, 10) || 0,
+      pending: parseInt(overall?.pending_alerts ?? 0, 10) || 0,
+      sent: parseInt(overall?.sent_alerts ?? 0, 10) || 0,
+      failed: parseInt(overall?.failed_alerts ?? 0, 10) || 0,
+    };
+  }, [stats]);
 
   // Real-time WebSocket connection for alerts
   const { alerts: realTimeAlerts, removeAlert } = useAlertWebSocket();
@@ -58,9 +96,10 @@ const Alerts = () => {
 
   useEffect(() => {
     setUsername(Cookies.get("username"));
-    fetchData();
-    fetchAlertTypes();
-  }, []);
+    dispatch(fetchAlerts());
+    dispatch(fetchAlertStats());
+    dispatch(fetchAlertTypes());
+  }, [dispatch]);
 
 
 
@@ -70,62 +109,17 @@ const Alerts = () => {
     }
   }, []);
 
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      const res = await getAlerts();
-      console.log("Alerts API response:", res);
-      const alerts = res?.data?.alerts || [];
-      console.log("Extracted alerts:", alerts);
-      setAlertRecords(alerts);
-      await updateCardsData();
-    } catch (error) {
-      console.error("Error fetching alerts:", error);
-      setAlertRecords([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-    const fetchAlertTypes = async () => {
-    try {
-      const res = await getAlertTypes();
-      if (res?.success && res?.data) {
-        setAlertTypes(res.data);
-      } else {
-        setAlertTypes([]);
-      }
-    } catch (error) {
-      console.error("Error fetching alert types:", error);
-      setAlertTypes([]);
-    }
-  };
-
-  const updateCardsData = async () => {
-    try {
-      const stats = await getAlertStats();
-      console.log("Stats API response:", stats);
-      if (stats?.data?.overall) {
-        const overall = stats.data.overall;
-        console.log("Overall stats:", overall);
-        setCardValues({
-          total: parseInt(overall.total_alerts) || 0,
-          pending: parseInt(overall.pending_alerts) || 0,
-          sent: parseInt(overall.sent_alerts) || 0,
-          failed: parseInt(overall.failed_alerts) || 0,
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching stats:", error);
-    }
-  };
+  const handleRefreshAlerts = useCallback(() => {
+    dispatch(fetchAlerts());
+    dispatch(fetchAlertStats());
+  }, [dispatch]);
 
   const handleCreateAlert = async (alertData) => {
     try {
-      await createAlert(alertData);
+      await dispatch(createNewAlert(alertData)).unwrap();
       setIsModalOpen(false);
       setAlertToEdit(null);
-      fetchData();
+      handleRefreshAlerts();
     } catch (error) {
       console.error("Error creating alert:", error);
     }
@@ -133,10 +127,12 @@ const Alerts = () => {
 
   const handleUpdateAlert = async (alertData) => {
     try {
-      await updateAlert(alertToEdit.id, alertData);
+      await dispatch(
+        updateExistingAlert({ alertId: alertToEdit.id, updateData: alertData })
+      ).unwrap();
       setIsModalOpen(false);
       setAlertToEdit(null);
-      fetchData();
+      handleRefreshAlerts();
     } catch (error) {
       console.error("Error updating alert:", error);
     }
@@ -145,8 +141,8 @@ const Alerts = () => {
   const handleCancelAlert = async (alertId) => {
     if (window.confirm("Are you sure you want to cancel this alert?")) {
       try {
-        await cancelAlert(alertId);
-        fetchData();
+        await dispatch(cancelExistingAlert(alertId)).unwrap();
+        handleRefreshAlerts();
       } catch (error) {
         console.error("Error cancelling alert:", error);
       }
@@ -221,28 +217,15 @@ const Alerts = () => {
     alert.status.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  console.log("Alert records state:", alertRecords);
-  console.log("Filtered alerts:", filteredAlerts);
-
   const itemsPerPage = 10;
   const totalPages = Math.ceil(filteredAlerts.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentAlerts = filteredAlerts.slice(startIndex, endIndex);
 
-  console.log("Pagination calculation:", {
-    itemsPerPage,
-    totalPages,
-    startIndex,
-    endIndex,
-    currentAlertsLength: currentAlerts.length
-  });
-
-  console.log("Component render state:", { isLoading, alertRecordsLength: alertRecords.length });
-
-  if (isLoading) {
+  if (loading && alertRecords.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
@@ -262,22 +245,24 @@ const Alerts = () => {
         />
       )}
 
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 bg-white min-h-screen">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Alert Management</h1>
             <p className="text-gray-600">Manage and monitor system alerts</p>
           </div>
-                               <Button
+          <Button
             onClick={() => setIsModalOpen(true)}
-            disabled={alertTypes === null || alertTypes.length === 0}
+            disabled={alertTypesLoading || alertTypesList.length === 0}
             className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="h-4 w-4" />
             Create Alert
-            {alertTypes === null && <span className="ml-2 text-xs">(Loading...)</span>}
-            {alertTypes && alertTypes.length === 0 && <span className="ml-2 text-xs">(No Types)</span>}
+            {alertTypesLoading && <span className="ml-2 text-xs">(Loading...)</span>}
+            {!alertTypesLoading && alertTypesList.length === 0 && (
+              <span className="ml-2 text-xs">(No Types)</span>
+            )}
           </Button>
         </div>
 
@@ -480,14 +465,14 @@ const Alerts = () => {
               </Button>
             </div>
           </div>
-        ) : alertTypes === null ? (
+        ) : alertTypesLoading ? (
           <div className="flex items-center justify-center py-8">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
               <p className="text-gray-600">Loading alert types...</p>
             </div>
           </div>
-        ) : alertTypes.length === 0 ? (
+        ) : alertTypesList.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-red-600 mb-4">No alert types are configured.</p>
             <p className="text-gray-600 text-sm">Please contact an administrator to set up alert types before creating alerts.</p>
@@ -495,7 +480,7 @@ const Alerts = () => {
         ) : (
           <AlertForm
             alertToEdit={alertToEdit}
-            alertTypes={alertTypes}
+            alertTypes={alertTypesList}
             onSubmit={alertToEdit ? handleUpdateAlert : handleCreateAlert}
             onClose={handleCloseModal}
           />

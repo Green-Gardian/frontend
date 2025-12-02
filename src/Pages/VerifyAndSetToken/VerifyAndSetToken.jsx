@@ -134,17 +134,17 @@ const VerifyAndSetToken = () => {
             <Alert
               className={`mb-6 w-full ${
                 submissionStatus === "success"
-                  ? "bg-green-50 text-green-800 border-green-200"
-                  : "bg-red-50 text-red-800 border-red-200"
+                  ? "bg-primary/10 border-primary/70"
+                  : "bg-red-50 text-red-800 border-red"
               } border`}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex gap-2">
                 {submissionStatus === "success" ? (
                   <CheckCircle className="h-4 w-4" />
                 ) : (
                   <AlertCircle className="h-4 w-4" />
                 )}
-                <AlertDescription className="w-full">{statusMessage}</AlertDescription>
+                <AlertDescription className={`w-full min-w-[300px] ${ submissionStatus === "success" ? "text-primary/70" : "text-red-800"}`}>{statusMessage}</AlertDescription>
               </div>
             </Alert>
           )}
@@ -226,14 +226,14 @@ const VerifyAndSetToken = () => {
             {submissionStatus === "success" ? (
               <Button
                 type="button"
-                className="w-full py-6 bg-green-600 hover:bg-green-700 text-white font-medium"
+                className="w-full py-6 bg-primary hover:bg-primary/80 hover:cursor-pointer text-white font-medium"
                 onClick={() => (window.location.href = "/signin")}
               >
                 Go to Login
               </Button>
             ) : (
               <Button
-                className="w-full py-6 bg-[#624DE3]/80 hover:bg-[#624DE3] text-white font-medium"
+                className="w-full py-6 bg-primary hover:bg-primary/80 hover:cursor-pointer text-white font-medium"
                 type="submit"
                 disabled={
                   isSubmitting || !token || submissionStatus === "success"

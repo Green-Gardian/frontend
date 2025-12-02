@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 import {
   Table,
@@ -23,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-import { Plus, SquarePen, Trash2 } from "lucide-react";
+import { Plus, SquarePen, Users } from "lucide-react";
 
 import InfoCards from "@/components/info-cards";
 import Modal from "@/components/modal";
@@ -32,22 +33,61 @@ import VehicleForm from "@/components/forms/vehicleForm";
 
 import Cookies from "js-cookie";
 
-import { getVehicles, deleteVehicle } from "@/services/vehicle";
+import { fetchVehicles } from "@/redux/slices/vehicleSlice";
+import { fetchDrivers } from "@/redux/slices/driverSlice";
 
 const Vehicle = () => {
   const [username, setUsername] = useState("");
-  const [vehicleRecords, setVehicleRecords] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [vehicleToEdit, setVehicleToEdit] = useState(null);
-  const [cardValues, setCardValues] = useState({
-    total: 0,
-    active: 0,
-    maintenance: 0,
-    available: 0,
-  });
+  const dispatch = useDispatch();
+  const { vehicles: vehicleState, loading: vehiclesLoading } = useSelector(
+    (state) => state.vehicles
+  );
+  const { drivers: driverState } = useSelector((state) => state.driver || {});
+
+  const normalizeVehicles = useCallback((data) => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.vehicles)) return data.vehicles;
+    if (Array.isArray(data?.data?.vehicles)) return data.data.vehicles;
+    return [];
+  }, []);
+
+  const normalizeDrivers = useCallback((data) => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.drivers)) return data.drivers;
+    if (Array.isArray(data?.data?.drivers)) return data.data.drivers;
+    return [];
+  }, []);
+
+  const vehicleRecords = useMemo(
+    () => normalizeVehicles(vehicleState),
+    [normalizeVehicles, vehicleState]
+  );
+
+  const drivers = useMemo(
+    () => normalizeDrivers(driverState),
+    [normalizeDrivers, driverState]
+  );
+
+  const cardValues = useMemo(() => {
+    const total = vehicleRecords.length;
+    const active = vehicleRecords.filter(
+      (v) => v.status?.toLowerCase() === "active"
+    ).length;
+    const maintenance = vehicleRecords.filter(
+      (v) => v.status?.toLowerCase() === "maintenance"
+    ).length;
+    const available = vehicleRecords.filter(
+      (v) => v.status?.toLowerCase() === "available"
+    ).length;
+
+    return { total, active, maintenance, available };
+  }, [vehicleRecords]);
 
   const cardsData = [
     {
@@ -66,20 +106,22 @@ const Vehicle = () => {
       title: "In Maintenance",
       number: cardValues.maintenance,
       percentage: -1.8,
-      backgroundColor: "bg-[#FFF2E6]",
+      backgroundColor: "bg-[#E6F1FD]",
+
     },
     {
       title: "Available",
       number: cardValues.available,
       percentage: 3.1,
-      backgroundColor: "bg-[#E6F1FD]",
+      backgroundColor: "bg-[#EDEEFC]",
     },
   ];
 
   useEffect(() => {
     setUsername(Cookies.get("username"));
-    fetchData();
-  }, []);
+    dispatch(fetchVehicles());
+    dispatch(fetchDrivers());
+  }, [dispatch]);
 
   useEffect(() => {
     if (!Cookies.get("access_token")) {
@@ -87,69 +129,9 @@ const Vehicle = () => {
     }
   }, []);
 
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      const res = await getVehicles();
-      const vehicles = res?.vehicles || [];
-      console.log("vehicles : ", vehicles);
-      setVehicleRecords(vehicles);
-      await updateCardsData();
-    } catch (error) {
-      console.error("Error fetching vehicles:", error);
-      setVehicleRecords([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const updateCardsData = async () => {
-    try {
-      setIsLoading(true);
-      const res = await getVehicles();
-      const vehicles = res?.vehicles || [];
-
-      const total = vehicles.length;
-      const active = vehicles.filter(
-        (v) => v.status?.toLowerCase() === "active"
-      ).length;
-      const maintenance = vehicles.filter(
-        (v) => v.status?.toLowerCase() === "maintenance"
-      ).length;
-      const available = vehicles.filter(
-        (v) => v.status?.toLowerCase() === "active"
-      ).length;
-
-      setCardValues({
-        total:total,
-        active:active,
-        maintenance:maintenance,
-        available:available,
-      })
-
-      console.log({
-        total,
-        active,
-        maintenance,
-        available,
-      });
-    } catch (error) {
-      console.error("Error updating cards data:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const deleteRecord = async (vehicleId) => {
-    console.log("inside delete record function!");
-
-    try {
-      await deleteVehicle(vehicleId);
-      fetchData();
-    } catch (error) {
-      console.error("Error deleting vehicle:", error);
-    }
-  };
+  const handleRefreshVehicles = useCallback(() => {
+    dispatch(fetchVehicles());
+  }, [dispatch]);
 
   const itemsPerPage = 7;
 
@@ -219,8 +201,10 @@ const Vehicle = () => {
   };
 
   const openModal = (vehicle = null) => {
+    console.log("Opening modal with vehicle:", vehicle);
     setVehicleToEdit(vehicle);
     setIsModalOpen(true);
+    console.log("Modal state set to true");
   };
 
   const onClose = () => {
@@ -228,10 +212,20 @@ const Vehicle = () => {
     setVehicleToEdit(null);
   };
 
-  const onSubmit = async (formData) => {
-    console.log("Vehicle form submitted successfully!");
-    onClose();
-    await fetchData();
+  const getDriverInfo = (driverName) => {
+    if (!driverName || driverName === "unassigned")
+      return { name: "Unassigned", status: "unassigned" };
+
+    const driver = drivers.find((d) => d.username === driverName);
+    if (driver) {
+      return {
+        name: `${driver.first_name} ${driver.last_name}`,
+        username: driver.username,
+        email: driver.email,
+        status: driver.is_verified ? "verified" : "unverified",
+      };
+    }
+    return { name: driverName, status: "unknown" };
   };
 
   const getStatusBadgeStyle = (status) => {
@@ -252,7 +246,7 @@ const Vehicle = () => {
   return (
     <div className="bg-white min-h-screen py-6 px-4 gap-y-6 flex flex-col w-auto">
       <h1 className="text-[#121212] text-[24px] leading-[32px]">
-        Hello,<span className="font-semibold">{username || "User"}</span>
+        Hello,<span className="font-semibold">{Cookies.get('society')} - {username}</span>
       </h1>
 
       {/*Cards Section */}
@@ -281,11 +275,23 @@ const Vehicle = () => {
             />
           </div>
 
-          <Button className="w-full sm:w-auto " onClick={() => openModal()}>
-            <Plus className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Add Vehicle</span>
-            <span className="sm:hidden">Add</span>
-          </Button>
+          <div className="flex gap-2 w-full sm:w-auto">
+            {/* <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => (window.location.href = "/admin/staff")}
+            >
+              <Users className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Manage Drivers</span>
+              <span className="sm:hidden">Drivers</span>
+            </Button> */}
+
+            <Button className="w-full sm:w-auto " onClick={() => openModal()}>
+              <Plus className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Assign Vehicle</span>
+              <span className="sm:hidden">Add</span>
+            </Button>
+          </div>
         </div>
 
         <div className="rounded-md overflow-hidden">
@@ -307,7 +313,7 @@ const Vehicle = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading ? (
+                {vehiclesLoading ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8">
                       Loading vehicle data...
@@ -328,12 +334,21 @@ const Vehicle = () => {
                         <div className="flex flex-col">
                           <span>{record.plate_no || "N/A"}</span>
                           <span className="text-xs text-gray-500 sm:hidden">
-                            {record.driver_name || "Unassigned"}
+                            {getDriverInfo(record.driver_name).name}
                           </span>
                         </div>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
-                        {record.driver_name || "Unassigned"}
+                        <div className="flex flex-col">
+                          <span className="font-medium">
+                            {getDriverInfo(record.driver_name).name}
+                          </span>
+                          {record.driver_name && (
+                            <span className="text-xs text-gray-500">
+                              @{getDriverInfo(record.driver_name).username}
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge
@@ -349,10 +364,6 @@ const Vehicle = () => {
                           <SquarePen
                             className="h-4 w-4 cursor-pointer text-primary"
                             onClick={() => openModal(record)}
-                          />
-                          <Trash2
-                            className="h-4 w-4 cursor-pointer text-[#A30D11]"
-                            onClick={() => deleteRecord(record.id)}
                           />
                         </div>
                       </TableCell>
@@ -372,7 +383,7 @@ const Vehicle = () => {
           </div>
         </div>
 
-        {!isLoading && totalPages > 1 && (
+        {!vehiclesLoading && totalPages > 1 && (
           <Pagination className="py-4">
             <PaginationContent className="flex-wrap gap-1">
               <PaginationItem>
@@ -429,10 +440,10 @@ const Vehicle = () => {
         )}
       </div>
 
-      <Modal status={isModalOpen}>
+      <Modal isOpen={isModalOpen} onClose={onClose}>
         <VehicleForm
           onClose={onClose}
-          onSubmit={fetchData}
+          onSubmit={handleRefreshVehicles}
           vehicleToEdit={vehicleToEdit}
         />
       </Modal>

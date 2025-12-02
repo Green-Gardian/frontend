@@ -1,4 +1,8 @@
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+} from "react-router-dom";
 import Cookies from "js-cookie";
 
 import { AdminLayout, SuperAdminLayout } from "./layout";
@@ -10,6 +14,8 @@ import {
   Settings,
   NotFound,
   Signin,
+  ForgotPassword,
+  ResetPassword,
   Customer,
   Payments,
 <<<<<<< HEAD
@@ -22,11 +28,14 @@ import {
   Alerts,
   SuperAdminDashboard,
   UserManagement,
+  VehicleInventory,
   SocietyManagement,
   SuperAdminAnalytics,
-  SuperAdminSettings,
->>>>>>> origin/main
+  ActivityLogs,
 } from "./Pages";
+
+import { Provider } from "react-redux";
+import store from "./redux/store";
 
 import "./index.css";
 
@@ -34,11 +43,12 @@ import "./index.css";
 const RootRedirect = () => {
   const userRole = Cookies.get("user_role");
   const accessToken = Cookies.get("access_token");
-  
+
+
   if (!accessToken) {
     return <Navigate to="/signin" replace />;
   }
-  
+
   if (userRole === "super_admin") {
     return <Navigate to="/super-admin" replace />;
   } else {
@@ -58,6 +68,10 @@ function App() {
       children: [
         {
           path: "",
+          element: <Dashboard />,
+        },
+        {
+          path: "dashboard",
           element: <Dashboard />,
         },
         {
@@ -97,6 +111,10 @@ function App() {
           element: <Alerts />,
         },
         {
+          path: "activity-logs",
+          element: <ActivityLogs />,
+        },
+        {
           path: "analytics",
           element: <Analytics />,
 >>>>>>> origin/main
@@ -128,6 +146,10 @@ function App() {
           element: <UserManagement />,
         },
         {
+          path: "vehicles",
+          element: <VehicleInventory />,
+        },
+        {
           path: "societies",
           element: <SocietyManagement />,
         },
@@ -137,7 +159,7 @@ function App() {
         },
         {
           path: "settings",
-          element: <SuperAdminSettings />,
+          element: <Settings />,
         },
         {
           path: "*",
@@ -150,6 +172,14 @@ function App() {
       element: <Signin />,
     },
     {
+      path: "forgot-password",
+      element: <ForgotPassword />,
+    },
+    {
+      path: "reset-password",
+      element: <ResetPassword />, 
+    },
+    {
       path: "verify-email",
       element: <VerifyAndSetToken />,
     },
@@ -159,7 +189,11 @@ function App() {
     },
   ]);
 
-  return <RouterProvider router={router} />;
+  return (
+    <Provider store={store}>
+      <RouterProvider router={router} />;
+    </Provider>
+  );
 }
 
 export default App;

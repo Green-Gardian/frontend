@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,34 +19,30 @@ import {
   CheckCircle,
   Clock
 } from "lucide-react";
-import { getSystemStats } from "@/services/auth";
+import { fetchSystemStats } from "@/redux/slices/staffSlice";
 
 const SuperAdminAnalytics = () => {
-  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [timeRange, setTimeRange] = useState('7d');
+  const dispatch = useDispatch();
+  const stats = useSelector((state) => state.staff.stats);
 
-  useEffect(() => {
-    fetchSystemStats();
-  }, [timeRange]);
-
-  const fetchSystemStats = async () => {
+  const loadSystemStats = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await getSystemStats();
-      
-      if (response.error) {
-        setError(response.error);
-      } else {
-        setStats(response);
-      }
+      setError(null);
+      await dispatch(fetchSystemStats()).unwrap();
     } catch (err) {
-      setError("Failed to fetch system statistics");
+      setError(err?.message || "Failed to fetch system statistics");
     } finally {
       setLoading(false);
     }
-  };
+  }, [dispatch]);
+
+  useEffect(() => {
+    loadSystemStats();
+  }, [loadSystemStats, timeRange]);
 
   const getRoleColor = (role) => {
     switch (role) {
@@ -96,7 +93,7 @@ const SuperAdminAnalytics = () => {
         <div className="text-center">
           <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <p className="text-red-500">{error}</p>
-          <Button onClick={fetchSystemStats} className="mt-4">
+          <Button onClick={loadSystemStats} className="mt-4">
             Retry
           </Button>
         </div>
@@ -126,7 +123,7 @@ const SuperAdminAnalytics = () => {
               <SelectItem value="90d">Last 90 days</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={fetchSystemStats} variant="outline">
+          <Button onClick={loadSystemStats} variant="outline">
             <Activity className="h-4 w-4 mr-2" />
             Refresh
           </Button>
