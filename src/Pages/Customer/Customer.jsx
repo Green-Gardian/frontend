@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 "use client"
+=======
+>>>>>>> origin/main
 
 import React, { useState, useEffect } from "react"
 

@@ -1,4 +1,6 @@
-const signUp = async ({ credentials }) => {
+import Cookies from "js-cookie";
+
+const signUp = async (credentials) => {
   try {
     const options = {
       method: "POST",
@@ -18,11 +20,12 @@ const signUp = async ({ credentials }) => {
     const data = await response.json();
     return data;
   } catch (err) {
-    console.log("Erorr : ", err.message);
+    // Handle error silently
   }
 };
 
 const signInFunc = async (credentials) => {
+
   try {
     const options = {
       method: "POST",
@@ -43,9 +46,190 @@ const signInFunc = async (credentials) => {
 
     return data;
   } catch (err) {
-    console.log("Erorr : ", err.message);
     return "Error while fetching!";
   }
 };
 
-export { signUp, signInFunc };
+const verifyEmail = async (token,credentials) => {
+  try {
+    const options = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(credentials),
+    };
+
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/verify-email?token=${token}`,
+      options
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+
+    return data;
+  } catch (err) {
+    return "Error while fetching!";
+  }
+};
+
+// Super Admin Functions
+const getAllUsers = async (params = {}) => {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page);
+    if (params.limit) queryParams.append('limit', params.limit);
+    if (params.role) queryParams.append('role', params.role);
+    if (params.search) queryParams.append('search', params.search);
+
+    const token = Cookies.get('access_token');
+    
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/users?${queryParams}`,
+      {
+        method: "GET",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+
+    return data;
+  } catch (err) {
+    return { error: "Error while fetching users!" };
+  }
+};
+
+const blockUser = async (userId, isBlocked) => {
+  try {
+    const token = Cookies.get('access_token');
+    
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/users/${userId}/block`,
+      {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ isBlocked }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+
+    return data;
+  } catch (err) {
+    return { error: "Error while blocking user!" };
+  }
+};
+
+const deleteUser = async (userId) => {
+  try {
+    const token = Cookies.get('access_token');
+    
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/users/${userId}`,
+      {
+        method: "DELETE",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+
+    return data;
+  } catch (err) {
+    return { error: "Error while deleting user!" };
+  }
+};
+
+const getSystemStats = async () => {
+  try {
+    const token = Cookies.get('access_token');
+    
+    if (!token) {
+      return { error: "No access token found" };
+    }
+    
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/system-stats`,
+      {
+        method: "GET",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+
+    return data;
+  } catch (err) {
+    return { error: "Error while fetching system stats!" };
+  }
+};
+
+const addAdminAndStaff = async (userData) => {
+  try {
+    const token = Cookies.get('access_token');
+    
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/auth/add-admin-and-staff`,
+      {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(userData),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message };
+    }
+
+    return data;
+  } catch (err) {
+    return { error: "Error while adding admin/staff!" };
+  }
+};
+
+export { 
+  signUp, 
+  signInFunc, 
+  verifyEmail, 
+  getAllUsers, 
+  blockUser, 
+  deleteUser, 
+  getSystemStats,
+  addAdminAndStaff 
+};

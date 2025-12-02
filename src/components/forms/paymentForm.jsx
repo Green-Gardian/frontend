@@ -283,11 +283,19 @@ const PaymentForm = ({ onClose, onSubmit }) => {
                   <SelectValue placeholder="Select service type" />
                 </SelectTrigger>
                 <SelectContent>
+<<<<<<< HEAD
                   <SelectItem value="Basic">Basic (₹2,000)</SelectItem>
                   <SelectItem value="Standard">Standard (₹2,500)</SelectItem>
                   <SelectItem value="Premium">Premium (₹3,000)</SelectItem>
                   <SelectItem value="Premium Plus">
                     Premium Plus (₹3,500)
+=======
+                  <SelectItem value="Basic">Basic (Rs.2,000)</SelectItem>
+                  <SelectItem value="Standard">Standard (Rs.2,500)</SelectItem>
+                  <SelectItem value="Premium">Premium (Rs.3,000)</SelectItem>
+                  <SelectItem value="Premium Plus">
+                    Premium Plus (Rs.3,500)
+>>>>>>> origin/main
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -298,7 +306,11 @@ const PaymentForm = ({ onClose, onSubmit }) => {
 
             <div className="space-y-2">
               <Label htmlFor="monthlyFee">
+<<<<<<< HEAD
                 Monthly Fee (₹) <span className="text-red-500">*</span>
+=======
+                Monthly Fee (Rs.) <span className="text-red-500">*</span>
+>>>>>>> origin/main
               </Label>
               <Input
                 id="monthlyFee"
@@ -315,7 +327,11 @@ const PaymentForm = ({ onClose, onSubmit }) => {
             </div>
 
             <div className="space-y-2">
+<<<<<<< HEAD
               <Label htmlFor="lateFee">Late Fee (₹)</Label>
+=======
+              <Label htmlFor="lateFee">Late Fee (Rs.)</Label>
+>>>>>>> origin/main
               <Input
                 id="lateFee"
                 name="lateFee"

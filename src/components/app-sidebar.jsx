@@ -13,6 +13,13 @@ import {
   CreditCard,
   HelpCircle,
   UserCircle,
+<<<<<<< HEAD
+=======
+  MessageCircleMore,
+  Building2,
+  Shield,
+  Activity,
+>>>>>>> origin/main
 } from "lucide-react";
 
 import {
@@ -49,10 +56,31 @@ const superAdminRoutes = [
     href: "/super-admin/",
   },
   {
+<<<<<<< HEAD
+=======
+    title: "User Management",
+    icon: <Users className="h-5 w-5" />,
+    href: "/super-admin/users",
+  },
+  {
+>>>>>>> origin/main
     title: "Societies",
-    icon: <LayoutDashboard className="h-5 w-5" />,
+    icon: <Building2 className="h-5 w-5" />,
     href: "/super-admin/societies",
   },
+<<<<<<< HEAD
+=======
+  {
+    title: "Messages",
+    icon: <MessageCircleMore className="h-5 w-5" />,
+    href: "/super-admin/messages",
+  },
+  {
+    title: "Settings",
+    icon: <Settings className="h-5 w-5" />,
+    href: "/super-admin/settings",
+  },
+>>>>>>> origin/main
 ];
 
 const adminRoutes = [
@@ -87,10 +115,18 @@ const adminRoutes = [
     href: "/admin/payment",
   },
   {
-    title: "Settings",
-    icon: <Settings className="h-5 w-5" />,
-    href: "/admin/settings",
+    title: "Messaging",
+    icon: <MessageCircleMore className="h-5 w-5" />,
+    href: "/admin/messaging",
   },
+<<<<<<< HEAD
+=======
+  {
+    title: "Alerts",
+    icon: <Activity className="h-5 w-5" />,
+    href: "/admin/alerts",
+  },
+>>>>>>> origin/main
 ];
 
 export function AppSidebar({ role }) {
@@ -111,6 +147,9 @@ export function AppSidebar({ role }) {
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold text-white">
                   Green Guardian
+                </span>
+                <span className="truncate text-xs text-zinc-400">
+                  {role === "super-admin" ? "Super Admin" : "Admin"}
                 </span>
               </div>
             </SidebarMenuButton>
@@ -199,7 +238,13 @@ export function AppSidebar({ role }) {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-white/12" />
-                <DropdownMenuItem className="text-white/80 hover:text-[#FFFFFF]/80 hover:bg-[#fff]/12 focus:bg-[#fff]/12 focus:text-[#FFFFFF]/80 cursor-pointer transition-colors">
+                <DropdownMenuItem
+                  className="text-white/80 hover:text-[#FFFFFF]/80 hover:bg-[#fff]/12 focus:bg-[#fff]/12 focus:text-[#FFFFFF]/80 cursor-pointer transition-colors"
+                  onClick={() => {
+                    const settingsPath = role === "super-admin" ? "/super-admin/settings" : "/admin/settings";
+                    window.location.href = settingsPath;
+                  }}
+                >
                   <Settings className="mr-2 h-4 w-4" />
                   Profile Settings
                 </DropdownMenuItem>

@@ -36,12 +36,14 @@ const SignIn = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+<<<<<<< HEAD
     console.log("inside handle submit fuction!");
+=======
+>>>>>>> origin/main
     const res = await signInFunc(credentials);
 
     if (res.error) {
       setError(res.error);
-
       return;
     }
 
@@ -49,7 +51,15 @@ const SignIn = () => {
     Cookies.set("access_token", res.access_token ? res.access_token : null);
     Cookies.set("refresh_token", res.refresh_token);
     Cookies.set("username", res.username);
-    window.location.href = "/admin/staff";
+    Cookies.set("user_role", res.role);
+    Cookies.set("user_society_id", res.society_id);
+    
+    // Redirect based on user role
+    if (res.role === 'super_admin') {
+      window.location.href = "/super-admin/";
+    } else {
+      window.location.href = "/admin/";
+    }
   };
 
   return (

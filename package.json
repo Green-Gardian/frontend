@@ -37,6 +37,10 @@
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.6.0",
     "recharts": "^2.15.3",
+<<<<<<< HEAD
+=======
+    "socket.io-client": "^4.8.1",
+>>>>>>> origin/main
     "tailwind-merge": "^3.3.0",
     "tailwindcss": "^4.1.7",
     "xlsx": "^0.18.5"

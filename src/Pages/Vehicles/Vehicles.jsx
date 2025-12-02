@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 import {
   Table,
@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-import { Car, Plus, SquarePen, Trash2 } from "lucide-react";
+import { Plus, SquarePen, Trash2 } from "lucide-react";
 
 import InfoCards from "@/components/info-cards";
 import Modal from "@/components/modal";
@@ -32,114 +32,53 @@ import VehicleForm from "@/components/forms/vehicleForm";
 
 import Cookies from "js-cookie";
 
-const vehicleRecords = [
-  {
-    vehicleId: 1,
-    plateNumber: "ABC-123",
-    assignedTo: "Muhammad Hassan Amir",
-    vehicleStatus: "Active",
-    Action: "",
-  },
-  {
-    vehicleId: 2,
-    plateNumber: "XYZ-456",
-    assignedTo: "Ali Raza",
-    vehicleStatus: "Active",
-    Action: "",
-  },
-  {
-    vehicleId: 3,
-    plateNumber: "DEF-789",
-    assignedTo: "Bilal Saeed",
-    vehicleStatus: "Maintenance",
-    Action: "",
-  },
-  {
-    vehicleId: 4,
-    plateNumber: "GHI-012",
-    assignedTo: "Usman Tariq",
-    vehicleStatus: "Active",
-    Action: "",
-  },
-  {
-    vehicleId: 5,
-    plateNumber: "JKL-345",
-    assignedTo: "Zain Ali",
-    vehicleStatus: "Inactive",
-    Action: "",
-  },
-  {
-    vehicleId: 6,
-    plateNumber: "MNO-678",
-    assignedTo: "Imran Qureshi",
-    vehicleStatus: "Active",
-    Action: "",
-  },
-  {
-    vehicleId: 7,
-    plateNumber: "PQR-901",
-    assignedTo: "Hamza Yousaf",
-    vehicleStatus: "Active",
-    Action: "",
-  },
-  {
-    vehicleId: 8,
-    plateNumber: "STU-234",
-    assignedTo: "Ahmed Siddiqui",
-    vehicleStatus: "Maintenance",
-    Action: "",
-  },
-  {
-    vehicleId: 9,
-    plateNumber: "VWX-567",
-    assignedTo: "Unassigned",
-    vehicleStatus: "Available",
-    Action: "",
-  },
-  {
-    vehicleId: 10,
-    plateNumber: "YZA-890",
-    assignedTo: "Unassigned",
-    vehicleStatus: "Available",
-    Action: "",
-  },
-];
-
-const cardsData = [
-  {
-    title: "Total Vehicles",
-    number: "10",
-    percentage: 2.5,
-    backgroundColor: "bg-[#EDEEFC]",
-  },
-  {
-    title: "Active Vehicles",
-    number: "5",
-    percentage: 4.2,
-    backgroundColor: "bg-[#E6F1FD]",
-  },
-  {
-    title: "In Maintenance",
-    number: "2",
-    percentage: -1.8,
-    backgroundColor: "bg-[#FFF2E6]",
-  },
-  {
-    title: "Available",
-    number: "2",
-    percentage: 3.1,
-    backgroundColor: "bg-[#E6F1FD]",
-  },
-];
+import { getVehicles, deleteVehicle } from "@/services/vehicle";
 
 const Vehicle = () => {
   const [username, setUsername] = useState("");
+  const [vehicleRecords, setVehicleRecords] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [vehicleToEdit, setVehicleToEdit] = useState(null);
+  const [cardValues, setCardValues] = useState({
+    total: 0,
+    active: 0,
+    maintenance: 0,
+    available: 0,
+  });
+
+  const cardsData = [
+    {
+      title: "Total Vehicles",
+      number: cardValues.total,
+      percentage: 2.5,
+      backgroundColor: "bg-[#EDEEFC]",
+    },
+    {
+      title: "Active Vehicles",
+      number: cardValues.active,
+      percentage: 4.2,
+      backgroundColor: "bg-[#E6F1FD]",
+    },
+    {
+      title: "In Maintenance",
+      number: cardValues.maintenance,
+      percentage: -1.8,
+      backgroundColor: "bg-[#FFF2E6]",
+    },
+    {
+      title: "Available",
+      number: cardValues.available,
+      percentage: 3.1,
+      backgroundColor: "bg-[#E6F1FD]",
+    },
+  ];
 
   useEffect(() => {
     setUsername(Cookies.get("username"));
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -148,21 +87,93 @@ const Vehicle = () => {
     }
   }, []);
 
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      const res = await getVehicles();
+      const vehicles = res?.vehicles || [];
+      console.log("vehicles : ", vehicles);
+      setVehicleRecords(vehicles);
+      await updateCardsData();
+    } catch (error) {
+      console.error("Error fetching vehicles:", error);
+      setVehicleRecords([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateCardsData = async () => {
+    try {
+      setIsLoading(true);
+      const res = await getVehicles();
+      const vehicles = res?.vehicles || [];
+
+      const total = vehicles.length;
+      const active = vehicles.filter(
+        (v) => v.status?.toLowerCase() === "active"
+      ).length;
+      const maintenance = vehicles.filter(
+        (v) => v.status?.toLowerCase() === "maintenance"
+      ).length;
+      const available = vehicles.filter(
+        (v) => v.status?.toLowerCase() === "active"
+      ).length;
+
+      setCardValues({
+        total:total,
+        active:active,
+        maintenance:maintenance,
+        available:available,
+      })
+
+      console.log({
+        total,
+        active,
+        maintenance,
+        available,
+      });
+    } catch (error) {
+      console.error("Error updating cards data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const deleteRecord = async (vehicleId) => {
+    console.log("inside delete record function!");
+
+    try {
+      await deleteVehicle(vehicleId);
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting vehicle:", error);
+    }
+  };
+
   const itemsPerPage = 7;
 
-  const filteredRecords = vehicleRecords.filter(
-    (record) =>
-      record.plateNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.assignedTo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.vehicleStatus.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredRecords =
+    vehicleRecords && vehicleRecords.length > 0
+      ? vehicleRecords.filter(
+          (record) =>
+            record.plate_no?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            record.driver_name
+              ?.toLowerCase()
+              .includes(searchTerm.toLowerCase()) ||
+            record.status?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      : [];
 
-  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredRecords.length / itemsPerPage)
+  );
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentRecords = filteredRecords.slice(startIndex, endIndex);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
 
@@ -207,27 +218,31 @@ const Vehicle = () => {
     return pages;
   };
 
-  const openModal = () => {
+  const openModal = (vehicle = null) => {
+    setVehicleToEdit(vehicle);
     setIsModalOpen(true);
   };
 
   const onClose = () => {
     setIsModalOpen(false);
+    setVehicleToEdit(null);
   };
 
-  const onSubmit = () => {
+  const onSubmit = async (formData) => {
     console.log("Vehicle form submitted successfully!");
+    onClose();
+    await fetchData();
   };
 
   const getStatusBadgeStyle = (status) => {
-    switch (status) {
-      case "Active":
+    switch (status?.toLowerCase()) {
+      case "active":
         return "bg-[#EBF9F1] text-[#1F9254]";
-      case "Inactive":
+      case "inactive":
         return "bg-[#FBE7E8] text-[#A30D11]";
-      case "Maintenance":
+      case "maintenance":
         return "bg-[#FFF2E6] text-[#B45309]";
-      case "Available":
+      case "available":
         return "bg-[#E0F2FE] text-[#0369A1]";
       default:
         return "bg-gray-100 text-gray-600";
@@ -237,7 +252,7 @@ const Vehicle = () => {
   return (
     <div className="bg-white min-h-screen py-6 px-4 gap-y-6 flex flex-col w-auto">
       <h1 className="text-[#121212] text-[24px] leading-[32px]">
-        Hello,<span className="font-semibold">{username}</span>
+        Hello,<span className="font-semibold">{username || "User"}</span>
       </h1>
 
       {/*Cards Section */}
@@ -247,7 +262,7 @@ const Vehicle = () => {
             key={index}
             title={card.title}
             number={card.number}
-            percentage={card.percentage}
+            // percentage={card.percentage}
             backgroundColor={card.backgroundColor}
           />
         ))}
@@ -266,7 +281,7 @@ const Vehicle = () => {
             />
           </div>
 
-          <Button className="w-full sm:w-auto " onClick={openModal}>
+          <Button className="w-full sm:w-auto " onClick={() => openModal()}>
             <Plus className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Add Vehicle</span>
             <span className="sm:hidden">Add</span>
@@ -279,16 +294,26 @@ const Vehicle = () => {
               <TableHeader className="bg-white border-none font-montserrat">
                 <TableRow>
                   <TableHead className="w-[100px]">Vehicle Id</TableHead>
-                  <TableHead className="min-w-[150px]">Vehicle Plate Number</TableHead>
+                  <TableHead className="min-w-[150px]">
+                    Vehicle Plate Number
+                  </TableHead>
                   <TableHead className="min-w-[180px] hidden sm:table-cell">
                     Assigned To
                   </TableHead>
-                  <TableHead className="min-w-[120px]">Vehicle Status</TableHead>
+                  <TableHead className="min-w-[120px]">
+                    Vehicle Status
+                  </TableHead>
                   <TableHead className="min-w-[100px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {currentRecords.length > 0 ? (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8">
+                      Loading vehicle data...
+                    </TableCell>
+                  </TableRow>
+                ) : currentRecords.length > 0 ? (
                   currentRecords.map((record, index) => (
                     <TableRow
                       key={index}
@@ -297,30 +322,38 @@ const Vehicle = () => {
                       }`}
                     >
                       <TableCell className="font-medium text-center">
-                        #{record.vehicleId}
+                        #{record.id || "N/A"}
                       </TableCell>
                       <TableCell className="font-medium">
                         <div className="flex flex-col">
-                          <span>{record.plateNumber}</span>
+                          <span>{record.plate_no || "N/A"}</span>
                           <span className="text-xs text-gray-500 sm:hidden">
-                            {record.assignedTo}
+                            {record.driver_name || "Unassigned"}
                           </span>
                         </div>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
-                        {record.assignedTo}
+                        {record.driver_name || "Unassigned"}
                       </TableCell>
                       <TableCell>
                         <Badge
-                          className={`${getStatusBadgeStyle(record.vehicleStatus)} text-xs`}
+                          className={`${getStatusBadgeStyle(
+                            record.status
+                          )} text-xs`}
                         >
-                          {record.vehicleStatus}
+                          {record.status || "Unknown"}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-x-2 justify-start">
-                          <SquarePen className="h-4 w-4 cursor-pointer text-primary" />
-                          <Trash2 className="h-4 w-4 cursor-pointer text-[#A30D11]" />
+                          <SquarePen
+                            className="h-4 w-4 cursor-pointer text-primary"
+                            onClick={() => openModal(record)}
+                          />
+                          <Trash2
+                            className="h-4 w-4 cursor-pointer text-[#A30D11]"
+                            onClick={() => deleteRecord(record.id)}
+                          />
                         </div>
                       </TableCell>
                     </TableRow>
@@ -328,7 +361,9 @@ const Vehicle = () => {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8">
-                      No vehicle records found matching your search.
+                      {searchTerm
+                        ? "No vehicle records found matching your search."
+                        : "No vehicle records available. Add a vehicle to get started."}
                     </TableCell>
                   </TableRow>
                 )}
@@ -337,7 +372,7 @@ const Vehicle = () => {
           </div>
         </div>
 
-        {totalPages > 1 && (
+        {!isLoading && totalPages > 1 && (
           <Pagination className="py-4">
             <PaginationContent className="flex-wrap gap-1">
               <PaginationItem>
@@ -395,7 +430,11 @@ const Vehicle = () => {
       </div>
 
       <Modal status={isModalOpen}>
-        <VehicleForm onClose={onClose} onSubmit={onSubmit} />
+        <VehicleForm
+          onClose={onClose}
+          onSubmit={fetchData}
+          vehicleToEdit={vehicleToEdit}
+        />
       </Modal>
     </div>
   );

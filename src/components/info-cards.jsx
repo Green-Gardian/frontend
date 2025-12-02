@@ -3,7 +3,7 @@ import { ArrowUpRight } from 'lucide-react'
 
 
 
-const InfoCards = ({ title, number, percentage, backgroundColor }) => {
+const InfoCards = ({ title, number, backgroundColor }) => {
   return (
     <div className={`
       h-[112px] 
@@ -32,10 +32,10 @@ const InfoCards = ({ title, number, percentage, backgroundColor }) => {
           {number}
         </p>
 
-        <p className="text-[12px] leading-[14px] flex justify-center items-center gap-1  whitespace-nowrap">
+        {/* <p className="text-[12px] leading-[14px] flex justify-center items-center gap-1  whitespace-nowrap">
           +{percentage}% 
           <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4" />
-        </p>
+        </p> */}
       </div>
     </div>
   )

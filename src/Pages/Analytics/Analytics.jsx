@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 "use client"
+=======
+>>>>>>> origin/main
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -24,7 +27,11 @@ import {
 import { ArrowUpRight, ArrowDownRight, Download } from "lucide-react"
 import Cookies from "js-cookie"
 
+<<<<<<< HEAD
 // Simplified mock data
+=======
+
+>>>>>>> origin/main
 const paymentData = [
   { month: "Jan", collected: 125000, outstanding: 15000 },
   { month: "Feb", collected: 132000, outstanding: 18000 },
