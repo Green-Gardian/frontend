@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { Button } from '@/components/ui/button';
@@ -20,10 +20,12 @@ const CITIES = {
 
 const AddBinForm = ({ onBinAdded }) => {
   const [selectedCity, setSelectedCity] = useState('rawalpindi');
+  const [societies, setSocieties] = useState([]);
+  const [loadingSocieties, setLoadingSocieties] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     address: '',
-    society: Cookies.get('society') || '',
+    society: '',
     latitude: CITIES.rawalpindi.lat,
     longitude: CITIES.rawalpindi.lng,
     status: 'idle',
@@ -31,6 +33,39 @@ const AddBinForm = ({ onBinAdded }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Fetch societies on component mount
+  useEffect(() => {
+    const fetchSocieties = async () => {
+      try {
+        const token = Cookies.get('access_token');
+        const apiBase = 'http://localhost:3001';
+
+        const response = await axios.get(
+          `${apiBase}/society/get-societies`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (response.data.societies && Array.isArray(response.data.societies)) {
+          setSocieties(response.data.societies);
+          // Set first society as default
+          if (response.data.societies.length > 0) {
+            setFormData((prev) => ({
+              ...prev,
+              society: response.data.societies[0].society_name,
+            }));
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching societies:', err);
+        setError('Failed to load societies');
+      } finally {
+        setLoadingSocieties(false);
+      }
+    };
+
+    fetchSocieties();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -72,7 +107,7 @@ const AddBinForm = ({ onBinAdded }) => {
         setFormData({
           name: '',
           address: '',
-          society: Cookies.get('society') || '',
+          society: societies.length > 0 ? societies[0].society_name : '',
           latitude: 24.8607,
           longitude: 67.0011,
           status: 'idle',
@@ -120,15 +155,24 @@ const AddBinForm = ({ onBinAdded }) => {
 
         <div>
           <Label htmlFor="society">Society</Label>
-          <Input
+          <select
             id="society"
             name="society"
-            type="text"
-            placeholder="e.g., Green Estate"
             value={formData.society}
             onChange={handleChange}
-            disabled
-          />
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={loadingSocieties}
+            required
+          >
+            <option value="">
+              {loadingSocieties ? 'Loading societies...' : 'Select a Society'}
+            </option>
+            {societies.map((soc) => (
+              <option key={soc.id} value={soc.society_name}>
+                {soc.society_name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
