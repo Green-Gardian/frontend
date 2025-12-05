@@ -30,6 +30,7 @@ import {
   SuperAdminAnalytics,
   ActivityLogs,
   SentimentAnalytics,
+  BinsManagement,
 } from "./Pages";
 
 import { Provider } from "react-redux";
@@ -145,6 +146,10 @@ function App() {
         {
           path: "societies",
           element: <SocietyManagement />,
+        },
+        {
+          path: "bins",
+          element: <BinsManagement />,
         },
         {
           path: "messages",

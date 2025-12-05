@@ -16,6 +16,7 @@ import {
   Building2,
   FileClock,
   Activity,
+  Trash
 } from "lucide-react"
 
 import {
@@ -68,6 +69,11 @@ const superAdminRoutes = [
     title: "Societies",
     icon: <Building2 className="h-5 w-5" />,
     href: "/super-admin/societies",
+  },
+  {
+    title: "Dustbins",
+    icon: <Trash className="h-5 w-5" />,
+    href: "/super-admin/bins",
   },
   {
     title: "Messages",

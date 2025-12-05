@@ -1,0 +1,17 @@
+/* Override Leaflet z-index to prevent map from covering modals and forms */
+.leaflet-container {
+  z-index: 1 !important;
+}
+
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 2 !important;
+}
+
+.leaflet-control {
+  z-index: 2 !important;
+}
+
+.leaflet-popup {
+  z-index: 3 !important;
+}
