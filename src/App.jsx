@@ -29,6 +29,7 @@ import {
   SocietyManagement,
   SuperAdminAnalytics,
   ActivityLogs,
+  SentimentAnalytics,
 } from "./Pages";
 
 import { Provider } from "react-redux";
@@ -108,6 +109,10 @@ function App() {
           element: <Analytics />,
         },
         {
+          path: "sentiment-analytics",
+          element: <SentimentAnalytics />,
+        },
+        {
           path: "settings",
           element: <Settings />,
         },
@@ -146,6 +151,10 @@ function App() {
           element: <Messaging />,
         },
         {
+          path: "sentiment-analytics",
+          element: <SentimentAnalytics />,
+        },
+        {
           path: "settings",
           element: <Settings />,
         },
@@ -165,7 +174,7 @@ function App() {
     },
     {
       path: "reset-password",
-      element: <ResetPassword />, 
+      element: <ResetPassword />,
     },
     {
       path: "verify-email",
