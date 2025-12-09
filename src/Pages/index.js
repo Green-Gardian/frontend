@@ -15,6 +15,7 @@ import { Messaging } from "./Messaging";
 import { VerifyAndSetToken } from "./VerifyAndSetToken";
 import { Alerts } from "./Alerts";
 import { ActivityLogs } from "./ActivityLogs";
+import SentimentAnalytics from "./SentimentAnalytics";
 
 // SuperAdmin exports
 export * from "./SuperAdmin";
@@ -43,4 +44,5 @@ export {
   VerifyAndSetToken,
   Alerts,
   ActivityLogs,
+  SentimentAnalytics,
 };

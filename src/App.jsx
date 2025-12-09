@@ -32,6 +32,8 @@ import {
   SocietyManagement,
   SuperAdminAnalytics,
   ActivityLogs,
+  SentimentAnalytics,
+  BinsManagement,
 } from "./Pages";
 
 import { Provider } from "react-redux";
@@ -120,6 +122,10 @@ function App() {
 >>>>>>> origin/main
         },
         {
+          path: "sentiment-analytics",
+          element: <SentimentAnalytics />,
+        },
+        {
           path: "settings",
           element: <Settings />,
         },
@@ -154,8 +160,16 @@ function App() {
           element: <SocietyManagement />,
         },
         {
+          path: "bins",
+          element: <BinsManagement />,
+        },
+        {
           path: "messages",
           element: <Messaging />,
+        },
+        {
+          path: "sentiment-analytics",
+          element: <SentimentAnalytics />,
         },
         {
           path: "settings",
@@ -177,7 +191,7 @@ function App() {
     },
     {
       path: "reset-password",
-      element: <ResetPassword />, 
+      element: <ResetPassword />,
     },
     {
       path: "verify-email",

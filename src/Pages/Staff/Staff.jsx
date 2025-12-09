@@ -167,7 +167,7 @@ const Staff = () => {
       limit: 7,
       search: searchTerm || undefined,
       societyId: userRole === "admin" ? societyId : undefined,
-      role: userRole === "admin" ? "customer_support,driver,sub_admin" : undefined,
+      role: userRole === "admin" || "sub_admin" ? "customer_support,driver,sub_admin" : undefined,
     }
     await dispatch(fetchStaff(params))
   }, [dispatch, currentPage, searchTerm, userRole, societyId])

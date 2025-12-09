@@ -17,6 +17,8 @@ import {
   MessageCircleMore,
   Building2,
   FileClock,
+  Activity,
+  Trash
 } from "lucide-react"
 
 import {
@@ -75,9 +77,19 @@ const superAdminRoutes = [
 <<<<<<< HEAD
 =======
   {
+    title: "Dustbins",
+    icon: <Trash className="h-5 w-5" />,
+    href: "/super-admin/bins",
+  },
+  {
     title: "Messages",
     icon: <MessageCircleMore className="h-5 w-5" />,
     href: "/super-admin/messages",
+  },
+  {
+    title: "Sentiment Analytics",
+    icon: <Activity className="h-5 w-5" />,
+    href: "/super-admin/sentiment-analytics",
   },
   // {
   //   title: "Settings",
@@ -111,6 +123,11 @@ const adminRoutes = [
     title: "Analytics",
     icon: <BarChart3 className="h-5 w-5" />,
     href: "/admin/analytics",
+  },
+  {
+    title: "Sentiment Analytics",
+    icon: <Activity className="h-5 w-5" />,
+    href: "/admin/sentiment-analytics",
   },
   // {
   //   title: "Payment",
@@ -187,13 +204,13 @@ export function AppSidebar({ role }) {
 
   useEffect(() => {
     let routesToSet = role === "admin" ? adminRoutes : superAdminRoutes
-    
+
     // Filter out Activity Logs for sub_admin users
     const currentUserRole = Cookies.get("user_role")
     if (currentUserRole === "sub_admin") {
       routesToSet = routesToSet.filter(route => route.title !== "Activity Logs")
     }
-    
+
     setRoutes(routesToSet)
   }, [role])
 

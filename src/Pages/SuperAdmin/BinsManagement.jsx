@@ -1,18 +1,13 @@
-<<<<<<< HEAD
-"use client"
-=======
->>>>>>> origin/main
 import { useState, useEffect, useRef } from "react"
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
-import "./dashboard.css"
+import "../Dashboard/dashboard.css"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { RefreshCw, LocateFixed, Trash2, Edit2, OctagonX } from "lucide-react"
 import Cookies from "js-cookie"
-import InfoCards from "@/components/info-cards"
 import BinManagementModal from "@/components/BinManagementModal"
 import EditBinModal from "@/components/EditBinModal"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
@@ -52,7 +47,6 @@ const createBinIcon = (fillLevel) => {
   })
 }
 
-// Component to center map on user's location
 const LocateControl = () => {
   return (
     <div className="leaflet-top leaflet-right" style={{ marginTop: "60px" }}>
@@ -65,19 +59,16 @@ const LocateControl = () => {
   )
 }
 
-const Dashboard = () => {
+export const BinsManagement = () => {
   const [username, setUsername] = useState("")
-  const [userRole, setUserRole] = useState("")
-  const [lastRefreshed, setLastRefreshed] = useState(new Date())
   const [dustbins, setDustbins] = useState([])
   const [selectedBinForEdit, setSelectedBinForEdit] = useState(null)
+  const [lastRefreshed, setLastRefreshed] = useState(new Date())
   const mapRef = useRef(null)
   const socketRef = useRef(null)
 
   useEffect(() => {
     setUsername(Cookies.get("username"))
-    setUserRole(Cookies.get("user_role"))
-    // Fix Leaflet icons
     fixLeafletIcons()
   }, [])
 
@@ -121,7 +112,6 @@ const Dashboard = () => {
       })
 
       socketRef.current.on('bins:update', (updates) => {
-        // updates is an array of bins
         setDustbins((prev) => {
           const byId = new Map(prev.map((p) => [p.id, p]))
           updates.forEach((u) => {
@@ -172,7 +162,6 @@ const Dashboard = () => {
     }
   }, [])
 
-  // Simulate refreshing data (manually trigger re-fetch)
   const refreshData = () => {
     setLastRefreshed(new Date())
     const token = Cookies.get('access_token')
@@ -196,7 +185,6 @@ const Dashboard = () => {
       .catch((err) => console.error('Failed to fetch bins', err))
   }
 
-  // Get fill level color
   const getFillLevelColor = (level) => {
     if (level >= 80) return "bg-red-500"
     if (level >= 60) return "bg-orange-500"
@@ -204,7 +192,6 @@ const Dashboard = () => {
     return "bg-green-500"
   }
 
-  // Get status badge color - based on fill level
   const getStatusBadgeColor = (fillLevel) => {
     if (fillLevel >= 80) return "bg-red-100 text-red-800"
     if (fillLevel >= 60) return "bg-orange-100 text-orange-800"
@@ -212,7 +199,6 @@ const Dashboard = () => {
     return "bg-green-100 text-green-800"
   }
 
-  // Empty bin function - reset fill level to 0
   const emptyBin = async (binId) => {
     try {
       const token = Cookies.get('access_token')
@@ -234,7 +220,6 @@ const Dashboard = () => {
     }
   }
 
-  // Delete bin function
   const deleteBin = async (binId) => {
     try {
       const token = Cookies.get('access_token')
@@ -251,69 +236,34 @@ const Dashboard = () => {
     }
   }
 
-  // Calculate statistics
   const totalDustbins = dustbins.length
-  const criticalDustbins = dustbins.filter((bin) => bin.status === "Critical").length
-  const warningDustbins = dustbins.filter((bin) => bin.status === "Warning").length
+  const criticalDustbins = dustbins.filter((bin) => bin.fillLevel >= 80).length
+  const warningDustbins = dustbins.filter((bin) => bin.fillLevel >= 60 && bin.fillLevel < 80).length
   const averageFillLevel = dustbins.length ? Math.round(dustbins.reduce((sum, bin) => sum + bin.fillLevel, 0) / dustbins.length) : 0
-
-  // Filter dustbins based on user role
-  const userSociety = Cookies.get('society')
-  const filteredDustbins = userRole === 'super_admin' 
-    ? dustbins 
-    : dustbins.filter((bin) => bin.raw?.society === userSociety)
-
-  // Recalculate statistics based on filtered bins
-  const totalDustbinsFiltered = filteredDustbins.length
-  const criticalDustbinsFiltered = filteredDustbins.filter((bin) => bin.status === "Critical").length
-  const warningDustbinsFiltered = filteredDustbins.filter((bin) => bin.status === "Warning").length
-  const averageFillLevelFiltered = filteredDustbins.length ? Math.round(filteredDustbins.reduce((sum, bin) => sum + bin.fillLevel, 0) / filteredDustbins.length) : 0
-
-  // Cards data
-  const cardsData = [
-    {
-      title: "Total Dustbins",
-      number: totalDustbinsFiltered.toString(),
-      percentage: 8.2,
-      backgroundColor: "bg-[#EDEEFC]",
-    },
-    {
-      title: "Critical Dustbins",
-      number: criticalDustbinsFiltered.toString(),
-      percentage: -15.2,
-      backgroundColor: "bg-[#E6F1FD]",
-    },
-    {
-      title: "Warning Dustbins",
-      number: warningDustbinsFiltered.toString(),
-      percentage: 5.3,
-      backgroundColor: "bg-[#EDEEFC]",
-    },
-    {
-      title: "Average Fill Level",
-      number: `${averageFillLevelFiltered}%`,
-      percentage: 6.8,
-      backgroundColor: "bg-[#E6F1FD]",
-    },
-  ]
 
   return (
     <div className="bg-white min-h-screen py-6 px-4 gap-y-6 flex flex-col w-auto">
       <h1 className="text-[#121212] text-[24px] leading-[32px]">
-        Hello, <span className="font-semibold">{Cookies.get('society')} - {username}</span>
+        Dustbins Management
       </h1>
 
-      {/* Cards Section */}
-      <div className="flex flex-wrap md:gap-4 gap-2 justify-center w-full">
-        {cardsData.map((card, index) => (
-          <InfoCards
-            key={index}
-            title={card.title}
-            number={card.number}
-            percentage={card.percentage}
-            backgroundColor={card.backgroundColor}
-          />
-        ))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+          <p className="text-sm text-gray-600">Total Dustbins</p>
+          <p className="text-2xl font-bold text-blue-900">{totalDustbins}</p>
+        </div>
+        <div className="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-lg border border-red-200">
+          <p className="text-sm text-gray-600">Critical (≥80%)</p>
+          <p className="text-2xl font-bold text-red-900">{criticalDustbins}</p>
+        </div>
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
+          <p className="text-sm text-gray-600">Warning (60-79%)</p>
+          <p className="text-2xl font-bold text-orange-900">{warningDustbins}</p>
+        </div>
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+          <p className="text-sm text-gray-600">Average Fill Level</p>
+          <p className="text-2xl font-bold text-green-900">{averageFillLevel}%</p>
+        </div>
       </div>
 
       {/* Map Section */}
@@ -321,7 +271,7 @@ const Dashboard = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-2 py-3 gap-3">
           <h2 className="text-lg font-semibold">Dustbin Locations</h2>
           <div className="flex gap-2">
-            {userRole === 'super_admin' && <BinManagementModal onBinAdded={() => refreshData()} />}
+            <BinManagementModal onBinAdded={() => refreshData()} />
             <Button variant="outline" onClick={refreshData}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
@@ -332,7 +282,7 @@ const Dashboard = () => {
         <div className="bg-white border rounded-lg shadow-sm overflow-hidden" style={{ height: "500px" }}>
           {typeof window !== "undefined" && (
             <MapContainer
-              center={[33.5651, 74.3350]} // Rawalpindi coordinates (default)
+              center={[33.5651, 74.3350]}
               zoom={12}
               style={{ height: "100%", width: "100%" }}
               ref={mapRef}
@@ -342,8 +292,7 @@ const Dashboard = () => {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
 
-              {/* Dustbin Markers with color-coded icons */}
-              {filteredDustbins.map((bin) => (
+              {dustbins.map((bin) => (
                 <Marker key={bin.id} position={bin.location} icon={createBinIcon(bin.fillLevel)}>
                   <Popup>
                     <div className="p-3 min-w-[250px]">
@@ -360,16 +309,14 @@ const Dashboard = () => {
                       </div>
                       <div className="mt-3 flex gap-2 flex-wrap">
                         <Badge className={getStatusBadgeColor(bin.fillLevel)}>{bin.fillLevel.toFixed(2)}%</Badge>
-                        {userRole === 'super_admin' && (
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => setSelectedBinForEdit(bin.raw)}
-                            className="text-xs"
-                          >
-                            Edit
-                          </Button>
-                        )}
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => setSelectedBinForEdit(bin.raw)}
+                          className="text-xs"
+                        >
+                          Edit
+                        </Button>
                         <Button 
                           size="sm" 
                           variant="secondary" 
@@ -378,40 +325,37 @@ const Dashboard = () => {
                         >
                           Empty
                         </Button>
-                        {userRole === 'super_admin' && (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button 
-                                size="sm" 
-                                variant="destructive" 
-                                className="text-xs"
-                              >
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              size="sm" 
+                              variant="destructive" 
+                              className="text-xs"
+                            >
+                              Delete
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Dustbin</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete dustbin #{bin.id}? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <div className="flex gap-2 justify-end">
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteBin(bin.id)} className="bg-red-600 hover:bg-red-700">
                                 Delete
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Dustbin</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete dustbin #{bin.id}? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <div className="flex gap-2 justify-end">
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => deleteBin(bin.id)} className="bg-red-600 hover:bg-red-700">
-                                  Delete
-                                </AlertDialogAction>
-                              </div>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        )}
+                              </AlertDialogAction>
+                            </div>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                   </Popup>
                 </Marker>
               ))}
 
-              {/* Locate control */}
               <LocateControl />
             </MapContainer>
           )}
@@ -420,112 +364,86 @@ const Dashboard = () => {
 
       {/* Dustbins Table */}
       <div className="flex flex-col justify-center w-full">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-2 py-3 gap-3">
-          <h2 className="text-lg font-semibold">Dustbin Details</h2>
-        </div>
+        <h2 className="text-lg font-semibold mb-3">Dustbin Details</h2>
 
         <div className="rounded-md overflow-hidden">
           <div className="overflow-x-auto">
             <Table className="w-full">
-              <TableHeader className="bg-white border-none font-montserrat">
+              <TableHeader className="bg-white border-none">
                 <TableRow>
-                  <TableHead className="w-[100px]">Dustbin ID</TableHead>
+                  <TableHead className="w-[100px]">ID</TableHead>
                   <TableHead className="min-w-[180px]">Location</TableHead>
-                  <TableHead className="min-w-[120px] hidden sm:table-cell">Type</TableHead>
+                  <TableHead className="min-w-[120px] hidden sm:table-cell">Society</TableHead>
                   <TableHead className="min-w-[120px] hidden md:table-cell">Fill Level</TableHead>
-                  <TableHead className="min-w-[120px] hidden lg:table-cell">Last Emptied</TableHead>
-                  <TableHead className="min-w-[100px]">Status</TableHead>
+                  <TableHead className="min-w-[120px] hidden lg:table-cell">Last Updated</TableHead>
+                  <TableHead className="min-w-[150px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredDustbins.map((bin, index) => (
+                {dustbins.map((bin, index) => (
                   <TableRow key={index} className={`${index % 2 === 0 ? "bg-[#F7F6FE]" : "bg-white"}`}>
-                    <TableCell className="font-medium text-center">#{bin.id}</TableCell>
-                    <TableCell className="font-medium">
-                      <div className="flex flex-col">
-                        <span>{bin.address}</span>
-                        <span className="text-xs text-gray-500 sm:hidden">{bin.type}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <div className="flex flex-col">
-                        <span>{bin.type}</span>
-                        <span className="text-xs text-gray-500 md:hidden">
-                          <div className="flex items-center mt-1">
-                            <div className="w-full bg-gray-200 rounded-full h-1.5 mr-2 max-w-[60px]">
-                              <div
-                                className={`h-1.5 rounded-full ${getFillLevelColor(bin.fillLevel)}`}
-                                style={{ width: `${bin.fillLevel}%` }}
-                              ></div>
-                            </div>
-                            <span className="text-xs">{bin.fillLevel}%</span>
-                          </div>
-                        </span>
-                      </div>
-                    </TableCell>
+                    <TableCell className="font-medium">#{bin.id}</TableCell>
+                    <TableCell>{bin.address}</TableCell>
+                    <TableCell className="hidden sm:table-cell text-sm">{bin.raw?.society || '-'}</TableCell>
                     <TableCell className="hidden md:table-cell">
-                      <div className="flex items-center">
-                        <div className="w-full bg-gray-200 rounded-full h-2 mr-2 max-w-[80px]">
+                      <div className="flex items-center gap-2">
+                        <div className="w-full bg-gray-200 rounded-full h-2 max-w-[80px]">
                           <div
                             className={`h-2 rounded-full ${getFillLevelColor(bin.fillLevel)}`}
                             style={{ width: `${bin.fillLevel}%` }}
                           ></div>
                         </div>
-                        <span className="text-sm text-gray-500">{bin.fillLevel}%</span>
+                        <span className="text-sm">{bin.fillLevel.toFixed(1)}%</span>
                       </div>
                     </TableCell>
                     <TableCell className="hidden lg:table-cell text-sm">{bin.lastEmptied}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Badge className={`${getStatusBadgeColor(bin.fillLevel)} text-xs`}>{bin.fillLevel.toFixed(2)}%</Badge>
-                        {userRole === 'super_admin' && (
-                          <Button 
-                            size="sm" 
-                            variant="ghost"
-                            onClick={() => setSelectedBinForEdit(bin.raw)}
-                            className="text-xs px-2 py-1 h-auto"
-                            title="Edit this bin"
-                          >
-                            <Edit2 className="h-3 w-3" />
-                          </Button>
-                        )}
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          onClick={() => setSelectedBinForEdit(bin.raw)}
+                          className="text-xs px-2 py-1 h-auto"
+                          title="Edit"
+                        >
+                          <Edit2 className="h-3 w-3" />
+                        </Button>
                         <Button 
                           size="sm" 
                           variant="ghost"
                           onClick={() => emptyBin(bin.id)}
                           className="text-xs px-2 py-1 h-auto"
-                          title="Empty this bin"
+                          title="Empty"
                         >
                           <OctagonX className="h-3 w-3" />
                         </Button>
-                        {userRole === 'super_admin' && (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button 
-                                size="sm" 
-                                variant="ghost"
-                                className="text-xs px-2 py-1 h-auto text-red-600 hover:text-red-700 hover:bg-red-50"
-                                title="Delete this bin"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Dustbin</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete dustbin #{bin.id}? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <div className="flex gap-2 justify-end">
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => deleteBin(bin.id)} className="bg-red-600 hover:bg-red-700">
-                                  Delete
-                                </AlertDialogAction>
-                              </div>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        )}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              className="text-xs px-2 py-1 h-auto text-red-600 hover:text-red-700 hover:bg-red-50"
+                              title="Delete"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Dustbin</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete dustbin #{bin.id}? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <div className="flex gap-2 justify-end">
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteBin(bin.id)} className="bg-red-600 hover:bg-red-700">
+                                Delete
+                              </AlertDialogAction>
+                            </div>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -550,4 +468,4 @@ const Dashboard = () => {
   )
 }
 
-export default Dashboard
+export default BinsManagement
