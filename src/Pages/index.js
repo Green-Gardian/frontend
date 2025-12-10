@@ -8,9 +8,6 @@ import { Signin, ForgotPassword, ResetPassword } from "./Auth";
 import { Customer } from "./Customer";
 import { Payments } from "./Payment";
 import { Analytics } from "./Analytics";
-<<<<<<< HEAD
-
-=======
 import { Messaging } from "./Messaging";
 import { VerifyAndSetToken } from "./VerifyAndSetToken";
 import { Alerts } from "./Alerts";
@@ -20,25 +17,18 @@ import SentimentAnalytics from "./SentimentAnalytics";
 // SuperAdmin exports
 export * from "./SuperAdmin";
 
->>>>>>> origin/main
 export {
   Dashboard,
   Vehicles,
   Customer,
   Staff,
-<<<<<<< HEAD
-=======
   StaffPerformance,
->>>>>>> origin/main
   Settings,
   Signin,
   ForgotPassword,
   ResetPassword,
   Payments,
   Analytics,
-<<<<<<< HEAD
-  NotFound,
-=======
   Messaging,
   NotFound,
   VerifyAndSetToken,

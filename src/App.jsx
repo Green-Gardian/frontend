@@ -18,9 +18,6 @@ import {
   ResetPassword,
   Customer,
   Payments,
-<<<<<<< HEAD
-  Analytics
-=======
   Analytics,
   StaffPerformance,
   Messaging,
@@ -89,14 +86,6 @@ function App() {
           element: <Staff />,
         },
         {
-<<<<<<< HEAD
-          path:"payment", 
-          element:<Payments/>
-        },
-        {
-          path:"analytics",
-          element:<Analytics/>
-=======
           path: "staff-performance/:employeeId",
           element: <StaffPerformance />,
         },
@@ -119,7 +108,6 @@ function App() {
         {
           path: "analytics",
           element: <Analytics />,
->>>>>>> origin/main
         },
         {
           path: "sentiment-analytics",

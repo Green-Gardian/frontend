@@ -242,12 +242,12 @@ const Payments = () => {
 
   const filteredRecords = paymentRecords.filter((record) => {
     const term = (searchTerm || "").toLowerCase()
-    const matchesSearch = 
+    const matchesSearch =
       record.residentName.toLowerCase().includes(term) ||
       record.houseNumber.toLowerCase().includes(term) ||
       record.email.toLowerCase().includes(term) ||
       record.phone.includes(term)
-    
+
     const matchesStatus = statusFilter === "all" || record.paymentStatus.toLowerCase().replace(" ", "") === statusFilter
     const matchesService = serviceFilter === "all" || record.serviceType.toLowerCase().replace(" ", "") === serviceFilter
 
@@ -379,15 +379,12 @@ const Payments = () => {
       "Total Amount": record.totalAmount,
       "Outstanding Balance": record.outstandingBalance,
     }))
-    
+
     exportToExcel(exportData, `All_Payments_${new Date().toISOString().split('T')[0]}`)
   }
 
   const exportResidentData = (resident) => {
-<<<<<<< HEAD
     // In a real app, you'd fetch all payment history for this resident
-=======
->>>>>>> origin/main
     const residentData = [{
       "House Number": resident.houseNumber,
       "Resident Name": resident.residentName,
@@ -403,7 +400,7 @@ const Payments = () => {
       "Total Amount": resident.totalAmount,
       "Outstanding Balance": resident.outstandingBalance,
     }]
-    
+
     exportToExcel(residentData, `${resident.houseNumber}_${resident.residentName.replace(/\s+/g, '_')}_Payment_History`)
   }
 
@@ -437,7 +434,7 @@ const Payments = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full sm:max-w-[250px] h-10 px-4 rounded-md border text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-0 focus:border-gray-200 focus:bg-white transition-colors duration-200"
             />
-            
+
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-[150px]">
                 <SelectValue placeholder="Status" />
@@ -528,13 +525,13 @@ const Payments = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-x-2 justify-start">
-                          <Eye 
-                            className="h-4 w-4 cursor-pointer text-blue-600" 
+                          <Eye
+                            className="h-4 w-4 cursor-pointer text-blue-600"
                             onClick={() => openHistoryModal(record)}
                             title="View Payment History"
                           />
-                          <FileText 
-                            className="h-4 w-4 cursor-pointer text-green-600" 
+                          <FileText
+                            className="h-4 w-4 cursor-pointer text-green-600"
                             onClick={() => exportResidentData(record)}
                             title="Export Payment Data"
                           />
@@ -562,9 +559,8 @@ const Payments = () => {
               <PaginationItem>
                 <PaginationPrevious
                   onClick={handlePrevious}
-                  className={`cursor-pointer text-sm ${
-                    currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"
-                  }`}
+                  className={`cursor-pointer text-sm ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"
+                    }`}
                 />
               </PaginationItem>
 
@@ -594,9 +590,8 @@ const Payments = () => {
               <PaginationItem>
                 <PaginationNext
                   onClick={handleNext}
-                  className={`cursor-pointer text-sm ${
-                    currentPage === totalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"
-                  }`}
+                  className={`cursor-pointer text-sm ${currentPage === totalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"
+                    }`}
                 />
               </PaginationItem>
             </PaginationContent>

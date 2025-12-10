@@ -9,11 +9,7 @@ import * as XLSX from "xlsx"
 
 
 // Mock payment history data - in real app, this would be fetched from API
-<<<<<<< HEAD
-const getPaymentHistory = () => [
-=======
 const getPaymentHistory = (residentId) => [
->>>>>>> origin/main
   {
     month: "June 2024",
     dueDate: "2024-06-05",
@@ -248,21 +244,12 @@ const PaymentHistory = ({ resident, onClose }) => {
                       <TableCell className="font-medium">{payment.month}</TableCell>
                       <TableCell>{payment.dueDate}</TableCell>
                       <TableCell>{payment.paymentDate}</TableCell>
-<<<<<<< HEAD
-                      <TableCell>₹{payment.amount.toLocaleString()}</TableCell>
-                      <TableCell className={payment.lateFee > 0 ? "text-red-600 font-medium" : ""}>
-                        ₹{payment.lateFee.toLocaleString()}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        ₹{(payment.amount + payment.lateFee).toLocaleString()}
-=======
                       <TableCell>Rs.{payment.amount.toLocaleString()}</TableCell>
                       <TableCell className={payment.lateFee > 0 ? "text-red-600 font-medium" : ""}>
                         Rs.{payment.lateFee.toLocaleString()}
                       </TableCell>
                       <TableCell className="font-medium">
                         Rs.{(payment.amount + payment.lateFee).toLocaleString()}
->>>>>>> origin/main
                       </TableCell>
                       <TableCell>
                         <Badge className={`${getStatusBadgeStyle(payment.status)} text-xs`}>{payment.status}</Badge>

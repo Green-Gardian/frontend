@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-"use client"
-=======
->>>>>>> origin/main
 import { useState, useEffect, useRef } from "react"
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"
 import L from "leaflet"
@@ -259,8 +255,8 @@ const Dashboard = () => {
 
   // Filter dustbins based on user role
   const userSociety = Cookies.get('society')
-  const filteredDustbins = userRole === 'super_admin' 
-    ? dustbins 
+  const filteredDustbins = userRole === 'super_admin'
+    ? dustbins
     : dustbins.filter((bin) => bin.raw?.society === userSociety)
 
   // Recalculate statistics based on filtered bins
@@ -361,18 +357,18 @@ const Dashboard = () => {
                       <div className="mt-3 flex gap-2 flex-wrap">
                         <Badge className={getStatusBadgeColor(bin.fillLevel)}>{bin.fillLevel.toFixed(2)}%</Badge>
                         {userRole === 'super_admin' && (
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => setSelectedBinForEdit(bin.raw)}
                             className="text-xs"
                           >
                             Edit
                           </Button>
                         )}
-                        <Button 
-                          size="sm" 
-                          variant="secondary" 
+                        <Button
+                          size="sm"
+                          variant="secondary"
                           onClick={() => emptyBin(bin.id)}
                           className="text-xs"
                         >
@@ -381,9 +377,9 @@ const Dashboard = () => {
                         {userRole === 'super_admin' && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button 
-                                size="sm" 
-                                variant="destructive" 
+                              <Button
+                                size="sm"
+                                variant="destructive"
                                 className="text-xs"
                               >
                                 Delete
@@ -479,8 +475,8 @@ const Dashboard = () => {
                       <div className="flex items-center gap-1">
                         <Badge className={`${getStatusBadgeColor(bin.fillLevel)} text-xs`}>{bin.fillLevel.toFixed(2)}%</Badge>
                         {userRole === 'super_admin' && (
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="ghost"
                             onClick={() => setSelectedBinForEdit(bin.raw)}
                             className="text-xs px-2 py-1 h-auto"
@@ -489,8 +485,8 @@ const Dashboard = () => {
                             <Edit2 className="h-3 w-3" />
                           </Button>
                         )}
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="ghost"
                           onClick={() => emptyBin(bin.id)}
                           className="text-xs px-2 py-1 h-auto"
@@ -501,8 +497,8 @@ const Dashboard = () => {
                         {userRole === 'super_admin' && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="ghost"
                                 className="text-xs px-2 py-1 h-auto text-red-600 hover:text-red-700 hover:bg-red-50"
                                 title="Delete this bin"
@@ -538,7 +534,7 @@ const Dashboard = () => {
 
       {/* Edit Bin Modal */}
       {selectedBinForEdit && (
-        <EditBinModal 
+        <EditBinModal
           bin={selectedBinForEdit}
           open={!!selectedBinForEdit}
           onOpenChange={(open) => {

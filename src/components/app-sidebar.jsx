@@ -12,8 +12,6 @@ import {
   BarChart3,
   CreditCard,
   UserCircle,
-<<<<<<< HEAD
-=======
   MessageCircleMore,
   Building2,
   FileClock,
@@ -58,8 +56,7 @@ const superAdminRoutes = [
     href: "/super-admin/",
   },
   {
-<<<<<<< HEAD
-=======
+
     title: "User Management",
     icon: <Users className="h-5 w-5" />,
     href: "/super-admin/users",
@@ -74,8 +71,7 @@ const superAdminRoutes = [
     icon: <Building2 className="h-5 w-5" />,
     href: "/super-admin/societies",
   },
-<<<<<<< HEAD
-=======
+
   {
     title: "Dustbins",
     icon: <Trash className="h-5 w-5" />,
@@ -139,8 +135,7 @@ const adminRoutes = [
     icon: <MessageCircleMore className="h-5 w-5" />,
     href: "/admin/messaging",
   },
-<<<<<<< HEAD
-=======
+
   {
     title: "Activity Logs",
     icon: <FileClock className="h-5 w-5" />,
