@@ -48,6 +48,27 @@ const createBinIcon = (fillLevel) => {
   })
 }
 
+// Create custom driver icon
+const createDriverIcon = () => {
+  const color = '#3b82f6'; // blue
+  const svgString = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="1" y="3" width="15" height="13" />
+      <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+      <circle cx="5.5" cy="18.5" r="2.5" />
+      <circle cx="18.5" cy="18.5" r="2.5" />
+      <rect x="1" y="16" width="15" height="2" fill="${color}" opacity="0.3"/>
+    </svg>
+  `
+  return L.divIcon({
+    html: svgString,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -20],
+    className: 'driver-icon',
+  })
+}
+
 // Component to center map on user's location
 const LocateControl = () => {
   return (
@@ -66,6 +87,7 @@ const Dashboard = () => {
   const [userRole, setUserRole] = useState("")
   const [lastRefreshed, setLastRefreshed] = useState(new Date())
   const [dustbins, setDustbins] = useState([])
+  const [drivers, setDrivers] = useState([])
   const [selectedBinForEdit, setSelectedBinForEdit] = useState(null)
   const mapRef = useRef(null)
   const socketRef = useRef(null)
@@ -105,6 +127,25 @@ const Dashboard = () => {
         }
       })
       .catch((err) => console.error('Failed to fetch bins', err))
+
+    // fetch drivers
+    axios
+      .get(`${apiBase}/driver/get-drivers`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => {
+        if (res.data && res.data.drivers) {
+          const mappedDrivers = res.data.drivers.filter(d => d.latitude && d.longitude).map((d) => ({
+             id: d.id,
+             name: `${d.first_name || ''} ${d.last_name || ''}`.trim(),
+             location: [parseFloat(d.latitude), parseFloat(d.longitude)],
+             status: d.is_blocked ? 'Blocked' : 'Active',
+             role: 'driver',
+             lastUpdate: d.last_location_update,
+             society_id: d.society_id
+          }))
+          setDrivers(mappedDrivers)
+        }
+      })
+      .catch((err) => console.error('Failed to fetch drivers', err))
 
     // connect socket
     try {
@@ -401,6 +442,29 @@ const Dashboard = () => {
                             </AlertDialogContent>
                           </AlertDialog>
                         )}
+                      </div>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+
+              {/* Driver Markers */}
+              {drivers
+                .filter(d => userRole === 'super_admin' || (d.society_id && String(d.society_id) === String(Cookies.get("society_id") || ''))) // Filter for current society if not super admin
+                .map((driver) => (
+                <Marker key={`driver-${driver.id}`} position={driver.location} icon={createDriverIcon()}>
+                  <Popup>
+                    <div className="p-2 min-w-[200px]">
+                      <h3 className="font-bold flex items-center gap-2">
+                         <span className="text-lg">🚚</span> {driver.name}
+                      </h3>
+                      <div className="mt-2 space-y-1">
+                        <Badge variant={driver.status === 'Active' ? 'default' : 'destructive'} className="text-xs">
+                          {driver.status}
+                        </Badge>
+                        <p className="text-xs text-gray-500">
+                          Last Updated: {driver.lastUpdate ? new Date(driver.lastUpdate).toLocaleTimeString() : 'N/A'}
+                        </p>
                       </div>
                     </div>
                   </Popup>
