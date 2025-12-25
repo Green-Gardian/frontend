@@ -13,7 +13,7 @@ import { VerifyAndSetToken } from "./VerifyAndSetToken";
 import { Alerts } from "./Alerts";
 import { ActivityLogs } from "./ActivityLogs";
 import SentimentAnalytics from "./SentimentAnalytics";
-import { Logs } from "./Logs";
+// import { Logs } from "./Logs";
 
 // SuperAdmin exports
 export * from "./SuperAdmin";
@@ -36,5 +36,5 @@ export {
   Alerts,
   ActivityLogs,
   SentimentAnalytics,
-  Logs,
+  // Logs,
 };
