@@ -31,7 +31,8 @@ import {
   ActivityLogs,
   SentimentAnalytics,
   BinsManagement,
-} from "./Pages";
+  Logs,
+} from "./pages";
 
 import { Provider } from "react-redux";
 import store from "./redux/store";
@@ -112,6 +113,10 @@ function App() {
         {
           path: "sentiment-analytics",
           element: <SentimentAnalytics />,
+        },
+        {
+          path: "logs",
+          element: <Logs />,
         },
         {
           path: "settings",

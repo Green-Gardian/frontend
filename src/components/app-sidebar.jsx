@@ -141,6 +141,11 @@ const adminRoutes = [
     icon: <FileClock className="h-5 w-5" />,
     href: "/admin/activity-logs",
   },
+  {
+    title: "System Logs",
+    icon: <Activity className="h-5 w-5" />,   
+    href: "/admin/logs",
+  },
   // {
   //   title: "Settings",
   //   icon: <Settings className="h-5 w-5" />,
