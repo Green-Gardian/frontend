@@ -6,7 +6,7 @@ import "../Dashboard/dashboard.css"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { RefreshCw, LocateFixed, Trash2, Edit2, OctagonX } from "lucide-react"
+import { RefreshCw, LocateFixed, Trash2, Edit2, OctagonX, Wifi, WifiOff } from "lucide-react"
 import Cookies from "js-cookie"
 import BinManagementModal from "@/components/BinManagementModal"
 import EditBinModal from "@/components/EditBinModal"
@@ -64,6 +64,7 @@ export const BinsManagement = () => {
   const [dustbins, setDustbins] = useState([])
   const [selectedBinForEdit, setSelectedBinForEdit] = useState(null)
   const [lastRefreshed, setLastRefreshed] = useState(new Date())
+  const [iotPolling, setIotPolling] = useState(false)
   const mapRef = useRef(null)
   const socketRef = useRef(null)
 
@@ -94,6 +95,8 @@ export const BinsManagement = () => {
             fillLevel: Number(b.fill_level) || 0,
             status: b.status || 'idle',
             lastEmptied: b.updated_at ? new Date(b.updated_at).toLocaleString() : '-',
+            hasIoT: !!b.thingspeak_channel_id,
+            iotLastUpdate: b.iot_last_update,
             raw: b,
           }))
           setDustbins(mapped)
@@ -122,6 +125,8 @@ export const BinsManagement = () => {
               fillLevel: Number(u.fill_level) || 0,
               status: u.status || 'idle',
               lastEmptied: u.updated_at ? new Date(u.updated_at).toLocaleString() : '-',
+              hasIoT: !!u.thingspeak_channel_id,
+              iotLastUpdate: u.iot_last_update,
               raw: u,
             }
             byId.set(mapped.id, mapped)
@@ -140,6 +145,8 @@ export const BinsManagement = () => {
             fillLevel: Number(b.fill_level) || 0,
             status: b.status || 'idle',
             lastEmptied: b.updated_at ? new Date(b.updated_at).toLocaleString() : '-',
+            hasIoT: !!b.thingspeak_channel_id,
+            iotLastUpdate: b.iot_last_update,
             raw: b,
           },
         ])
@@ -177,12 +184,36 @@ export const BinsManagement = () => {
             fillLevel: Number(b.fill_level) || 0,
             status: b.status || 'idle',
             lastEmptied: b.updated_at ? new Date(b.updated_at).toLocaleString() : '-',
+            hasIoT: !!b.thingspeak_channel_id,
+            iotLastUpdate: b.iot_last_update,
             raw: b,
           }))
           setDustbins(mapped)
         }
       })
       .catch((err) => console.error('Failed to fetch bins', err))
+  }
+
+  // Poll IoT data from ThingSpeak
+  const pollIoTData = async () => {
+    setIotPolling(true)
+    try {
+      const token = Cookies.get('access_token')
+      const apiBase = 'http://localhost:3001'
+      await axios.post(
+        `${apiBase}/bins/iot/poll`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      // Refresh data after polling
+      setTimeout(() => {
+        refreshData()
+        setIotPolling(false)
+      }, 2000)
+    } catch (err) {
+      console.error('Failed to poll IoT data:', err)
+      setIotPolling(false)
+    }
   }
 
   const getFillLevelColor = (level) => {
@@ -272,6 +303,15 @@ export const BinsManagement = () => {
           <h2 className="text-lg font-semibold">Dustbin Locations</h2>
           <div className="flex gap-2">
             <BinManagementModal onBinAdded={() => refreshData()} />
+            <Button
+              variant="outline"
+              onClick={pollIoTData}
+              disabled={iotPolling}
+              className="bg-green-50 hover:bg-green-100 border-green-200"
+            >
+              <Wifi className={`h-4 w-4 mr-2 ${iotPolling ? 'animate-pulse' : ''}`} />
+              {iotPolling ? 'Polling...' : 'IoT Poll'}
+            </Button>
             <Button variant="outline" onClick={refreshData}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
@@ -307,19 +347,39 @@ export const BinsManagement = () => {
                           ></div>
                         </div>
                       </div>
+                      {/* IoT Sensor Data */}
+                      {bin.hasIoT && (
+                        <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                          {bin.raw?.temperature !== null && (
+                            <div className="bg-blue-50 p-1 rounded text-center">
+                              <span className="block text-blue-600">🌡️ {bin.raw.temperature?.toFixed(1)}°C</span>
+                            </div>
+                          )}
+                          {bin.raw?.humidity !== null && (
+                            <div className="bg-cyan-50 p-1 rounded text-center">
+                              <span className="block text-cyan-600">💧 {bin.raw.humidity?.toFixed(1)}%</span>
+                            </div>
+                          )}
+                          {bin.raw?.smoke_level !== null && (
+                            <div className="bg-gray-50 p-1 rounded text-center">
+                              <span className="block text-gray-600">🌫️ {bin.raw.smoke_level}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                       <div className="mt-3 flex gap-2 flex-wrap">
                         <Badge className={getStatusBadgeColor(bin.fillLevel)}>{bin.fillLevel.toFixed(2)}%</Badge>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
+                        <Button
+                          size="sm"
+                          variant="outline"
                           onClick={() => setSelectedBinForEdit(bin.raw)}
                           className="text-xs"
                         >
                           Edit
                         </Button>
-                        <Button 
-                          size="sm" 
-                          variant="secondary" 
+                        <Button
+                          size="sm"
+                          variant="secondary"
                           onClick={() => emptyBin(bin.id)}
                           className="text-xs"
                         >
@@ -327,9 +387,9 @@ export const BinsManagement = () => {
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button 
-                              size="sm" 
-                              variant="destructive" 
+                            <Button
+                              size="sm"
+                              variant="destructive"
                               className="text-xs"
                             >
                               Delete
@@ -373,6 +433,7 @@ export const BinsManagement = () => {
                 <TableRow>
                   <TableHead className="w-[100px]">ID</TableHead>
                   <TableHead className="min-w-[180px]">Location</TableHead>
+                  <TableHead className="min-w-[80px] hidden sm:table-cell">IoT</TableHead>
                   <TableHead className="min-w-[120px] hidden sm:table-cell">Society</TableHead>
                   <TableHead className="min-w-[120px] hidden md:table-cell">Fill Level</TableHead>
                   <TableHead className="min-w-[120px] hidden lg:table-cell">Last Updated</TableHead>
@@ -384,6 +445,15 @@ export const BinsManagement = () => {
                   <TableRow key={index} className={`${index % 2 === 0 ? "bg-[#F7F6FE]" : "bg-white"}`}>
                     <TableCell className="font-medium">#{bin.id}</TableCell>
                     <TableCell>{bin.address}</TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      <div className="flex items-center gap-1" title={bin.hasIoT ? (bin.iotLastUpdate ? `Last: ${new Date(bin.iotLastUpdate).toLocaleString()}` : 'Connected') : 'No IoT'}>
+                        {bin.hasIoT ? (
+                          <Wifi className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <WifiOff className="h-4 w-4 text-gray-400" />
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="hidden sm:table-cell text-sm">{bin.raw?.society || '-'}</TableCell>
                     <TableCell className="hidden md:table-cell">
                       <div className="flex items-center gap-2">
@@ -400,8 +470,8 @@ export const BinsManagement = () => {
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Badge className={`${getStatusBadgeColor(bin.fillLevel)} text-xs`}>{bin.fillLevel.toFixed(2)}%</Badge>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="ghost"
                           onClick={() => setSelectedBinForEdit(bin.raw)}
                           className="text-xs px-2 py-1 h-auto"
@@ -409,8 +479,8 @@ export const BinsManagement = () => {
                         >
                           <Edit2 className="h-3 w-3" />
                         </Button>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="ghost"
                           onClick={() => emptyBin(bin.id)}
                           className="text-xs px-2 py-1 h-auto"
@@ -420,8 +490,8 @@ export const BinsManagement = () => {
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="ghost"
                               className="text-xs px-2 py-1 h-auto text-red-600 hover:text-red-700 hover:bg-red-50"
                               title="Delete"
@@ -456,7 +526,7 @@ export const BinsManagement = () => {
 
       {/* Edit Bin Modal */}
       {selectedBinForEdit && (
-        <EditBinModal 
+        <EditBinModal
           bin={selectedBinForEdit}
           open={!!selectedBinForEdit}
           onOpenChange={(open) => {

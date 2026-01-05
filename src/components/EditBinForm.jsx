@@ -24,7 +24,11 @@ const EditBinForm = ({ bin, onBinUpdated, onCancel }) => {
     address: bin.address || '',
     latitude: bin.latitude || 0,
     longitude: bin.longitude || 0,
+    thingspeak_channel_id: bin.thingspeak_channel_id || '',
+    thingspeak_api_key: bin.thingspeak_api_key || '',
   });
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -122,6 +126,62 @@ const EditBinForm = ({ bin, onBinUpdated, onCancel }) => {
               onChange={handleChange}
               placeholder="e.g., 74.3350"
             />
+          </div>
+        </div>
+
+        {/* ThingSpeak IoT Configuration */}
+        <div className="border-t pt-4 mt-4">
+          <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+            </svg>
+            IoT Configuration
+          </h4>
+
+          {/* Current IoT Status */}
+          {bin.thingspeak_channel_id && (
+            <div className="mb-3 p-2 bg-gray-50 rounded-md text-xs">
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                <span className="text-gray-600">Channel: {bin.thingspeak_channel_id}</span>
+              </div>
+              {bin.iot_last_update && (
+                <div className="text-gray-500 mt-1">
+                  Last IoT Update: {new Date(bin.iot_last_update).toLocaleString()}
+                </div>
+              )}
+              {bin.raw_distance !== null && bin.raw_distance !== undefined && (
+                <div className="text-gray-500">
+                  Raw Distance: {bin.raw_distance} cm
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="thingspeak_channel_id">ThingSpeak Channel ID</Label>
+              <Input
+                id="thingspeak_channel_id"
+                name="thingspeak_channel_id"
+                type="text"
+                placeholder="e.g., 2812345"
+                value={formData.thingspeak_channel_id}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <Label htmlFor="thingspeak_api_key">ThingSpeak Read API Key</Label>
+              <Input
+                id="thingspeak_api_key"
+                name="thingspeak_api_key"
+                type="text"
+                placeholder="e.g., ABCDEFGHIJKLMNOP"
+                value={formData.thingspeak_api_key}
+                onChange={handleChange}
+              />
+              <p className="text-xs text-gray-500 mt-1">Leave empty to use default API key from server</p>
+            </div>
           </div>
         </div>
 
