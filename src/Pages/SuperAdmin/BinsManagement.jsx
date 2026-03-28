@@ -11,7 +11,7 @@ import Cookies from "js-cookie"
 import BinManagementModal from "@/components/BinManagementModal"
 import EditBinModal from "@/components/EditBinModal"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import axios from "axios"
+import { apiFetch } from "@/utils/apiClient"
 import { io } from "socket.io-client"
 
 const fixLeafletIcons = () => {
@@ -84,11 +84,11 @@ export const BinsManagement = () => {
     const apiBase = 'http://localhost:3001'
 
     // fetch initial bins
-    axios
-      .get(`${apiBase}/bins`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => {
-        if (res.data && res.data.data) {
-          const mapped = res.data.data.map((b) => ({
+    apiFetch(`${apiBase}/bins`, { method: 'GET' })
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData && resData.data) {
+          const mapped = resData.data.map((b) => ({
             id: b.id,
             address: b.address || b.name || 'Unknown',
             location: [parseFloat(b.latitude) || 24.8607, parseFloat(b.longitude) || 67.0011],
@@ -171,13 +171,12 @@ export const BinsManagement = () => {
 
   const refreshData = () => {
     setLastRefreshed(new Date())
-    const token = Cookies.get('access_token')
     const apiBase = 'http://localhost:3001'
-    axios
-      .get(`${apiBase}/bins`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => {
-        if (res.data && res.data.data) {
-          const mapped = res.data.data.map((b) => ({
+    apiFetch(`${apiBase}/bins`, { method: 'GET' })
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData && resData.data) {
+          const mapped = resData.data.map((b) => ({
             id: b.id,
             address: b.address || b.name || 'Unknown',
             location: [parseFloat(b.latitude) || 24.8607, parseFloat(b.longitude) || 67.0011],
@@ -198,13 +197,8 @@ export const BinsManagement = () => {
   const pollIoTData = async () => {
     setIotPolling(true)
     try {
-      const token = Cookies.get('access_token')
       const apiBase = 'http://localhost:3001'
-      await axios.post(
-        `${apiBase}/bins/iot/poll`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      await apiFetch(`${apiBase}/bins/iot/poll`, { method: 'POST' })
       // Refresh data after polling
       setTimeout(() => {
         refreshData()
@@ -232,14 +226,13 @@ export const BinsManagement = () => {
 
   const emptyBin = async (binId) => {
     try {
-      const token = Cookies.get('access_token')
       const apiBase = 'http://localhost:3001'
-      const response = await axios.put(
+      const response = await apiFetch(
         `${apiBase}/bins/${binId}`,
-        { fill_level: 0, status: 'idle' },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { method: 'PUT', body: JSON.stringify({ fill_level: 0, status: 'idle' }) }
       )
-      if (response.data.success) {
+      const data = await response.json()
+      if (data.success) {
         setDustbins((prev) =>
           prev.map((bin) =>
             bin.id === binId ? { ...bin, fillLevel: 0, status: 'idle' } : bin
@@ -253,13 +246,13 @@ export const BinsManagement = () => {
 
   const deleteBin = async (binId) => {
     try {
-      const token = Cookies.get('access_token')
       const apiBase = 'http://localhost:3001'
-      const response = await axios.delete(
+      const response = await apiFetch(
         `${apiBase}/bins/${binId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { method: 'DELETE' }
       )
-      if (response.data.success) {
+      const data = await response.json()
+      if (data.success) {
         setDustbins((prev) => prev.filter((bin) => bin.id !== binId))
       }
     } catch (err) {

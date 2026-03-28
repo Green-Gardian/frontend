@@ -1,19 +1,12 @@
-import Cookies from "js-cookie";
+import { apiFetch } from "@/utils/apiClient";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
-
-// Helper function to get auth headers
-const getAuthHeaders = () => ({
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${Cookies.get("access_token")}`,
-});
 
 // Get all alerts
 export const getAlerts = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/alerts`, {
+    const response = await apiFetch(`${API_BASE_URL}/alerts`, {
       method: "GET",
-      headers: getAuthHeaders(),
     });
 
     const data = await response.json();
@@ -32,9 +25,8 @@ export const getAlerts = async () => {
 // Get alert details
 export const getAlertDetails = async (alertId) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/alerts/${alertId}`, {
+    const response = await apiFetch(`${API_BASE_URL}/alerts/${alertId}`, {
       method: "GET",
-      headers: getAuthHeaders(),
     });
 
     const data = await response.json();
@@ -53,9 +45,8 @@ export const getAlertDetails = async (alertId) => {
 // Create new alert
 export const createAlert = async (alertData) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/alerts`, {
+    const response = await apiFetch(`${API_BASE_URL}/alerts`, {
       method: "POST",
-      headers: getAuthHeaders(),
       body: JSON.stringify(alertData),
     });
 
@@ -75,9 +66,8 @@ export const createAlert = async (alertData) => {
 // Update alert
 export const updateAlert = async (alertId, updateData) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/alerts/${alertId}`, {
+    const response = await apiFetch(`${API_BASE_URL}/alerts/${alertId}`, {
       method: "PUT",
-      headers: getAuthHeaders(),
       body: JSON.stringify(updateData),
     });
 
@@ -97,9 +87,8 @@ export const updateAlert = async (alertId, updateData) => {
 // Cancel alert
 export const cancelAlert = async (alertId) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/alerts/${alertId}`, {
+    const response = await apiFetch(`${API_BASE_URL}/alerts/${alertId}`, {
       method: "DELETE",
-      headers: getAuthHeaders(),
     });
 
     const data = await response.json();
@@ -118,9 +107,8 @@ export const cancelAlert = async (alertId) => {
 // Get alert statistics
 export const getAlertStats = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/alerts/stats`, {
+    const response = await apiFetch(`${API_BASE_URL}/alerts/stats`, {
       method: "GET",
-      headers: getAuthHeaders(),
     });
 
     const data = await response.json();
@@ -139,9 +127,8 @@ export const getAlertStats = async () => {
 // Get alert types
 export const getAlertTypes = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/alerts/types`, {
+    const response = await apiFetch(`${API_BASE_URL}/alerts/types`, {
       method: "GET",
-      headers: getAuthHeaders(),
     });
 
     const data = await response.json();
@@ -160,9 +147,8 @@ export const getAlertTypes = async () => {
 // Get user notification preferences
 export const getUserNotificationPreferences = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/alerts/preferences`, {
+    const response = await apiFetch(`${API_BASE_URL}/alerts/preferences`, {
       method: "GET",
-      headers: getAuthHeaders(),
     });
 
     const data = await response.json();
@@ -181,9 +167,8 @@ export const getUserNotificationPreferences = async () => {
 // Update user notification preferences
 export const updateUserNotificationPreferences = async (preferences) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/alerts/preferences`, {
+    const response = await apiFetch(`${API_BASE_URL}/alerts/preferences`, {
       method: "PUT",
-      headers: getAuthHeaders(),
       body: JSON.stringify(preferences),
     });
 
@@ -203,9 +188,8 @@ export const updateUserNotificationPreferences = async (preferences) => {
 // Register push token
 export const registerPushToken = async (tokenData) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/alerts/push-token`, {
+    const response = await apiFetch(`${API_BASE_URL}/alerts/push-token`, {
       method: "POST",
-      headers: getAuthHeaders(),
       body: JSON.stringify(tokenData),
     });
 
@@ -225,9 +209,8 @@ export const registerPushToken = async (tokenData) => {
 // Get communication logs
 export const getCommunicationLogs = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/alerts/logs`, {
+    const response = await apiFetch(`${API_BASE_URL}/alerts/logs`, {
       method: "GET",
-      headers: getAuthHeaders(),
     });
 
     const data = await response.json();
@@ -246,9 +229,8 @@ export const getCommunicationLogs = async () => {
 // Test notification service
 export const testNotificationService = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/alerts/test-notification`, {
+    const response = await apiFetch(`${API_BASE_URL}/alerts/test-notification`, {
       method: "POST",
-      headers: getAuthHeaders(),
     });
 
     const data = await response.json();

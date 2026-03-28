@@ -1,18 +1,12 @@
+import { apiFetch } from "@/utils/apiClient";
+
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
-
-import Cookies from "js-cookie";
-
-const getAuthHeaders = () => ({
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${Cookies.get("access_token")}`,
-});
 
 
 const getCustomerAnalytics = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/analytics/customers`, {
+        const response = await apiFetch(`${API_BASE_URL}/analytics/customers`, {
             method: "GET",
-            headers: getAuthHeaders(),
         });
         const data = await response.json();
         if (!response.ok) {
@@ -27,9 +21,8 @@ const getCustomerAnalytics = async () => {
 
 const getStaffAnalytics = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/analytics/staff`, {
+        const response = await apiFetch(`${API_BASE_URL}/analytics/staff`, {
             method: "GET",
-            headers: getAuthHeaders(),
         });
         const data = await response.json();
         if (!response.ok) {
@@ -44,9 +37,8 @@ const getStaffAnalytics = async () => {
 
 const getVehicleAnalytics = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/analytics/vehicles`, {
+        const response = await apiFetch(`${API_BASE_URL}/analytics/vehicles`, {
             method: "GET",
-            headers: getAuthHeaders(),
         });
     
         const data = await response.json();

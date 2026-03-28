@@ -1,59 +1,63 @@
-import axios from "axios";
-import Cookies from "js-cookie";
+import { apiFetch } from "@/utils/apiClient";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
-
-function getAuthHeaders() {
-  const token = Cookies.get("access_token");
-  return token
-    ? {
-        Authorization: `Bearer ${token}`,
-      }
-    : {};
-}
 
 // Fetch activity logs (supports page, limit, search, subAdminId, activityType, date range)
 export async function getActivityLogs(params = {}) {
   try {
-    const response = await axios.get(`${API_BASE_URL}/sub-admin/logs`, {
-      params,
-      headers: {
-        ...getAuthHeaders(),
-      },
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, val]) => {
+      if (val !== undefined && val !== null && val !== "") {
+        queryParams.append(key, val);
+      }
     });
-    return response.data;
+
+    const response = await apiFetch(
+      `${API_BASE_URL}/sub-admin/logs?${queryParams}`,
+      { method: "GET" }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        error: data.error || data.message || "Failed to fetch activity logs",
+      };
+    }
+
+    return data;
   } catch (error) {
     console.error("Error fetching activity logs:", error);
-    return {
-      error:
-        error.response?.data?.error ||
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to fetch activity logs",
-    };
+    return { error: error.message || "Failed to fetch activity logs" };
   }
 }
 
 // Fetch stats for activity logs (total, by type, etc.)
 export async function getActivityLogStats(params = {}) {
   try {
-    const response = await axios.get(`${API_BASE_URL}/sub-admin/logs/stats`, {
-      params,
-      headers: {
-        ...getAuthHeaders(),
-      },
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, val]) => {
+      if (val !== undefined && val !== null && val !== "") {
+        queryParams.append(key, val);
+      }
     });
-    return response.data;
+
+    const response = await apiFetch(
+      `${API_BASE_URL}/sub-admin/logs/stats?${queryParams}`,
+      { method: "GET" }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        error: data.error || data.message || "Failed to fetch activity log stats",
+      };
+    }
+
+    return data;
   } catch (error) {
     console.error("Error fetching activity log stats:", error);
-    return {
-      error:
-        error.response?.data?.error ||
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to fetch activity log stats",
-    };
+    return { error: error.message || "Failed to fetch activity log stats" };
   }
 }
-
-

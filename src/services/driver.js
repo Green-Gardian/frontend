@@ -1,28 +1,15 @@
-import Cookies from "js-cookie";
+import { apiFetch } from "@/utils/apiClient";
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
 
 const getDrivers = async () => {
-  const access_token = Cookies.get("access_token");
-
   try {
-    const options = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${access_token}`,
-      },
-    };
-
-    const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:3001"}/driver/get-drivers`,
-      options
+    const response = await apiFetch(
+      `${BACKEND_URL}/driver/get-drivers`,
+      { method: "GET" }
     );
-
     const data = await response.json();
-
-    if (!response.ok) {
-      return { error: data.message };
-    }
-
+    if (!response.ok) return { error: data.message };
     return data;
   } catch (err) {
     console.log("Error fetching drivers:", err.message);
@@ -31,29 +18,13 @@ const getDrivers = async () => {
 };
 
 const addDriver = async (driverData) => {
-  const access_token = Cookies.get("access_token");
-
   try {
-    const options = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${access_token}`,
-      },
-      body: JSON.stringify(driverData),
-    };
-
-    const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:3001"}/driver/add-driver`,
-      options
+    const response = await apiFetch(
+      `${BACKEND_URL}/driver/add-driver`,
+      { method: "POST", body: JSON.stringify(driverData) }
     );
-
     const data = await response.json();
-
-    if (!response.ok) {
-      return { error: data.message };
-    }
-
+    if (!response.ok) return { error: data.message };
     return data;
   } catch (err) {
     console.log("Error adding driver:", err.message);
@@ -62,29 +33,13 @@ const addDriver = async (driverData) => {
 };
 
 const updateDriver = async (id, driverData) => {
-  const access_token = Cookies.get("access_token");
-
   try {
-    const options = {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${access_token}`,
-      },
-      body: JSON.stringify(driverData),
-    };
-
-    const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:3001"}/driver/update-driver/${id}`,
-      options
+    const response = await apiFetch(
+      `${BACKEND_URL}/driver/update-driver/${id}`,
+      { method: "PUT", body: JSON.stringify(driverData) }
     );
-
     const data = await response.json();
-
-    if (!response.ok) {
-      return { error: data.message };
-    }
-
+    if (!response.ok) return { error: data.message };
     return data;
   } catch (err) {
     console.log("Error updating driver:", err.message);
@@ -93,28 +48,13 @@ const updateDriver = async (id, driverData) => {
 };
 
 const deleteDriver = async (driverId) => {
-  const access_token = Cookies.get("access_token");
-
   try {
-    const options = {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${access_token}`,
-      },
-    };
-
-    const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:3001"}/driver/delete-driver/${driverId}`,
-      options
+    const response = await apiFetch(
+      `${BACKEND_URL}/driver/delete-driver/${driverId}`,
+      { method: "DELETE" }
     );
-
     const data = await response.json();
-
-    if (!response.ok) {
-      return { error: data.message };
-    }
-
+    if (!response.ok) return { error: data.message };
     return data;
   } catch (err) {
     console.log("Error deleting driver:", err.message);
@@ -123,28 +63,13 @@ const deleteDriver = async (driverId) => {
 };
 
 const getDriverPerformance = async (driverId, period = '30') => {
-  const access_token = Cookies.get("access_token");
-
   try {
-    const options = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${access_token}`,
-      },
-    };
-
-    const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:3001"}/driver/${driverId}/performance?period=${period}`,
-      options
+    const response = await apiFetch(
+      `${BACKEND_URL}/driver/${driverId}/performance?period=${period}`,
+      { method: "GET" }
     );
-
     const data = await response.json();
-
-    if (!response.ok) {
-      return { error: data.message };
-    }
-
+    if (!response.ok) return { error: data.message };
     return data;
   } catch (err) {
     console.log("Error fetching driver performance:", err.message);
@@ -153,28 +78,13 @@ const getDriverPerformance = async (driverId, period = '30') => {
 };
 
 const getDriverWorkAreas = async (driverId) => {
-  const access_token = Cookies.get("access_token");
-
   try {
-    const options = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${access_token}`,
-      },
-    };
-
-    const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:3001"}/driver/work-areas`,
-      options
+    const response = await apiFetch(
+      `${BACKEND_URL}/driver/work-areas`,
+      { method: "GET" }
     );
-
     const data = await response.json();
-
-    if (!response.ok) {
-      return { error: data.message };
-    }
-
+    if (!response.ok) return { error: data.message };
     return data;
   } catch (err) {
     console.log("Error fetching driver work areas:", err.message);
@@ -182,11 +92,11 @@ const getDriverWorkAreas = async (driverId) => {
   }
 };
 
-export { 
-  getDrivers, 
-  addDriver, 
-  updateDriver, 
-  deleteDriver, 
-  getDriverPerformance, 
-  getDriverWorkAreas 
+export {
+  getDrivers,
+  addDriver,
+  updateDriver,
+  deleteDriver,
+  getDriverPerformance,
+  getDriverWorkAreas
 };

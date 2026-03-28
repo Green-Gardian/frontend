@@ -1,4 +1,5 @@
 import Cookies from "js-cookie";
+import { apiFetch } from "@/utils/apiClient";
 
 const signUp = async (credentials) => {
   try {
@@ -83,17 +84,9 @@ const getAllUsers = async (params = {}) => {
     if (params.role) queryParams.append("role", params.role);
     if (params.search) queryParams.append("search", params.search);
 
-    const token = Cookies.get("access_token");
-
-    const response = await fetch(
+    const response = await apiFetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/users?${queryParams}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      { method: "GET" }
     );
 
     const data = await response.json();
@@ -117,16 +110,10 @@ const blockUser = async (userId, isBlocked) => {
   );
 
   try {
-    const token = Cookies.get("access_token");
-
-    const response = await fetch(
+    const response = await apiFetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/users/${userId}/block`,
       {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({ isBlocked }),
       }
     );
@@ -147,16 +134,10 @@ const blockUser = async (userId, isBlocked) => {
 
 const updateUser = async (userId, userData) => {
   try {
-    const token = Cookies.get("access_token");
-
-    const response = await fetch(
+    const response = await apiFetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/users/${userId}`,
       {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify(userData),
       }
     );
@@ -176,17 +157,9 @@ const updateUser = async (userId, userData) => {
 
 const deleteUser = async (userId) => {
   try {
-    const token = Cookies.get("access_token");
-
-    const response = await fetch(
+    const response = await apiFetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/users/${userId}`,
-      {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      { method: "DELETE" }
     );
 
     const data = await response.json();
@@ -203,21 +176,9 @@ const deleteUser = async (userId) => {
 
 const getSystemStats = async () => {
   try {
-    const token = Cookies.get("access_token");
-
-    if (!token) {
-      return { error: "No access token found" };
-    }
-
-    const response = await fetch(
+    const response = await apiFetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/system-stats`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      { method: "GET" }
     );
 
     const data = await response.json();
@@ -234,16 +195,10 @@ const getSystemStats = async () => {
 
 const addAdminAndStaff = async (userData) => {
   try {
-    const token = Cookies.get("access_token");
-
-    const response = await fetch(
+    const response = await apiFetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/add-admin-and-staff`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify(userData),
       }
     );
@@ -312,16 +267,9 @@ const resetPasswordFunc = async (token, credentials) => {
 
 const getProfileData = async () => {
   try {
-    const token = Cookies.get("access_token");
-    const response = await fetch(
+    const response = await apiFetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/profile`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      { method: "GET" }
     );
 
     const data = await response.json();
@@ -342,25 +290,18 @@ const updateProfile = async (payload) => {
 
   console.log(`Payload size: ${sizeInBytes} bytes (${sizeInKB.toFixed(2)} KB)`);
   try {
-    const token = Cookies.get("access_token");
-    const options = {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        first_name: payload.first_name,
-        last_name: payload.last_name,
-        email: payload.email,
-        phone_number: payload.phone_number,
-        profile_picture: payload.profile_picture,
-      }),
-    };
-
-    const response = await fetch(
+    const response = await apiFetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/update-profile`,
-      options
+      {
+        method: "PUT",
+        body: JSON.stringify({
+          first_name: payload.first_name,
+          last_name: payload.last_name,
+          email: payload.email,
+          phone_number: payload.phone_number,
+          profile_picture: payload.profile_picture,
+        }),
+      }
     );
 
     const data = await response.json();
@@ -380,22 +321,16 @@ const changePassword = async ({
   confirmNewPassword,
 }) => {
   try {
-    const token = Cookies.get("access_token");
-    const options = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        currentPassword,
-        newPassword,
-        confirmNewPassword,
-      }),
-    };
-    const response = await fetch(
+    const response = await apiFetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/change-password`,
-      options
+      {
+        method: "POST",
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+          confirmNewPassword,
+        }),
+      }
     );
     const data = await response.json();
 
@@ -411,16 +346,9 @@ const changePassword = async ({
 // MFA Functions
 const getMFAStatus = async () => {
   try {
-    const token = Cookies.get("access_token");
-    const response = await fetch(
+    const response = await apiFetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/mfa/status`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      { method: "GET" }
     );
 
     const data = await response.json();
@@ -437,16 +365,9 @@ const getMFAStatus = async () => {
 
 const generateMFASecret = async () => {
   try {
-    const token = Cookies.get("access_token");
-    const response = await fetch(
+    const response = await apiFetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/mfa/generate-secret`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      { method: "POST" }
     );
 
     const data = await response.json();
@@ -463,15 +384,10 @@ const generateMFASecret = async () => {
 
 const enableMFA = async (totpCode) => {
   try {
-    const token = Cookies.get("access_token");
-    const response = await fetch(
+    const response = await apiFetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/mfa/enable`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({ totpCode }),
       }
     );
@@ -490,16 +406,9 @@ const enableMFA = async (totpCode) => {
 
 const disableMFA = async () => {
   try {
-    const token = Cookies.get("access_token");
-    const response = await fetch(
+    const response = await apiFetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/mfa/disable`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      { method: "POST" }
     );
 
     const data = await response.json();

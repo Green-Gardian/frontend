@@ -1,17 +1,10 @@
-import Cookies from "js-cookie";
+import { apiFetch } from "@/utils/apiClient";
 
 export const getUsersBySociety = async () => {
   try {
-    const token = Cookies.get("access_token");
-    const response = await fetch(
+    const response = await apiFetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/get-users-by-society`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      { method: "GET" }
     );
     if (!response.ok) {
       throw new Error("Failed to fetch users by society");
@@ -25,15 +18,10 @@ export const getUsersBySociety = async () => {
 
 export const addResident = async (residentData) => {
   try {
-    const token = Cookies.get("access_token");
-    const response = await fetch(
+    const response = await apiFetch(
       `${import.meta.env.VITE_BACKEND_URL}/auth/add-resident`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           first_name: residentData.first_name,
           last_name: residentData.last_name,
@@ -51,7 +39,7 @@ export const addResident = async (residentData) => {
     if (!response.ok) {
       return { error: data.message || "Failed to add resident" };
     }
-    return {success: true, data};  
+    return { success: true, data };
   } catch (error) {
     console.error("Error adding resident:", error);
     throw error;

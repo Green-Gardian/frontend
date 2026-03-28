@@ -1,21 +1,14 @@
-import Cookies from "js-cookie";
+import { apiFetch } from "@/utils/apiClient";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
-
-// Helper function to get auth headers
-const getAuthHeaders = () => ({
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${Cookies.get("access_token")}`,
-});
 
 // Get all staff/users based on role and permissions
 export const getStaff = async (params = {}) => {
   try {
     const queryParams = new URLSearchParams();
 
-
     console.log("params : ", params);
-    
+
     if (params.page) queryParams.append('page', params.page);
     if (params.limit) queryParams.append('limit', params.limit);
     if (params.role) queryParams.append('role', params.role);
@@ -23,11 +16,8 @@ export const getStaff = async (params = {}) => {
     if (params.societyId) queryParams.append('societyId', params.societyId);
 
     const url = `${API_BASE_URL}/auth/users${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-    
-    const response = await fetch(url, {
-      method: "GET",
-      headers: getAuthHeaders(),
-    });
+
+    const response = await apiFetch(url, { method: "GET" });
 
     const data = await response.json();
 
@@ -45,9 +35,8 @@ export const getStaff = async (params = {}) => {
 // Add new staff member
 export const addStaff = async (staffData) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/add-admin-and-staff`, {
+    const response = await apiFetch(`${API_BASE_URL}/auth/add-admin-and-staff`, {
       method: "POST",
-      headers: getAuthHeaders(),
       body: JSON.stringify(staffData),
     });
 
@@ -69,9 +58,8 @@ export const addStaff = async (staffData) => {
 // Block/Unblock user
 export const toggleUserBlock = async (userId, isBlocked) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/users/${userId}/block`, {
+    const response = await apiFetch(`${API_BASE_URL}/auth/users/${userId}/block`, {
       method: "PATCH",
-      headers: getAuthHeaders(),
       body: JSON.stringify({ isBlocked }),
     });
 
@@ -91,9 +79,8 @@ export const toggleUserBlock = async (userId, isBlocked) => {
 // Update user
 export const updateUser = async (userId, userData) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/users/${userId}`, {
+    const response = await apiFetch(`${API_BASE_URL}/auth/users/${userId}`, {
       method: "PUT",
-      headers: getAuthHeaders(),
       body: JSON.stringify(userData),
     });
 
@@ -113,9 +100,8 @@ export const updateUser = async (userId, userData) => {
 // Delete user
 export const deleteUser = async (userId) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/users/${userId}`, {
+    const response = await apiFetch(`${API_BASE_URL}/auth/users/${userId}`, {
       method: "DELETE",
-      headers: getAuthHeaders(),
     });
 
     const data = await response.json();
@@ -134,9 +120,8 @@ export const deleteUser = async (userId) => {
 // Get system stats
 export const getSystemStats = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/system-stats`, {
+    const response = await apiFetch(`${API_BASE_URL}/auth/system-stats`, {
       method: "GET",
-      headers: getAuthHeaders(),
     });
 
     const data = await response.json();
@@ -160,7 +145,6 @@ export const getAvailableRoles = (currentUserRole) => {
       { value: "customer_support", label: "Customer Support" },
       { value: "driver", label: "Driver" },
       { value: "sub_admin", label: "Sub_Admin" },
-
     ];
   } else if (currentUserRole === 'admin') {
     return [
@@ -173,7 +157,6 @@ export const getAvailableRoles = (currentUserRole) => {
     return [
       { value: "customer_support", label: "Customer Support" },
       { value: "driver", label: "Driver" },
-      // { value: "sub_admin", label: "Sub_Admin" },
     ];
   }
   else {
@@ -184,9 +167,8 @@ export const getAvailableRoles = (currentUserRole) => {
 // Get societies for admin (if needed)
 export const getSocieties = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/society/get-societies`, {
+    const response = await apiFetch(`${API_BASE_URL}/society/get-societies`, {
       method: "GET",
-      headers: getAuthHeaders(),
     });
 
     const data = await response.json();

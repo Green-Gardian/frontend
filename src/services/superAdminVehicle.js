@@ -1,22 +1,12 @@
-import Cookies from "js-cookie";
+import { apiFetch } from "@/utils/apiClient";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
-
-// Helper function to get auth headers
-const getAuthHeaders = () => {
-    const token = Cookies.get("access_token");
-    return {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-    };
-};
+const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
 
 // Add a new vehicle to inventory (Super Admin only)
 export const addVehicleToInventory = async (vehicleData) => {
     try {
-        const response = await fetch(`${BASE_URL}/super-admin/vehicle/add-to-inventory`, {
+        const response = await apiFetch(`${BASE_URL}/super-admin/vehicle/add-to-inventory`, {
             method: "POST",
-            headers: getAuthHeaders(),
             body: JSON.stringify(vehicleData),
         });
 
@@ -36,9 +26,8 @@ export const addVehicleToInventory = async (vehicleData) => {
 // Get all vehicles in inventory (Super Admin only)
 export const getVehicleInventory = async () => {
     try {
-        const response = await fetch(`${BASE_URL}/super-admin/vehicle/inventory`, {
+        const response = await apiFetch(`${BASE_URL}/super-admin/vehicle/inventory`, {
             method: "GET",
-            headers: getAuthHeaders(),
         });
 
         const data = await response.json();
@@ -57,11 +46,10 @@ export const getVehicleInventory = async () => {
 // Update vehicle in inventory (Super Admin only)
 export const updateVehicleInventory = async (vehicleId, vehicleData) => {
     try {
-        const response = await fetch(
+        const response = await apiFetch(
             `${BASE_URL}/super-admin/vehicle/inventory/${vehicleId}`,
             {
                 method: "PUT",
-                headers: getAuthHeaders(),
                 body: JSON.stringify(vehicleData),
             }
         );
@@ -82,11 +70,10 @@ export const updateVehicleInventory = async (vehicleId, vehicleData) => {
 // Block a vehicle (Super Admin only)
 export const blockVehicle = async (vehicleId, blockData) => {
     try {
-        const response = await fetch(
+        const response = await apiFetch(
             `${BASE_URL}/super-admin/vehicle/block/${vehicleId}`,
             {
                 method: "PUT",
-                headers: getAuthHeaders(),
                 body: JSON.stringify(blockData),
             }
         );
@@ -107,11 +94,10 @@ export const blockVehicle = async (vehicleId, blockData) => {
 // Unblock a vehicle (Super Admin only)
 export const unblockVehicle = async (vehicleId, statusData) => {
     try {
-        const response = await fetch(
+        const response = await apiFetch(
             `${BASE_URL}/super-admin/vehicle/unblock/${vehicleId}`,
             {
                 method: "PUT",
-                headers: getAuthHeaders(),
                 body: JSON.stringify(statusData),
             }
         );
@@ -132,9 +118,8 @@ export const unblockVehicle = async (vehicleId, statusData) => {
 // Get available vehicles for assignment (Admin and Super Admin)
 export const getAvailableVehicles = async () => {
     try {
-        const response = await fetch(`${BASE_URL}/super-admin/vehicle/available`, {
+        const response = await apiFetch(`${BASE_URL}/super-admin/vehicle/available`, {
             method: "GET",
-            headers: getAuthHeaders(),
         });
 
         const data = await response.json();

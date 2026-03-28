@@ -12,7 +12,7 @@ import InfoCards from "@/components/info-cards"
 import BinManagementModal from "@/components/BinManagementModal"
 import EditBinModal from "@/components/EditBinModal"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import axios from "axios"
+import { apiFetch } from "@/utils/apiClient"
 import { io } from "socket.io-client"
 
 const fixLeafletIcons = () => {
@@ -96,15 +96,14 @@ const Dashboard = () => {
   }, [])
 
   useEffect(() => {
-    const token = Cookies.get('access_token')
     const apiBase = 'http://localhost:3001'
 
     // fetch initial bins
-    axios
-      .get(`${apiBase}/bins`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => {
-        if (res.data && res.data.data) {
-          const mapped = res.data.data.map((b) => ({
+    apiFetch(`${apiBase}/bins`, { method: 'GET' })
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData && resData.data) {
+          const mapped = resData.data.map((b) => ({
             id: b.id,
             address: b.address || b.name || 'Unknown',
             location: [parseFloat(b.latitude) || 24.8607, parseFloat(b.longitude) || 67.0011],
@@ -120,11 +119,11 @@ const Dashboard = () => {
 
     // fetch drivers immediately then poll
     const fetchDrivers = () => {
-      axios
-        .get(`${apiBase}/driver/get-drivers`, { headers: { Authorization: `Bearer ${token}` } })
-        .then((res) => {
-          if (res.data && res.data.drivers) {
-            const mappedDrivers = res.data.drivers.map((d) => {
+      apiFetch(`${apiBase}/driver/get-drivers`, { method: 'GET' })
+        .then((res) => res.json())
+        .then((resData) => {
+          if (resData && resData.drivers) {
+            const mappedDrivers = resData.drivers.map((d) => {
               const lat = parseFloat(d.latitude);
               const lon = parseFloat(d.longitude);
               return {
@@ -245,13 +244,12 @@ const Dashboard = () => {
   // Simulate refreshing data (manually trigger re-fetch)
   const refreshData = () => {
     setLastRefreshed(new Date())
-    const token = Cookies.get('access_token')
     const apiBase = 'http://localhost:3001'
-    axios
-      .get(`${apiBase}/bins`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => {
-        if (res.data && res.data.data) {
-          const mapped = res.data.data.map((b) => ({
+    apiFetch(`${apiBase}/bins`, { method: 'GET' })
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData && resData.data) {
+          const mapped = resData.data.map((b) => ({
             id: b.id,
             address: b.address || b.name || 'Unknown',
             location: [parseFloat(b.latitude) || 24.8607, parseFloat(b.longitude) || 67.0011],
@@ -285,14 +283,13 @@ const Dashboard = () => {
   // Empty bin function - reset fill level to 0
   const emptyBin = async (binId) => {
     try {
-      const token = Cookies.get('access_token')
       const apiBase = 'http://localhost:3001'
-      const response = await axios.put(
+      const response = await apiFetch(
         `${apiBase}/bins/${binId}`,
-        { fill_level: 0, status: 'idle' },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { method: 'PUT', body: JSON.stringify({ fill_level: 0, status: 'idle' }) }
       )
-      if (response.data.success) {
+      const data = await response.json()
+      if (data.success) {
         setDustbins((prev) =>
           prev.map((bin) =>
             bin.id === binId ? { ...bin, fillLevel: 0, status: 'idle' } : bin
@@ -307,13 +304,13 @@ const Dashboard = () => {
   // Delete bin function
   const deleteBin = async (binId) => {
     try {
-      const token = Cookies.get('access_token')
       const apiBase = 'http://localhost:3001'
-      const response = await axios.delete(
+      const response = await apiFetch(
         `${apiBase}/bins/${binId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { method: 'DELETE' }
       )
-      if (response.data.success) {
+      const data = await response.json()
+      if (data.success) {
         setDustbins((prev) => prev.filter((bin) => bin.id !== binId))
       }
     } catch (err) {

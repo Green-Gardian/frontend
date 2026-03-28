@@ -1,23 +1,13 @@
-import Cookies from "js-cookie";
+import { apiFetch } from "@/utils/apiClient";
 
 const getMessages = async ({ chatId }) => {
-  const access_token = Cookies.get("access_token");
   try {
-    const options = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${access_token}`,
-      },
-    };
-    const response = await fetch(
+    const response = await apiFetch(
       `${import.meta.env.VITE_BACKEND_URL}/chat/get-chat-messages/${chatId}`,
-      options
+      { method: "GET" }
     );
     const data = await response.json();
-    if (!response.ok) {
-      return { error: data.message };
-    }
+    if (!response.ok) return { error: data.message };
     return data;
   } catch (err) {
     console.log("Error : ", err.message);
@@ -26,34 +16,18 @@ const getMessages = async ({ chatId }) => {
 };
 
 const getChats = async () => {
-
-
-    console.log("Fetching chat groups...");
-
-  const access_token = Cookies.get("access_token");
+  console.log("Fetching chat groups...");
   try {
-    const options = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${access_token}`,
-      },
-    };
-
-    const response = await fetch(
+    const response = await apiFetch(
       `${import.meta.env.VITE_BACKEND_URL}/chat/get-chat-groups`,
-      options
+      { method: "GET" }
     );
-
     const data = await response.json();
-    if (!response.ok) {
-      return { error: data.message };
-    }
+    if (!response.ok) return { error: data.message };
     return data;
   } catch (err) {
     console.log("Error : ", err.message);
   }
 };
-
 
 export { getMessages, getChats };

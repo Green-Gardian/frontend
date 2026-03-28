@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { apiFetch } from "@/utils/apiClient";
 import Cookies from "js-cookie";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, Truck, Trash2, Calendar, MapPin, Activity } from "lucide-react";
@@ -28,15 +29,12 @@ const Logs = () => {
   };
 
   const fetchStats = async () => {
-    // setLoading(true); // Don't show full loading spinner on background refresh
     try {
-      const accessToken = Cookies.get("access_token");
-      const societyId = Cookies.get("society_id"); 
-      
-      const response = await fetch(`http://localhost:3001/logs/bins/stats?societyId=${societyId || ''}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+      const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+      const societyId = Cookies.get("society_id");
+
+      const response = await apiFetch(`${BACKEND_URL}/logs/bins/stats?societyId=${societyId || ''}`, {
+        method: 'GET',
       });
       const data = await response.json();
       if (data.success) {
@@ -50,16 +48,11 @@ const Logs = () => {
   };
 
   const fetchLogs = async () => {
-    // setLoading(true); // Don't show full loading spinner on background refresh
     try {
-      const accessToken = Cookies.get("access_token");
-      const endpoint = activeTab === "bins" ? "http://localhost:3001/logs/bins" : "http://localhost:3001/logs/tasks";
-      
-      const response = await fetch(endpoint, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+      const endpoint = activeTab === "bins" ? `${BACKEND_URL}/logs/bins` : `${BACKEND_URL}/logs/tasks`;
+
+      const response = await apiFetch(endpoint, { method: 'GET' });
       const data = await response.json();
       if (data.success) {
         setLogs(data.logs);

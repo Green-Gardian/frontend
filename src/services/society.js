@@ -1,26 +1,15 @@
-import Cookies from "js-cookie";
+import { apiFetch } from "@/utils/apiClient";
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const getSocieties = async () => {
   try {
-    const token = Cookies.get('access_token');
-    
-    const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/society/get-societies`,
-      {
-        method: "GET",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-      }
+    const response = await apiFetch(
+      `${BACKEND_URL}/society/get-societies`,
+      { method: "GET" }
     );
-
     const data = await response.json();
-
-    if (!response.ok) {
-      return { error: data.message };
-    }
-
+    if (!response.ok) return { error: data.message };
     return data;
   } catch (err) {
     console.log("Error fetching societies: ", err.message);
@@ -30,26 +19,12 @@ const getSocieties = async () => {
 
 const addSociety = async (societyData) => {
   try {
-    const token = Cookies.get('access_token');
-    
-    const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/society/add-society`,
-      {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(societyData),
-      }
+    const response = await apiFetch(
+      `${BACKEND_URL}/society/add-society`,
+      { method: "POST", body: JSON.stringify(societyData) }
     );
-
     const data = await response.json();
-
-    if (!response.ok) {
-      return { error: data.message };
-    }
-
+    if (!response.ok) return { error: data.message };
     return data;
   } catch (err) {
     console.log("Error adding society: ", err.message);
@@ -59,26 +34,12 @@ const addSociety = async (societyData) => {
 
 const updateSociety = async (societyId, societyData) => {
   try {
-    const token = Cookies.get('access_token');
-    
-    const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/society/update-society/${societyId}`,
-      {
-        method: "PUT",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(societyData),
-      }
+    const response = await apiFetch(
+      `${BACKEND_URL}/society/update-society/${societyId}`,
+      { method: "PUT", body: JSON.stringify(societyData) }
     );
-
     const data = await response.json();
-
-    if (!response.ok) {
-      return { error: data.message };
-    }
-
+    if (!response.ok) return { error: data.message };
     return data;
   } catch (err) {
     console.log("Error updating society: ", err.message);
@@ -88,25 +49,12 @@ const updateSociety = async (societyId, societyData) => {
 
 const blockSociety = async (societyId) => {
   try {
-    const token = Cookies.get('access_token');
-    
-    const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/society/block-society/${societyId}`,
-      {
-        method: "PUT",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-      }
+    const response = await apiFetch(
+      `${BACKEND_URL}/society/block-society/${societyId}`,
+      { method: "PUT" }
     );
-
     const data = await response.json();
-
-    if (!response.ok) {
-      return { error: data.message };
-    }
-
+    if (!response.ok) return { error: data.message };
     return data;
   } catch (err) {
     console.log("Error blocking society: ", err.message);
@@ -116,25 +64,12 @@ const blockSociety = async (societyId) => {
 
 const unblockSociety = async (societyId) => {
   try {
-    const token = Cookies.get('access_token');
-    
-    const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/society/unblock-society/${societyId}`,
-      {
-        method: "PUT",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-      }
+    const response = await apiFetch(
+      `${BACKEND_URL}/society/unblock-society/${societyId}`,
+      { method: "PUT" }
     );
-
     const data = await response.json();
-
-    if (!response.ok) {
-      return { error: data.message };
-    }
-
+    if (!response.ok) return { error: data.message };
     return data;
   } catch (err) {
     console.log("Error unblocking society: ", err.message);
@@ -144,25 +79,12 @@ const unblockSociety = async (societyId) => {
 
 const getSocietyById = async (societyId) => {
   try {
-    const token = Cookies.get('access_token');
-    
-    const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/society/get-society/${societyId}`,
-      {
-        method: "GET",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-      }
+    const response = await apiFetch(
+      `${BACKEND_URL}/society/get-society/${societyId}`,
+      { method: "GET" }
     );
-
     const data = await response.json();
-
-    if (!response.ok) {
-      return { error: data.message };
-    }
-
+    if (!response.ok) return { error: data.message };
     return data;
   } catch (err) {
     console.log("Error fetching society: ", err.message);
@@ -170,11 +92,11 @@ const getSocietyById = async (societyId) => {
   }
 };
 
-export { 
-  getSocieties, 
-  addSociety, 
-  updateSociety, 
-  blockSociety, 
+export {
+  getSocieties,
+  addSociety,
+  updateSociety,
+  blockSociety,
   unblockSociety,
-  getSocietyById 
+  getSocietyById
 };
