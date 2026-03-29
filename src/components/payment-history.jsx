@@ -1,154 +1,66 @@
-"use client"
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { X, Download, CreditCard, Home, Phone, Mail } from "lucide-react";
+import * as XLSX from "xlsx";
 
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { X, Download, Calendar, CreditCard, Home, Phone, Mail } from "lucide-react"
-import * as XLSX from "xlsx"
+const getStatusBadgeStyle = (status) => {
+  const value = String(status || "pending").toLowerCase();
+  if (value === "paid") return "bg-[#EBF9F1] text-[#1F9254]";
+  if (value === "overdue") return "bg-[#FBE7E8] text-[#A30D11]";
+  if (value === "failed") return "bg-[#FEF3E2] text-[#B54708]";
+  return "bg-[#E6F1FD] text-[#0369A1]";
+};
 
+const formatDate = (value) => {
+  if (!value) return "-";
+  return new Date(value).toLocaleDateString("en-GB");
+};
 
+const formatMoney = (amount, currency = "PKR") =>
+  new Intl.NumberFormat("en-PK", {
+    style: "currency",
+    currency: String(currency || "PKR").toUpperCase(),
+  }).format(Number(amount || 0));
 
-// Mock payment history data - in real app, this would be fetched from API
-const getPaymentHistory = (residentId) => [
-  {
-    month: "June 2024",
-    dueDate: "2024-06-05",
-    paymentDate: "2024-06-03",
-    amount: 2500,
-    lateFee: 0,
-    status: "Paid",
-    method: "Bank Transfer",
-    invoiceId: "INV-2024-06-001",
-  },
-  {
-    month: "May 2024",
-    dueDate: "2024-05-05",
-    paymentDate: "2024-05-07",
-    amount: 2500,
-    lateFee: 100,
-    status: "Paid Late",
-    method: "Cash",
-    invoiceId: "INV-2024-05-001",
-  },
-  {
-    month: "April 2024",
-    dueDate: "2024-04-05",
-    paymentDate: "2024-04-04",
-    amount: 2500,
-    lateFee: 0,
-    status: "Paid",
-    method: "Online",
-    invoiceId: "INV-2024-04-001",
-  },
-  {
-    month: "March 2024",
-    dueDate: "2024-03-05",
-    paymentDate: "2024-03-05",
-    amount: 2500,
-    lateFee: 0,
-    status: "Paid",
-    method: "Bank Transfer",
-    invoiceId: "INV-2024-03-001",
-  },
-  {
-    month: "February 2024",
-    dueDate: "2024-02-05",
-    paymentDate: "2024-02-15",
-    amount: 2500,
-    lateFee: 250,
-    status: "Paid Late",
-    method: "Cash",
-    invoiceId: "INV-2024-02-001",
-  },
-  {
-    month: "January 2024",
-    dueDate: "2024-01-05",
-    paymentDate: "2024-01-03",
-    amount: 2500,
-    lateFee: 0,
-    status: "Paid",
-    method: "Online",
-    invoiceId: "INV-2024-01-001",
-  },
-]
+const PaymentHistory = ({ resident, history = [], loading = false, onClose }) => {
+  if (!resident) return null;
 
-const PaymentHistory = ({ resident, onClose }) => {
-  if (!resident) return null
+  const totalPaid = history
+    .filter((p) => p.status === "paid")
+    .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
 
-  const paymentHistory = getPaymentHistory(resident.paymentId)
-
-  const getStatusBadgeStyle = (status) => {
-    switch (status) {
-      case "Paid":
-        return "bg-[#EBF9F1] text-[#1F9254]"
-      case "Paid Late":
-        return "bg-[#F0F9FF] text-[#0369A1]"
-      case "Overdue":
-        return "bg-[#FBE7E8] text-[#A30D11]"
-      default:
-        return "bg-gray-100 text-gray-600"
-    }
-  }
-
-  const calculateStats = () => {
-    const totalPaid = paymentHistory.reduce((sum, payment) => sum + payment.amount + payment.lateFee, 0)
-    const totalLateFees = paymentHistory.reduce((sum, payment) => sum + payment.lateFee, 0)
-    const onTimePayments = paymentHistory.filter((payment) => payment.status === "Paid").length
-    const latePayments = paymentHistory.filter((payment) => payment.status === "Paid Late").length
-    const onTimePercentage = ((onTimePayments / paymentHistory.length) * 100).toFixed(1)
-
-    return { totalPaid, totalLateFees, onTimePayments, latePayments, onTimePercentage }
-  }
-
-  const stats = calculateStats()
+  const paidCount = history.filter((p) => p.status === "paid").length;
+  const overdueCount = history.filter((p) => p.status === "overdue").length;
 
   const exportPaymentHistory = () => {
-    const exportData = paymentHistory.map((payment) => ({
-      Month: payment.month,
+    const exportData = history.map((payment) => ({
+      "Billing Month": payment.billingMonth,
       "Due Date": payment.dueDate,
-      "Payment Date": payment.paymentDate,
+      "Paid At": payment.paidAt || "-",
       Amount: payment.amount,
-      "Late Fee": payment.lateFee,
-      Total: payment.amount + payment.lateFee,
+      Currency: payment.currency,
       Status: payment.status,
-      "Payment Method": payment.method,
-      "Invoice ID": payment.invoiceId,
-    }))
+      "Payment Method": payment.paymentMethod || "-",
+      "Checkout Session": payment.stripeCheckoutSessionId || "-",
+      "Payment Intent": payment.stripePaymentIntentId || "-",
+    }));
 
-    // Add summary row
-    exportData.push({
-      Month: "SUMMARY",
-      "Due Date": "",
-      "Payment Date": "",
-      Amount: paymentHistory.reduce((sum, p) => sum + p.amount, 0),
-      "Late Fee": stats.totalLateFees,
-      Total: stats.totalPaid,
-      Status: `${stats.onTimePercentage}% On Time`,
-      "Payment Method": "",
-      "Invoice ID": "",
-    })
-
-    const worksheet = XLSX.utils.json_to_sheet(exportData)
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Payment History")
-    XLSX.writeFile(
-      workbook,
-      `${resident.houseNumber}_${resident.residentName.replace(/\s+/g, "_")}_Complete_History.xlsx`,
-    )
-  }
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Resident Dues History");
+    XLSX.writeFile(workbook, `${(resident.residentName || "resident").replace(/\s+/g, "_")}_Dues_History.xlsx`);
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-lg w-full max-w-6xl mx-auto max-h-[90vh] overflow-y-auto">
-      {/* Header */}
       <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white z-10">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Payment History</h2>
-          <p className="text-sm text-gray-500">
-            {resident.houseNumber} - {resident.residentName}
-          </p>
+          <h2 className="text-xl font-semibold text-gray-900">Resident Dues History</h2>
+          <p className="text-sm text-gray-500">{resident.houseNumber || "-"} - {resident.residentName}</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={exportPaymentHistory}>
+          <Button variant="outline" onClick={exportPaymentHistory} disabled={history.length === 0}>
             <Download className="h-4 w-4 mr-2" />
             Export History
           </Button>
@@ -159,113 +71,97 @@ const PaymentHistory = ({ resident, onClose }) => {
       </div>
 
       <div className="p-6 space-y-6">
-        {/* Resident Info Card */}
         <div className="bg-gray-50 rounded-lg p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="flex items-center gap-2">
               <Home className="h-4 w-4 text-gray-500" />
               <div>
-                <p className="text-xs text-gray-500">House Number</p>
-                <p className="font-medium">{resident.houseNumber}</p>
+                <p className="text-xs text-gray-500">House</p>
+                <p className="font-medium">{resident.houseNumber || "-"}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-gray-500" />
               <div>
                 <p className="text-xs text-gray-500">Email</p>
-                <p className="font-medium text-sm">{resident.email}</p>
+                <p className="font-medium text-sm">{resident.email || "-"}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Phone className="h-4 w-4 text-gray-500" />
               <div>
                 <p className="text-xs text-gray-500">Phone</p>
-                <p className="font-medium">{resident.phone}</p>
+                <p className="font-medium">{resident.phone || "-"}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-gray-500" />
               <div>
-                <p className="text-xs text-gray-500">Service Type</p>
-                <Badge className="bg-blue-100 text-blue-800 text-xs">{resident.serviceType}</Badge>
+                <p className="text-xs text-gray-500">Total Paid</p>
+                <p className="font-medium">{formatMoney(totalPaid, history[0]?.currency || "PKR")}</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Payment Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-green-50 p-4 rounded-lg">
-            <h3 className="text-sm font-medium text-green-800">Total Paid</h3>
-            <p className="text-2xl font-bold text-green-900">Rs.{stats.totalPaid.toLocaleString()}</p>
+            <h3 className="text-sm font-medium text-green-800">Paid Months</h3>
+            <p className="text-2xl font-bold text-green-900">{paidCount}</p>
           </div>
           <div className="bg-red-50 p-4 rounded-lg">
-            <h3 className="text-sm font-medium text-red-800">Total Late Fees</h3>
-            <p className="text-2xl font-bold text-red-900">Rs.{stats.totalLateFees.toLocaleString()}</p>
+            <h3 className="text-sm font-medium text-red-800">Overdue Months</h3>
+            <p className="text-2xl font-bold text-red-900">{overdueCount}</p>
           </div>
           <div className="bg-blue-50 p-4 rounded-lg">
-            <h3 className="text-sm font-medium text-blue-800">On-Time Payments</h3>
-            <p className="text-2xl font-bold text-blue-900">
-              {stats.onTimePayments}/{paymentHistory.length}
-            </p>
-          </div>
-          <div className="bg-purple-50 p-4 rounded-lg">
-            <h3 className="text-sm font-medium text-purple-800">On-Time Rate</h3>
-            <p className="text-2xl font-bold text-purple-900">{stats.onTimePercentage}%</p>
+            <h3 className="text-sm font-medium text-blue-800">Total Records</h3>
+            <p className="text-2xl font-bold text-blue-900">{history.length}</p>
           </div>
         </div>
 
-        {/* Payment History Table */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Payment History
-          </h3>
+          <h3 className="text-lg font-medium text-gray-900">Payment History</h3>
 
-          <div className="rounded-md border overflow-hidden">
-            <div className="overflow-x-auto">
+          {loading ? (
+            <p className="text-sm text-gray-500">Loading payment history...</p>
+          ) : history.length === 0 ? (
+            <p className="text-sm text-gray-500">No payment history found for this resident.</p>
+          ) : (
+            <div className="overflow-x-auto border rounded-lg">
               <Table>
-                <TableHeader className="bg-gray-50">
+                <TableHeader>
                   <TableRow>
                     <TableHead>Month</TableHead>
                     <TableHead>Due Date</TableHead>
-                    <TableHead>Payment Date</TableHead>
+                    <TableHead>Paid At</TableHead>
                     <TableHead>Amount</TableHead>
-                    <TableHead>Late Fee</TableHead>
-                    <TableHead>Total</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Method</TableHead>
-                    <TableHead>Invoice</TableHead>
+                    <TableHead>Stripe Session</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paymentHistory.map((payment, index) => (
-                    <TableRow key={index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                      <TableCell className="font-medium">{payment.month}</TableCell>
-                      <TableCell>{payment.dueDate}</TableCell>
-                      <TableCell>{payment.paymentDate}</TableCell>
-                      <TableCell>Rs.{payment.amount.toLocaleString()}</TableCell>
-                      <TableCell className={payment.lateFee > 0 ? "text-red-600 font-medium" : ""}>
-                        Rs.{payment.lateFee.toLocaleString()}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        Rs.{(payment.amount + payment.lateFee).toLocaleString()}
-                      </TableCell>
+                  {history.map((payment) => (
+                    <TableRow key={payment.id}>
+                      <TableCell>{payment.billingMonth}</TableCell>
+                      <TableCell>{formatDate(payment.dueDate)}</TableCell>
+                      <TableCell>{formatDate(payment.paidAt)}</TableCell>
+                      <TableCell>{formatMoney(payment.amount, payment.currency)}</TableCell>
                       <TableCell>
-                        <Badge className={`${getStatusBadgeStyle(payment.status)} text-xs`}>{payment.status}</Badge>
+                        <Badge className={getStatusBadgeStyle(payment.status)}>{payment.status}</Badge>
                       </TableCell>
-                      <TableCell>{payment.method}</TableCell>
-                      <TableCell className="text-sm text-gray-500">{payment.invoiceId}</TableCell>
+                      <TableCell>{payment.paymentMethod || "-"}</TableCell>
+                      <TableCell className="text-xs text-gray-600">{payment.stripeCheckoutSessionId || "-"}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default PaymentHistory
+export default PaymentHistory;
