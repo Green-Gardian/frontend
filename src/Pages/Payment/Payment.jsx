@@ -1,442 +1,219 @@
+import React, { useEffect, useMemo, useState } from "react";
+import Cookies from "js-cookie";
+import { Download, Eye } from "lucide-react";
+import * as XLSX from "xlsx";
 
-import React, { useState, useEffect } from "react"
+import InfoCards from "@/components/info-cards";
+import Modal from "@/components/modal";
+import PaymentHistory from "@/components/payment-history";
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination"
+} from "@/components/ui/pagination";
 
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { getDuesOverview, getDuesRecords, getResidentDuesHistory } from "@/services/payments";
 
-import { Plus, SquarePen, Trash2, Download, Eye, FileText } from 'lucide-react'
+const formatCurrency = (amount, currency = "PKR") =>
+  new Intl.NumberFormat("en-PK", {
+    style: "currency",
+    currency: (currency || "PKR").toUpperCase(),
+    maximumFractionDigits: 2,
+  }).format(Number(amount || 0));
 
-import InfoCards from "@/components/info-cards"
-import Modal from "@/components/modal"
-import PaymentForm from "@/components/forms/paymentForm"
-import PaymentHistory from "@/components/payment-history"
+const formatDate = (date) => {
+  if (!date) return "-";
+  return new Date(date).toLocaleDateString("en-GB");
+};
 
-import Cookies from "js-cookie"
-import * as XLSX from "xlsx"
+const monthKeyNow = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+};
 
-const paymentRecords = [
-  {
-    paymentId: 1,
-    houseNumber: "A-101",
-    residentName: "Ahmed Ali Khan",
-    email: "ahmed.ali@email.com",
-    phone: "03001234567",
-    monthlyFee: 2500,
-    dueDate: "2024-06-05",
-    paymentDate: "2024-06-03",
-    paymentStatus: "Paid",
-    paymentMethod: "Bank Transfer",
-    serviceType: "Standard",
-    lateFee: 0,
-    totalAmount: 2500,
-    outstandingBalance: 0,
-  },
-  {
-    paymentId: 2,
-    houseNumber: "B-205",
-    residentName: "Fatima Sheikh",
-    email: "fatima.sheikh@email.com",
-    phone: "03011234567",
-    monthlyFee: 3000,
-    dueDate: "2024-06-05",
-    paymentDate: null,
-    paymentStatus: "Overdue",
-    paymentMethod: null,
-    serviceType: "Premium",
-    lateFee: 300,
-    totalAmount: 3300,
-    outstandingBalance: 3300,
-  },
-  {
-    paymentId: 3,
-    houseNumber: "C-150",
-    residentName: "Muhammad Usman",
-    email: "m.usman@email.com",
-    phone: "03021234567",
-    monthlyFee: 2500,
-    dueDate: "2024-06-05",
-    paymentDate: "2024-06-05",
-    paymentStatus: "Paid",
-    paymentMethod: "Cash",
-    serviceType: "Standard",
-    lateFee: 0,
-    totalAmount: 2500,
-    outstandingBalance: 0,
-  },
-  {
-    paymentId: 4,
-    houseNumber: "A-205",
-    residentName: "Ayesha Malik",
-    email: "ayesha.malik@email.com",
-    phone: "03031234567",
-    monthlyFee: 3500,
-    dueDate: "2024-06-05",
-    paymentDate: "2024-06-01",
-    paymentStatus: "Paid",
-    paymentMethod: "Online",
-    serviceType: "Premium Plus",
-    lateFee: 0,
-    totalAmount: 3500,
-    outstandingBalance: 0,
-  },
-  {
-    paymentId: 5,
-    houseNumber: "B-110",
-    residentName: "Hassan Raza",
-    email: "hassan.raza@email.com",
-    phone: "03041234567",
-    monthlyFee: 2000,
-    dueDate: "2024-06-05",
-    paymentDate: null,
-    paymentStatus: "Pending",
-    paymentMethod: null,
-    serviceType: "Basic",
-    lateFee: 0,
-    totalAmount: 2000,
-    outstandingBalance: 2000,
-  },
-  {
-    paymentId: 6,
-    houseNumber: "C-301",
-    residentName: "Zainab Ahmed",
-    email: "zainab.ahmed@email.com",
-    phone: "03051234567",
-    monthlyFee: 2500,
-    dueDate: "2024-06-05",
-    paymentDate: "2024-06-07",
-    paymentStatus: "Paid Late",
-    paymentMethod: "Bank Transfer",
-    serviceType: "Standard",
-    lateFee: 100,
-    totalAmount: 2600,
-    outstandingBalance: 0,
-  },
-  {
-    paymentId: 7,
-    houseNumber: "A-305",
-    residentName: "Ali Haider",
-    email: "ali.haider@email.com",
-    phone: "03061234567",
-    monthlyFee: 3000,
-    dueDate: "2024-06-05",
-    paymentDate: "2024-06-04",
-    paymentStatus: "Paid",
-    paymentMethod: "Online",
-    serviceType: "Premium",
-    lateFee: 0,
-    totalAmount: 3000,
-    outstandingBalance: 0,
-  },
-  {
-    paymentId: 8,
-    houseNumber: "B-401",
-    residentName: "Sana Tariq",
-    email: "sana.tariq@email.com",
-    phone: "03071234567",
-    monthlyFee: 2500,
-    dueDate: "2024-06-05",
-    paymentDate: null,
-    paymentStatus: "Overdue",
-    paymentMethod: null,
-    serviceType: "Standard",
-    lateFee: 250,
-    totalAmount: 2750,
-    outstandingBalance: 2750,
-  },
-  {
-    paymentId: 9,
-    houseNumber: "C-205",
-    residentName: "Bilal Shah",
-    email: "bilal.shah@email.com",
-    phone: "03081234567",
-    monthlyFee: 2000,
-    dueDate: "2024-06-05",
-    paymentDate: "2024-06-06",
-    paymentStatus: "Paid Late",
-    paymentMethod: "Cash",
-    serviceType: "Basic",
-    lateFee: 50,
-    totalAmount: 2050,
-    outstandingBalance: 0,
-  },
-  {
-    paymentId: 10,
-    houseNumber: "A-450",
-    residentName: "Mariam Javed",
-    email: "mariam.javed@email.com",
-    phone: "03091234567",
-    monthlyFee: 3500,
-    dueDate: "2024-06-05",
-    paymentDate: "2024-06-02",
-    paymentStatus: "Paid",
-    paymentMethod: "Bank Transfer",
-    serviceType: "Premium Plus",
-    lateFee: 0,
-    totalAmount: 3500,
-    outstandingBalance: 0,
-  },
-]
-
-const cardsData = [
-  {
-    title: "Total Revenue",
-    number: "Rs.2,47,500",
-    percentage: 12.5,
-    backgroundColor: "bg-[#EDEEFC]",
-  },
-  {
-    title: "Paid This Month",
-    number: "Rs.1,89,600",
-    percentage: 8.3,
-    backgroundColor: "bg-[#E6F1FD]",
-  },
-  {
-    title: "Outstanding",
-    number: "Rs.57,900",
-    percentage: -15.2,
-    backgroundColor: "bg-[#EDEEFC]",
-  },
-  {
-    title: "Collection Rate",
-    number: "76.6%",
-    percentage: 5.1,
-    backgroundColor: "bg-[#E6F1FD]",
-  },
-]
+const getStatusBadgeStyle = (status) => {
+  const value = String(status || "pending").toLowerCase();
+  if (value === "paid") return "bg-[#EBF9F1] text-[#1F9254]";
+  if (value === "overdue") return "bg-[#FBE7E8] text-[#A30D11]";
+  if (value === "failed") return "bg-[#FEF3E2] text-[#B54708]";
+  return "bg-[#E6F1FD] text-[#0369A1]";
+};
 
 const Payments = () => {
-  const [username, setUsername] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [serviceFilter, setServiceFilter] = useState("all")
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
-  const [selectedResident, setSelectedResident] = useState(null)
+  const [username, setUsername] = useState("");
+  const [overview, setOverview] = useState(null);
+  const [records, setRecords] = useState([]);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 });
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [monthFilter, setMonthFilter] = useState(monthKeyNow());
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [selectedResident, setSelectedResident] = useState(null);
+  const [selectedHistory, setSelectedHistory] = useState([]);
 
   useEffect(() => {
-    setUsername(Cookies.get("username"))
-  }, [])
-
-  useEffect(() => {
+    setUsername(Cookies.get("username") || "");
     if (!Cookies.get("access_token")) {
-      window.location.href = "/signin"
+      window.location.href = "/signin";
     }
-  }, [])
+  }, []);
 
-  const itemsPerPage = 7
+  const loadData = async (page = 1) => {
+    try {
+      setLoading(true);
 
-  const filteredRecords = paymentRecords.filter((record) => {
-    const term = (searchTerm || "").toLowerCase()
-    const matchesSearch =
-      record.residentName.toLowerCase().includes(term) ||
-      record.houseNumber.toLowerCase().includes(term) ||
-      record.email.toLowerCase().includes(term) ||
-      record.phone.includes(term)
+      const status = statusFilter === "all" ? undefined : statusFilter;
+      const search = searchTerm.trim() || undefined;
 
-    const matchesStatus = statusFilter === "all" || record.paymentStatus.toLowerCase().replace(" ", "") === statusFilter
-    const matchesService = serviceFilter === "all" || record.serviceType.toLowerCase().replace(" ", "") === serviceFilter
+      const [overviewRes, recordsRes] = await Promise.all([
+        getDuesOverview({ month: monthFilter }),
+        getDuesRecords({ page, limit: pagination.limit, month: monthFilter, status, search }),
+      ]);
 
-    return matchesSearch && matchesStatus && matchesService
-  })
-
-  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const endIndex = startIndex + itemsPerPage
-  const currentRecords = filteredRecords.slice(startIndex, endIndex)
-
-  React.useEffect(() => {
-    setCurrentPage(1)
-  }, [searchTerm, statusFilter, serviceFilter])
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page)
-  }
-
-  const handlePrevious = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1)
+      setOverview(overviewRes.overview || null);
+      setRecords(recordsRes.records || []);
+      setPagination((prev) => ({
+        ...prev,
+        page: recordsRes.pagination?.page || page,
+        total: recordsRes.pagination?.total || 0,
+      }));
+    } catch (error) {
+      console.error("Failed to load payments:", error);
+      setOverview(null);
+      setRecords([]);
+      setPagination((prev) => ({ ...prev, total: 0 }));
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
-  const handleNext = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1)
+  useEffect(() => {
+    loadData(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter, monthFilter]);
+
+  const totalPages = Math.max(1, Math.ceil((pagination.total || 0) / pagination.limit));
+
+  const cardsData = useMemo(() => {
+    const currency = (overview?.currency || "PKR").toUpperCase();
+    return [
+      {
+        title: "Total Due",
+        number: formatCurrency(overview?.totalDue || 0, currency),
+        backgroundColor: "bg-[#EDEEFC]",
+      },
+      {
+        title: "Total Collected",
+        number: formatCurrency(overview?.totalCollected || 0, currency),
+        backgroundColor: "bg-[#E6F1FD]",
+      },
+      {
+        title: "Outstanding",
+        number: formatCurrency(overview?.totalOutstanding || 0, currency),
+        backgroundColor: "bg-[#EDEEFC]",
+      },
+      {
+        title: "Collection Rate",
+        number: `${Number(overview?.collectionRate || 0).toFixed(2)}%`,
+        backgroundColor: "bg-[#E6F1FD]",
+      },
+    ];
+  }, [overview]);
+
+  const exportRows = (data, name) => {
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Payments");
+    XLSX.writeFile(workbook, `${name}.xlsx`);
+  };
+
+  const exportCurrentPage = () => {
+    const rows = records.map((r) => ({
+      "Resident Name": r.residentName,
+      Email: r.email,
+      Phone: r.phone,
+      House: r.houseNumber,
+      Society: r.societyName || "-",
+      "Billing Month": r.billingMonth,
+      "Due Date": r.dueDate,
+      Status: r.status,
+      Amount: r.amount,
+      Currency: r.currency,
+      "Paid At": r.paidAt || "-",
+      "Payment Method": r.paymentMethod || "-",
+      "Checkout Session": r.stripeCheckoutSessionId || "-",
+      "Payment Intent": r.stripePaymentIntentId || "-",
+    }));
+
+    exportRows(rows, `Dues_Records_Page_${pagination.page}_${new Date().toISOString().split("T")[0]}`);
+  };
+
+  const openHistoryModal = async (residentRecord) => {
+    try {
+      setHistoryLoading(true);
+      setHistoryModalOpen(true);
+      const result = await getResidentDuesHistory(residentRecord.userId);
+      setSelectedResident({
+        ...residentRecord,
+        residentName: result.resident?.name || residentRecord.residentName,
+        email: result.resident?.email || residentRecord.email,
+        phone: result.resident?.phone || residentRecord.phone,
+      });
+      setSelectedHistory(result.history || []);
+    } catch (error) {
+      console.error("Failed to load resident history:", error);
+      setSelectedResident(residentRecord);
+      setSelectedHistory([]);
+    } finally {
+      setHistoryLoading(false);
     }
-  }
-
-  const getPageNumbers = () => {
-    const pages = []
-    const maxVisiblePages = 5
-
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i)
-      }
-    } else {
-      if (currentPage <= 3) {
-        pages.push(1, 2, 3, 4, 5)
-      } else if (currentPage >= totalPages - 2) {
-        for (let i = totalPages - 4; i <= totalPages; i++) {
-          pages.push(i)
-        }
-      } else {
-        for (let i = currentPage - 2; i <= currentPage + 2; i++) {
-          pages.push(i)
-        }
-      }
-    }
-
-    return pages
-  }
-
-  const openModal = () => {
-    setIsModalOpen(true)
-  }
-
-  const onClose = () => {
-    setIsModalOpen(false)
-  }
-
-  const onSubmit = () => {
-    console.log("Payment form submitted successfully!")
-  }
-
-  const openHistoryModal = (resident) => {
-    setSelectedResident(resident)
-    setIsHistoryModalOpen(true)
-  }
+  };
 
   const closeHistoryModal = () => {
-    setIsHistoryModalOpen(false)
-    setSelectedResident(null)
-  }
+    setHistoryModalOpen(false);
+    setSelectedResident(null);
+    setSelectedHistory([]);
+  };
 
-  const getStatusBadgeStyle = (status) => {
-    switch (status) {
-      case "Paid":
-        return "bg-[#EBF9F1] text-[#1F9254]"
-      case "Pending":
-        return "bg-[#FEF3E2] text-[#B54708]"
-      case "Overdue":
-        return "bg-[#FBE7E8] text-[#A30D11]"
-      case "Paid Late":
-        return "bg-[#F0F9FF] text-[#0369A1]"
-      default:
-        return "bg-gray-100 text-gray-600"
-    }
-  }
-
-  const getServiceBadgeStyle = (service) => {
-    switch (service) {
-      case "Premium Plus":
-        return "bg-[#F0F9FF] text-[#0369A1]"
-      case "Premium":
-        return "bg-[#F7FEE7] text-[#365314]"
-      case "Standard":
-        return "bg-[#FEF3E2] text-[#B54708]"
-      case "Basic":
-        return "bg-gray-100 text-gray-600"
-      default:
-        return "bg-gray-100 text-gray-600"
-    }
-  }
-
-  const exportToExcel = (data, filename) => {
-    const worksheet = XLSX.utils.json_to_sheet(data)
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Payments")
-    XLSX.writeFile(workbook, `${filename}.xlsx`)
-  }
-
-  const exportAllData = () => {
-    const exportData = paymentRecords.map(record => ({
-      "House Number": record.houseNumber,
-      "Resident Name": record.residentName,
-      "Email": record.email,
-      "Phone": record.phone,
-      "Monthly Fee": record.monthlyFee,
-      "Due Date": record.dueDate,
-      "Payment Date": record.paymentDate || "Not Paid",
-      "Payment Status": record.paymentStatus,
-      "Payment Method": record.paymentMethod || "N/A",
-      "Service Type": record.serviceType,
-      "Late Fee": record.lateFee,
-      "Total Amount": record.totalAmount,
-      "Outstanding Balance": record.outstandingBalance,
-    }))
-
-    exportToExcel(exportData, `All_Payments_${new Date().toISOString().split('T')[0]}`)
-  }
-
-  const exportResidentData = (resident) => {
-    // In a real app, you'd fetch all payment history for this resident
-    const residentData = [{
-      "House Number": resident.houseNumber,
-      "Resident Name": resident.residentName,
-      "Email": resident.email,
-      "Phone": resident.phone,
-      "Monthly Fee": resident.monthlyFee,
-      "Due Date": resident.dueDate,
-      "Payment Date": resident.paymentDate || "Not Paid",
-      "Payment Status": resident.paymentStatus,
-      "Payment Method": resident.paymentMethod || "N/A",
-      "Service Type": resident.serviceType,
-      "Late Fee": resident.lateFee,
-      "Total Amount": resident.totalAmount,
-      "Outstanding Balance": resident.outstandingBalance,
-    }]
-
-    exportToExcel(residentData, `${resident.houseNumber}_${resident.residentName.replace(/\s+/g, '_')}_Payment_History`)
-  }
+  const handleSearchSubmit = () => loadData(1);
 
   return (
     <div className="bg-white min-h-screen py-6 px-4 gap-y-6 flex flex-col w-auto">
       <h1 className="text-[#121212] text-[24px] leading-[32px]">
-        Hello, <span className="font-semibold">{Cookies.get('society')} - {username}</span>
+        Hello, <span className="font-semibold">{Cookies.get("society")} - {username}</span>
       </h1>
 
-      {/* Cards Section */}
       <div className="flex flex-wrap md:gap-4 gap-2 justify-center w-full">
         {cardsData.map((card, index) => (
-          <InfoCards
-            key={index}
-            title={card.title}
-            number={card.number}
-            percentage={card.percentage}
-            backgroundColor={card.backgroundColor}
-          />
+          <InfoCards key={index} title={card.title} number={card.number} backgroundColor={card.backgroundColor} />
         ))}
       </div>
 
-      {/* Table Section */}
       <div className="flex flex-col justify-center w-full">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center px-2 py-3 gap-3">
           <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
             <Input
-              name="Search bar"
-              placeholder="Search by name, house number..."
+              name="search"
+              placeholder="Search by resident name/email/phone"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full sm:max-w-[250px] h-10 px-4 rounded-md border text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-0 focus:border-gray-200 focus:bg-white transition-colors duration-200"
+              onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
+              className="w-full sm:max-w-[280px] h-10 px-4 rounded-md border"
             />
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-[150px]">
+              <SelectTrigger className="w-full sm:w-[160px]">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -444,170 +221,119 @@ const Payments = () => {
                 <SelectItem value="paid">Paid</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="overdue">Overdue</SelectItem>
-                <SelectItem value="paidlate">Paid Late</SelectItem>
+                <SelectItem value="failed">Failed</SelectItem>
               </SelectContent>
             </Select>
 
-            <Select value={serviceFilter} onValueChange={setServiceFilter}>
-              <SelectTrigger className="w-full sm:w-[150px]">
-                <SelectValue placeholder="Service" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Services</SelectItem>
-                <SelectItem value="basic">Basic</SelectItem>
-                <SelectItem value="standard">Standard</SelectItem>
-                <SelectItem value="premium">Premium</SelectItem>
-                <SelectItem value="premiumplus">Premium Plus</SelectItem>
-              </SelectContent>
-            </Select>
+            <Input
+              type="month"
+              value={monthFilter}
+              onChange={(e) => setMonthFilter(e.target.value)}
+              className="w-full sm:w-[180px] h-10"
+            />
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-            <Button variant="outline" onClick={exportAllData} className="w-full sm:w-auto">
-              <Download className="h-4 w-4 mr-2" />
-              Export All
+          <div className="flex gap-2 w-full lg:w-auto">
+            <Button variant="outline" onClick={handleSearchSubmit} className="w-full sm:w-auto">
+              Refresh
             </Button>
-            <Button className="w-full sm:w-auto" onClick={openModal}>
-              <Plus className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Add Payment</span>
-              <span className="sm:hidden">Add</span>
+            <Button variant="outline" onClick={exportCurrentPage} className="w-full sm:w-auto">
+              <Download className="h-4 w-4 mr-2" />
+              Export Page
             </Button>
           </div>
         </div>
 
-        <div className="rounded-md overflow-hidden">
+        <div className="rounded-md overflow-hidden border">
           <div className="overflow-x-auto">
             <Table className="w-full">
               <TableHeader className="bg-white border-none font-montserrat">
                 <TableRow>
-                  <TableHead className="w-[100px]">House No.</TableHead>
-                  <TableHead className="min-w-[150px]">Resident</TableHead>
-                  <TableHead className="min-w-[100px] hidden sm:table-cell">Service</TableHead>
-                  <TableHead className="min-w-[120px] hidden md:table-cell">Amount</TableHead>
-                  <TableHead className="min-w-[110px] hidden lg:table-cell">Due Date</TableHead>
-                  <TableHead className="min-w-[100px]">Status</TableHead>
+                  <TableHead className="min-w-[170px]">Resident</TableHead>
+                  <TableHead className="min-w-[100px]">House</TableHead>
+                  <TableHead className="min-w-[120px]">Month</TableHead>
+                  <TableHead className="min-w-[120px]">Due Date</TableHead>
+                  <TableHead className="min-w-[120px]">Amount</TableHead>
+                  <TableHead className="min-w-[110px]">Status</TableHead>
+                  <TableHead className="min-w-[150px]">Paid At</TableHead>
+                  <TableHead className="min-w-[140px]">Payment Method</TableHead>
+                  <TableHead className="min-w-[220px]">Stripe Session</TableHead>
                   <TableHead className="min-w-[120px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {currentRecords.length > 0 ? (
-                  currentRecords.map((record, index) => (
-                    <TableRow key={index} className={`${index % 2 === 0 ? "bg-[#F7F6FE]" : "bg-white"}`}>
-                      <TableCell className="font-medium text-center">{record.houseNumber}</TableCell>
-                      <TableCell className="font-medium">
-                        <div className="flex flex-col">
-                          <span>{record.residentName}</span>
-                          <span className="text-xs text-gray-500 sm:hidden">
-                            <Badge className={`${getServiceBadgeStyle(record.serviceType)} text-xs mt-1`}>
-                              {record.serviceType}
-                            </Badge>
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        <Badge className={`${getServiceBadgeStyle(record.serviceType)} text-xs`}>
-                          {record.serviceType}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <div className="flex flex-col">
-                          <span className="font-medium">Rs.{record.totalAmount}</span>
-                          {record.lateFee > 0 && (
-                            <span className="text-xs text-red-500">+Rs.{record.lateFee} late fee</span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-sm">{record.dueDate}</TableCell>
-                      <TableCell>
-                        <Badge className={`${getStatusBadgeStyle(record.paymentStatus)} text-xs`}>
-                          {record.paymentStatus}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-x-2 justify-start">
-                          <Eye
-                            className="h-4 w-4 cursor-pointer text-blue-600"
-                            onClick={() => openHistoryModal(record)}
-                            title="View Payment History"
-                          />
-                          <FileText
-                            className="h-4 w-4 cursor-pointer text-green-600"
-                            onClick={() => exportResidentData(record)}
-                            title="Export Payment Data"
-                          />
-                          <SquarePen className="h-4 w-4 cursor-pointer text-primary" title="Edit Payment" />
-                          <Trash2 className="h-4 w-4 cursor-pointer text-[#A30D11]" title="Delete Payment" />
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
+                {!loading && records.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
-                      No payment records found matching your search criteria.
+                    <TableCell colSpan={10} className="text-center py-8">
+                      No payment records found.
                     </TableCell>
                   </TableRow>
                 )}
+
+                {records.map((record, index) => (
+                  <TableRow key={record.id} className={`${index % 2 === 0 ? "bg-[#F7F6FE]" : "bg-white"}`}>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{record.residentName}</span>
+                        <span className="text-xs text-gray-500">{record.email}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{record.houseNumber || "-"}</TableCell>
+                    <TableCell>{record.billingMonth}</TableCell>
+                    <TableCell>{formatDate(record.dueDate)}</TableCell>
+                    <TableCell className="font-medium">{formatCurrency(record.amount, record.currency)}</TableCell>
+                    <TableCell>
+                      <Badge className={`${getStatusBadgeStyle(record.status)} text-xs`}>{record.status}</Badge>
+                    </TableCell>
+                    <TableCell>{record.paidAt ? formatDate(record.paidAt) : "-"}</TableCell>
+                    <TableCell>{record.paymentMethod || "-"}</TableCell>
+                    <TableCell className="text-xs text-slate-600">{record.stripeCheckoutSessionId || "-"}</TableCell>
+                    <TableCell>
+                      <Button size="sm" variant="outline" onClick={() => openHistoryModal(record)}>
+                        <Eye className="h-4 w-4 mr-1" />
+                        History
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </div>
         </div>
 
-        {totalPages > 1 && (
-          <Pagination className="py-4">
-            <PaginationContent className="flex-wrap gap-1">
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={handlePrevious}
-                  className={`cursor-pointer text-sm ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"
-                    }`}
-                />
-              </PaginationItem>
+        <Pagination className="py-4">
+          <PaginationContent className="flex-wrap gap-1">
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => pagination.page > 1 && loadData(pagination.page - 1)}
+                className={`cursor-pointer text-sm ${pagination.page === 1 ? "opacity-50 pointer-events-none" : ""}`}
+              />
+            </PaginationItem>
 
-              <div className="hidden sm:flex">
-                {getPageNumbers().map((pageNum, index) => (
-                  <PaginationItem key={pageNum}>
-                    <PaginationLink
-                      onClick={() => handlePageChange(pageNum)}
-                      className={`cursor-pointer ${currentPage === pageNum ? "bg-primary text-white" : "bg-white"}`}
-                    >
-                      {pageNum}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
+            <PaginationItem>
+              <PaginationLink className="bg-primary text-white cursor-default">{pagination.page}</PaginationLink>
+            </PaginationItem>
 
-                {totalPages > 5 && currentPage < totalPages - 2 && (
-                  <PaginationItem>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                )}
-              </div>
-
-              <div className="sm:hidden flex items-center px-3 py-2 text-sm">
-                {currentPage} / {totalPages}
-              </div>
-
-              <PaginationItem>
-                <PaginationNext
-                  onClick={handleNext}
-                  className={`cursor-pointer text-sm ${currentPage === totalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"
-                    }`}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        )}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => pagination.page < totalPages && loadData(pagination.page + 1)}
+                className={`cursor-pointer text-sm ${pagination.page >= totalPages ? "opacity-50 pointer-events-none" : ""}`}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       </div>
 
-      <Modal status={isModalOpen}>
-        <PaymentForm onClose={onClose} onSubmit={onSubmit} />
-      </Modal>
-
-      <Modal status={isHistoryModalOpen}>
-        <PaymentHistory resident={selectedResident} onClose={closeHistoryModal} />
+      <Modal status={historyModalOpen}>
+        <PaymentHistory
+          resident={selectedResident}
+          history={selectedHistory}
+          loading={historyLoading}
+          onClose={closeHistoryModal}
+        />
       </Modal>
     </div>
-  )
-}
+  );
+};
 
-export default Payments
+export default Payments;

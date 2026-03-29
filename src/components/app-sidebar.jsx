@@ -125,11 +125,11 @@ const adminRoutes = [
     icon: <Activity className="h-5 w-5" />,
     href: "/admin/sentiment-analytics",
   },
-  // {
-  //   title: "Payment",
-  //   icon: <CreditCard className="h-5 w-5" />,
-  //   href: "/admin/payment",
-  // },
+  {
+    title: "Payment",
+    icon: <CreditCard className="h-5 w-5" />,
+    href: "/admin/payment",
+  },
   {
     title: "Messaging",
     icon: <MessageCircleMore className="h-5 w-5" />,
