@@ -32,7 +32,7 @@ import {
   SentimentAnalytics,
   BinsManagement,
   Logs,
-} from "./pages";
+} from "./Pages";
 
 import { Provider } from "react-redux";
 import store from "./redux/store";
