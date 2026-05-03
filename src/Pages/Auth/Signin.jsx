@@ -188,7 +188,7 @@ const SignIn = () => {
               {step === 1 ? "Welcome Back" : "Verify Your Identity"}
             </h1>
             <p className="text-muted-foreground">
-              {step === 1 ? "Sign in to Green Guardian" : "Enter the 6-digit code from your authenticator app"}
+              {step === 1 ? "Sign in to Green-Guardian" : "Enter the 6-digit code from your authenticator app"}
             </p>
             <div className="flex justify-center gap-2 pt-2">
               <div className={`h-2 w-2 rounded-full ${step === 1 ? "bg-[#624DE3]" : "bg-gray-300"}`}></div>
