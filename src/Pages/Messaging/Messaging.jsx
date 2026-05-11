@@ -107,6 +107,7 @@ const Messaging = () => {
 
   const handleConversationSelect = (conversation) => {
     setSelectedConversation(conversation)
+    setNewMessage("")
     setSidebarOpen(false)
 
     if (conversation.id) {
@@ -154,26 +155,26 @@ const Messaging = () => {
   }
 
   return (
-    <div className="bg-white min-h-screen flex flex-col">
-      <div className="flex-1 flex flex-col md:flex-row h-screen">
-        {/* Mobile Header */}
-        <div className="md:hidden flex items-center justify-between p-4 border-b">
-          <Button variant="ghost" size="icon" onClick={toggleSidebar}>
-            <Menu className="h-5 w-5" />
-          </Button>
-          <h1 className="text-lg font-semibold">Messages</h1>
-          <Button variant="ghost" size="icon">
-            <Plus className="h-5 w-5" />
-          </Button>
-        </div>
+    <div className="h-screen overflow-hidden flex flex-col bg-white">
+      {/* Mobile Header */}
+      <div className="md:hidden flex items-center justify-between p-4 border-b flex-shrink-0">
+        <Button variant="ghost" size="icon" onClick={toggleSidebar}>
+          <Menu className="h-5 w-5" />
+        </Button>
+        <h1 className="text-lg font-semibold">Messages</h1>
+        <Button variant="ghost" size="icon">
+          <Plus className="h-5 w-5" />
+        </Button>
+      </div>
 
+      <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
         <div
           className={`${
-            sidebarOpen ? "block" : "hidden"
-          } md:block w-full md:w-80 lg:w-96 border-r bg-white z-20 md:relative absolute inset-0 md:inset-auto flex flex-col`}
+            sidebarOpen ? "flex" : "hidden"
+          } md:flex w-full md:w-80 lg:w-96 border-r bg-white z-20 md:relative absolute inset-0 md:inset-auto flex-col overflow-hidden`}
         >
-          <div className="p-4 border-b flex items-center justify-between">
+          <div className="p-4 border-b flex items-center justify-between flex-shrink-0">
             <h1 className="text-xl font-semibold">Messages</h1>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" className="md:hidden" onClick={toggleSidebar}>
@@ -183,7 +184,7 @@ const Messaging = () => {
           </div>
 
           {/* Search */}
-          <div className="p-4">
+          <div className="p-4 flex-shrink-0">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
@@ -195,8 +196,8 @@ const Messaging = () => {
             </div>
           </div>
 
-          {/* Conversations List */}
-          <div className="flex-1 overflow-y-auto hide-scrollbar">
+          {/* Conversations List — only this scrolls */}
+          <div className="flex-1 overflow-y-auto">
             <div className="divide-y">
               {filteredConversations?.map((conversation) => (
                 <div
@@ -211,13 +212,13 @@ const Messaging = () => {
                       <Avatar>
                         <AvatarImage src="/placeholder.svg?height=40&width=40" alt={conversation.chattitle} />
                         <AvatarFallback>
-                          {(conversation.chattitle || "U")
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
+                          {(() => {
+                            const parts = (conversation.chattitle || "U").split(" ").filter(Boolean)
+                            if (parts.length === 1) return parts[0][0].toUpperCase()
+                            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+                          })()}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-white"></span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start gap-2">
@@ -240,7 +241,7 @@ const Messaging = () => {
         </div>
 
         {/* Chat Area */}
-        <div className="flex-1 flex flex-col h-[calc(100vh-64px)] md:h-screen bg-white">
+        <div className="flex-1 flex flex-col overflow-hidden bg-white">
           {selectedConversation ? (
             <>
               {/* Chat Header */}
@@ -249,23 +250,18 @@ const Messaging = () => {
                   <Avatar>
                     <AvatarImage
                       src="/placeholder.svg?height=40&width=40"
-                      alt={selectedConversation.participant_name || selectedConversation.name}
+                      alt={selectedConversation.chattitle}
                     />
                     <AvatarFallback>
-                      {(
-                        selectedConversation.participant_name ||
-                        selectedConversation.name ||
-                        selectedConversation.chattitle ||
-                        "U"
-                      )
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
+                      {(() => {
+                        const parts = (selectedConversation.chattitle || "U").split(" ").filter(Boolean)
+                        if (parts.length === 1) return parts[0][0].toUpperCase()
+                        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+                      })()}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <h2 className="font-medium text-gray-900">{selectedConversation.chattitle}</h2>
-                    <span className="text-xs text-gray-500">Online</span>
                   </div>
                 </div>
                 {/* <Button variant="outline" size="sm" className="gap-1 bg-transparent">

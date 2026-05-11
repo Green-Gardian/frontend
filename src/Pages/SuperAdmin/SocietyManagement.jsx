@@ -31,12 +31,24 @@ const SocietyManagement = () => {
   const [showUnblockModal, setShowUnblockModal] = useState(false)
   const [selectedSociety, setSelectedSociety] = useState(null)
   const [searchLoading, setSearchLoading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [newSociety, setNewSociety] = useState({
     societyName: "",
     address: "",
     city: "",
     state: "",
+    registrationNumber: "",
+    postalCode: "",
+    contactEmail: "",
+    contactPhone: "",
   })
+
+  const emptyForm = {
+    societyName: "", address: "", city: "", state: "",
+    registrationNumber: "", postalCode: "", contactEmail: "", contactPhone: "",
+  }
+
+  const resetForm = () => setNewSociety(emptyForm)
 
   const fetchSocieties = async () => {
     try {
@@ -151,25 +163,34 @@ const SocietyManagement = () => {
       address: society.address,
       city: society.city,
       state: society.state,
+      registrationNumber: society.registration_number || "",
+      postalCode: society.postal_code || "",
+      contactEmail: society.contact_email || "",
+      contactPhone: society.contact_phone || "",
     })
     setShowEditModal(true)
   }
 
   const handleAddSociety = async () => {
+    setIsSubmitting(true)
     try {
       await addSociety(newSociety)
       fetchSocieties()
+      resetForm()
       setShowAddModal(false)
     } catch (error) {
       console.error("Error adding society:", error)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   const handleSearchInputChange = (event, isEdit) => {
+    const value = event.target.value
     clearTimeout(searchTimeout.current)
     searchTimeout.current = setTimeout(() => {
-      handleLocationSearch(event.target.value, isEdit)
-    }, 300)
+      handleLocationSearch(value, isEdit)
+    }, 700)
   }
 
   const handleSearchKeyDown = (event, isEdit) => {
@@ -180,12 +201,16 @@ const SocietyManagement = () => {
   }
 
   const handleUpdateSociety = async () => {
+    setIsSubmitting(true)
     try {
       await updateSociety(selectedSociety.id, newSociety)
       fetchSocieties()
+      resetForm()
       setShowEditModal(false)
     } catch (error) {
       console.error("Error updating society:", error)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -464,7 +489,7 @@ const SocietyManagement = () => {
       </Card>
 
       {/* Add Society Modal */}
-      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Add New Society">
+      <Modal isOpen={showAddModal} onClose={() => { resetForm(); setShowAddModal(false) }} title="Add New Society">
         <form
           onSubmit={(e) => {
             e.preventDefault()
@@ -493,7 +518,6 @@ const SocietyManagement = () => {
                 placeholder="Search for location, address, or landmark..."
                 onChange={(e) => handleSearchInputChange(e, false)}
                 onKeyDown={(e) => handleSearchKeyDown(e, false)}
-                disabled={searchLoading}
               />
               {searchLoading && <Loader2 className="absolute right-3 top-3 h-4 w-4 text-gray-400 animate-spin" />}
             </div>
@@ -536,17 +560,63 @@ const SocietyManagement = () => {
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Registration Number</label>
+              <Input
+                value={newSociety.registrationNumber}
+                onChange={(e) => setNewSociety({ ...newSociety, registrationNumber: e.target.value })}
+                className="mt-1 bg-white border-gray-300 text-gray-900"
+                placeholder="e.g. SOC-2024-001"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">Postal Code</label>
+              <Input
+                value={newSociety.postalCode}
+                onChange={(e) => setNewSociety({ ...newSociety, postalCode: e.target.value })}
+                className="mt-1 bg-white border-gray-300 text-gray-900"
+                placeholder="e.g. 44000"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Contact Email</label>
+              <Input
+                type="email"
+                value={newSociety.contactEmail}
+                onChange={(e) => setNewSociety({ ...newSociety, contactEmail: e.target.value })}
+                className="mt-1 bg-white border-gray-300 text-gray-900"
+                placeholder="contact@society.com"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">Contact Phone</label>
+              <Input
+                type="tel"
+                value={newSociety.contactPhone}
+                onChange={(e) => setNewSociety({ ...newSociety, contactPhone: e.target.value })}
+                className="mt-1 bg-white border-gray-300 text-gray-900"
+                placeholder="03XXXXXXXXX"
+              />
+            </div>
+          </div>
+
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setShowAddModal(false)}>
+            <Button type="button" variant="outline" onClick={() => { resetForm(); setShowAddModal(false) }} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit">Add Society</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Adding...</> : "Add Society"}
+            </Button>
           </div>
         </form>
       </Modal>
 
       {/* Edit Society Modal */}
-      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit Society">
+      <Modal isOpen={showEditModal} onClose={() => { resetForm(); setShowEditModal(false) }} title="Edit Society">
         <form
           onSubmit={(e) => {
             e.preventDefault()
@@ -618,11 +688,57 @@ const SocietyManagement = () => {
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Registration Number</label>
+              <Input
+                value={newSociety.registrationNumber}
+                onChange={(e) => setNewSociety({ ...newSociety, registrationNumber: e.target.value })}
+                className="mt-1 bg-white border-gray-300 text-gray-900"
+                placeholder="e.g. SOC-2024-001"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">Postal Code</label>
+              <Input
+                value={newSociety.postalCode}
+                onChange={(e) => setNewSociety({ ...newSociety, postalCode: e.target.value })}
+                className="mt-1 bg-white border-gray-300 text-gray-900"
+                placeholder="e.g. 44000"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Contact Email</label>
+              <Input
+                type="email"
+                value={newSociety.contactEmail}
+                onChange={(e) => setNewSociety({ ...newSociety, contactEmail: e.target.value })}
+                className="mt-1 bg-white border-gray-300 text-gray-900"
+                placeholder="contact@society.com"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">Contact Phone</label>
+              <Input
+                type="tel"
+                value={newSociety.contactPhone}
+                onChange={(e) => setNewSociety({ ...newSociety, contactPhone: e.target.value })}
+                className="mt-1 bg-white border-gray-300 text-gray-900"
+                placeholder="03XXXXXXXXX"
+              />
+            </div>
+          </div>
+
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setShowEditModal(false)}>
+            <Button type="button" variant="outline" onClick={() => { resetForm(); setShowEditModal(false) }} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit">Update Society</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Updating...</> : "Update Society"}
+            </Button>
           </div>
         </form>
       </Modal>

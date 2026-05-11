@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Outlet, Navigate } from "react-router-dom";
 import Cookies from "js-cookie";
+import io from "socket.io-client";
 import {
   SidebarProvider,
   SidebarTrigger,
@@ -13,9 +14,29 @@ import { getMFAStatus } from "@/services/auth";
 const SuperAdminLayout = () => {
   const userRole = Cookies.get("user_role");
   const accessToken = Cookies.get("access_token");
+  const socketRef = useRef(null);
   const [mfaStatus, setMfaStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showMFAModal, setShowMFAModal] = useState(false);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    const socket = io(import.meta.env.VITE_WEBSOCKET_URL || "http://localhost:3001", {
+      auth: { token: accessToken },
+    });
+    socketRef.current = socket;
+    socket.on("force-logout", (data) => {
+      console.warn("Force logout:", data?.reason);
+      socket.disconnect();
+      const cookies = document.cookie.split(";");
+      cookies.forEach((cookie) => {
+        const name = cookie.split("=")[0].trim();
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+      });
+      window.location.href = "/signin?reason=society_blocked";
+    });
+    return () => socket.disconnect();
+  }, [accessToken]);
 
   useEffect(() => {
     const checkMFAStatus = async () => {
@@ -83,13 +104,13 @@ const SuperAdminLayout = () => {
           </div>
         </div>
       ) : (
-        <SidebarProvider>
+        <SidebarProvider className="overflow-hidden h-screen">
           <AppSidebar role="super-admin" />
-          <SidebarInset>
-            <div className="block md:hidden absolute right-3 top-5 ">
+          <SidebarInset className="overflow-hidden">
+            <div className="flex-shrink-0 flex items-center h-10 px-2 border-b bg-white">
               <SidebarTrigger />
             </div>
-            <div className="flex flex-1 flex-col  bg-white">
+            <div className="flex flex-1 flex-col bg-white overflow-hidden" style={{height: 'calc(100% - 2.5rem)'}}>
               <Outlet className="rounded-3xl" />
             </div>
           </SidebarInset>

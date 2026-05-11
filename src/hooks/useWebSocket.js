@@ -42,6 +42,19 @@ export const useWebSocket = (url) => {
         setIsConnected(false);
       });
 
+      // Force-logout: society blocked by super admin
+      socketRef.current.on('force-logout', (data) => {
+        console.warn('Force logout received:', data?.reason);
+        socketRef.current?.disconnect();
+        // Clear all auth cookies
+        const cookies = document.cookie.split(';');
+        cookies.forEach(cookie => {
+          const name = cookie.split('=')[0].trim();
+          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+        });
+        window.location.href = '/signin?reason=society_blocked';
+      });
+
       // Listen for any message
       socketRef.current.onAny((event, data) => {
         setLastMessage({ event, data });

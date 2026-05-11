@@ -53,7 +53,7 @@ const RootRedirect = () => {
     return <Navigate to="/super-admin" replace />;
   } else {
     return <Navigate to="/admin" replace />;
-  }
+  } 
 };
 
 function App() {

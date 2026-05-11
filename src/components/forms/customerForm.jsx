@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 
 const CustomerForm = ({ onClose, onSubmit, error, setError }) => {
   const [formData, setFormData] = useState({
@@ -15,6 +15,7 @@ const CustomerForm = ({ onClose, onSubmit, error, setError }) => {
   });
 
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -71,13 +72,18 @@ const CustomerForm = ({ onClose, onSubmit, error, setError }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (validateForm()) {
-      console.log("Customer Form Data:", formData);
-      onSubmit(formData);
-      // onClose();
+    if (!validateForm()) return;
+
+    setLoading(true);
+    try {
+      await onSubmit(formData);
+    } catch (err) {
+      console.error("Error submitting customer form:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -92,6 +98,7 @@ const CustomerForm = ({ onClose, onSubmit, error, setError }) => {
           variant="ghost"
           size="icon"
           onClick={onClose}
+          disabled={loading}
           className="h-8 w-8 rounded-full"
         >
           <X className="h-4 w-4" />
@@ -185,12 +192,20 @@ const CustomerForm = ({ onClose, onSubmit, error, setError }) => {
             type="button"
             variant="outline"
             onClick={onClose}
+            disabled={loading}
             className="w-full sm:w-auto bg-transparent"
           >
             Cancel
           </Button>
-          <Button type="submit" className="w-full sm:w-auto">
-            Add Customer
+          <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Adding Customer...
+              </>
+            ) : (
+              "Add Customer"
+            )}
           </Button>
         </div>
       </form>

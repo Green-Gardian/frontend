@@ -22,88 +22,78 @@ import {
     addVehicleToInventory,
     updateVehicleInventory
 } from "@/services/superAdminVehicle";
+import { getSocieties } from "@/services/society";
+
+const toDateInput = (iso) => (iso ? iso.split("T")[0] : "");
+
+const mapVehicleToForm = (vehicle) => {
+    if (!vehicle) return {
+        plateNo: "", status: "", vehicleMake: "", vehicleModel: "",
+        vehicleYear: "", color: "", vinNumber: "", engineNumber: "",
+        vehicleType: "truck", capacity: "", capacityUnit: "cubic_meters", fuelType: "diesel",
+        purchasedDate: "", purchasePrice: "",
+        registrationDate: "", registrationExpiryDate: "",
+        insuranceExpiryDate: "", fitnessCertificateExpiry: "",
+        insuranceProvider: "", insurancePolicyNumber: "",
+        odometerReading: "0", lastMaintenanceDate: "", nextMaintenanceDue: "",
+        lastServiceOdometer: "", notes: "", societyId: "",
+    };
+    return {
+        plateNo: vehicle.plate_no || "",
+        status: vehicle.status || "",
+        vehicleMake: vehicle.vehicle_make || "",
+        vehicleModel: vehicle.vehicle_model || "",
+        vehicleYear: vehicle.vehicle_year || "",
+        color: vehicle.color || "",
+        vinNumber: vehicle.vin_number || "",
+        engineNumber: vehicle.engine_number || "",
+        vehicleType: vehicle.vehicle_type || "truck",
+        capacity: vehicle.capacity || "",
+        capacityUnit: vehicle.capacity_unit || "cubic_meters",
+        fuelType: vehicle.fuel_type || "diesel",
+        purchasedDate: toDateInput(vehicle.purchased_date),
+        purchasePrice: vehicle.purchase_price || "",
+        registrationDate: toDateInput(vehicle.registration_date),
+        registrationExpiryDate: toDateInput(vehicle.registration_expiry_date),
+        insuranceExpiryDate: toDateInput(vehicle.insurance_expiry_date),
+        fitnessCertificateExpiry: toDateInput(vehicle.fitness_certificate_expiry),
+        insuranceProvider: vehicle.insurance_provider || "",
+        insurancePolicyNumber: vehicle.insurance_policy_number || "",
+        odometerReading: vehicle.odometer_reading ?? "0",
+        lastMaintenanceDate: toDateInput(vehicle.last_maintenance_date),
+        nextMaintenanceDue: toDateInput(vehicle.next_maintenance_due),
+        lastServiceOdometer: vehicle.last_service_odometer || "",
+        notes: vehicle.notes || "",
+        societyId: vehicle.society_id ? String(vehicle.society_id) : "",
+    };
+};
 
 const VehicleInventoryFormEnhanced = ({ onClose, onSubmit, vehicleToEdit = null }) => {
     const isEditMode = !!vehicleToEdit;
 
-    const [formData, setFormData] = useState({
-        // Basic Info
-        plateNo: "",
-        status: "",
-        vehicleMake: "",
-        vehicleModel: "",
-        vehicleYear: "",
-        color: "",
-        vinNumber: "",
-        engineNumber: "",
-
-        // Type & Capacity
-        vehicleType: "truck",
-        capacity: "",
-        capacityUnit: "cubic_meters",
-        fuelType: "diesel",
-
-        // Purchase Info
-        purchasedDate: "",
-        purchasePrice: "",
-
-        // Registration & Legal
-        registrationDate: "",
-        registrationExpiryDate: "",
-        insuranceExpiryDate: "",
-        fitnessCertificateExpiry: "",
-        insuranceProvider: "",
-        insurancePolicyNumber: "",
-
-        // Operational
-        odometerReading: "0",
-        lastMaintenanceDate: "",
-        nextMaintenanceDue: "",
-        lastServiceOdometer: "",
-
-        // Additional
-        notes: "",
-    });
+    // Lazy init: first render already has correct values — fixes Radix Select not showing pre-filled value
+    const [formData, setFormData] = useState(() => mapVehicleToForm(vehicleToEdit));
 
     const [errors, setErrors] = useState({});
     const [error, setError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [activeTab, setActiveTab] = useState("basic");
+    const [societies, setSocieties] = useState([]);
 
     useEffect(() => {
-        if (vehicleToEdit) {
-            setFormData({
-                plateNo: vehicleToEdit.plate_no || "",
-                status: vehicleToEdit.status || "",
-                vehicleMake: vehicleToEdit.vehicle_make || "",
-                vehicleModel: vehicleToEdit.vehicle_model || "",
-                vehicleYear: vehicleToEdit.vehicle_year || "",
-                color: vehicleToEdit.color || "",
-                vinNumber: vehicleToEdit.vin_number || "",
-                engineNumber: vehicleToEdit.engine_number || "",
-                vehicleType: vehicleToEdit.vehicle_type || "truck",
-                capacity: vehicleToEdit.capacity || "",
-                capacityUnit: vehicleToEdit.capacity_unit || "cubic_meters",
-                fuelType: vehicleToEdit.fuel_type || "diesel",
-                purchasedDate: vehicleToEdit.purchased_date || "",
-                purchasePrice: vehicleToEdit.purchase_price || "",
-                registrationDate: vehicleToEdit.registration_date || "",
-                registrationExpiryDate: vehicleToEdit.registration_expiry_date || "",
-                insuranceExpiryDate: vehicleToEdit.insurance_expiry_date || "",
-                fitnessCertificateExpiry: vehicleToEdit.fitness_certificate_expiry || "",
-                insuranceProvider: vehicleToEdit.insurance_provider || "",
-                insurancePolicyNumber: vehicleToEdit.insurance_policy_number || "",
-                odometerReading: vehicleToEdit.odometer_reading || "0",
-                lastMaintenanceDate: vehicleToEdit.last_maintenance_date || "",
-                nextMaintenanceDue: vehicleToEdit.next_maintenance_due || "",
-                lastServiceOdometer: vehicleToEdit.last_service_odometer || "",
-                notes: vehicleToEdit.notes || "",
-            });
-        }
+        getSocieties().then((res) => {
+            if (!res.error) setSocieties(res.societies || res.data || []);
+        });
+    }, []);
+
+    // Sync if vehicleToEdit reference changes (different vehicle opened)
+    useEffect(() => {
+        setFormData(mapVehicleToForm(vehicleToEdit));
     }, [vehicleToEdit]);
 
     const statuses = [
         { value: "available", label: "Available" },
+        { value: "active", label: "Active" },
         { value: "maintenance", label: "Maintenance" },
         { value: "inactive", label: "Inactive" },
     ];
@@ -144,20 +134,39 @@ const VehicleInventoryFormEnhanced = ({ onClose, onSubmit, vehicleToEdit = null 
         }
     };
 
+    // Which tab each field lives in — used to auto-navigate on error
+    const fieldTabMap = {
+        plateNo: "basic",
+        status: "basic",
+        societyId: "additional",
+    };
+
     const validateForm = () => {
         const newErrors = {};
 
         if (!formData.plateNo.trim()) {
-            newErrors.plateNo = "Vehicle plate number is required";
+            newErrors.plateNo = "Plate number is required";
         } else if (!/^[A-Z]{2,3}-\d{3,4}$/.test(formData.plateNo.toUpperCase())) {
-            newErrors.plateNo = "Please enter a valid plate number format (e.g., ABC-123)";
+            newErrors.plateNo = "Invalid plate number format (e.g., ABC-123)";
         }
 
         if (!formData.status) {
             newErrors.status = "Status is required";
         }
 
+        if (!isEditMode && !formData.societyId) {
+            newErrors.societyId = "Society is required — vehicle must be assigned to a society";
+        }
+
         setErrors(newErrors);
+
+        // Auto-switch to first tab that has an error
+        if (Object.keys(newErrors).length > 0) {
+            const firstErrorField = Object.keys(newErrors)[0];
+            const targetTab = fieldTabMap[firstErrorField];
+            if (targetTab) setActiveTab(targetTab);
+        }
+
         return Object.keys(newErrors).length === 0;
     };
 
@@ -234,6 +243,7 @@ const VehicleInventoryFormEnhanced = ({ onClose, onSubmit, vehicleToEdit = null 
                 nextMaintenanceDue: "",
                 lastServiceOdometer: "",
                 notes: "",
+                societyId: "",
             });
         }
         setErrors({});
@@ -277,9 +287,22 @@ const VehicleInventoryFormEnhanced = ({ onClose, onSubmit, vehicleToEdit = null 
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="p-6">
+                {/* API error */}
                 {error && (
                     <div className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert">
                         {error}
+                    </div>
+                )}
+
+                {/* Validation error summary */}
+                {Object.keys(errors).length > 0 && (
+                    <div className="p-4 mb-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg" role="alert">
+                        <p className="font-semibold mb-1">Please fix the following before submitting:</p>
+                        <ul className="list-disc list-inside space-y-0.5">
+                            {Object.values(errors).map((msg, i) => (
+                                <li key={i}>{msg}</li>
+                            ))}
+                        </ul>
                     </div>
                 )}
 
@@ -601,13 +624,42 @@ const VehicleInventoryFormEnhanced = ({ onClose, onSubmit, vehicleToEdit = null 
                     {/* Additional Tab */}
                     <TabsContent value="additional" className="space-y-4 mt-4 min-h-[420px]">
                         <div className="space-y-2">
+                            <Label htmlFor="societyId">
+                                Assign to Society {!isEditMode && <span className="text-red-500">*</span>}
+                            </Label>
+                            <Select
+                                value={formData.societyId}
+                                onValueChange={(value) => handleInputChange("societyId", value)}
+                            >
+                                <SelectTrigger className={errors.societyId ? "border-red-500" : ""}>
+                                    <SelectValue placeholder="Select society" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {societies.map((s) => (
+                                        <SelectItem key={s.id} value={String(s.id)}>
+                                            {s.society_name} — {s.city}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {errors.societyId && (
+                                <p className="text-sm text-red-600">{errors.societyId}</p>
+                            )}
+                            {!errors.societyId && (
+                                <p className="text-xs text-gray-500">
+                                    Only this society's admins will see and assign this vehicle
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
                             <Label htmlFor="notes">Notes</Label>
                             <Textarea
                                 id="notes"
                                 placeholder="Any additional notes about this vehicle..."
                                 value={formData.notes}
                                 onChange={(e) => handleInputChange("notes", e.target.value)}
-                                className="min-h-[150px]"
+                                className="min-h-[120px]"
                             />
                         </div>
                     </TabsContent>

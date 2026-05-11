@@ -245,10 +245,8 @@ const Customer = () => {
     try {
       console.log("Submitting customer form data:", formData);
 
-      // Use Redux thunk to add a new resident
       await dispatch(addNewResident(formData)).unwrap();
-
-      // No need to refetch; slice already updates users list
+      await dispatch(fetchSocietyUsers());
       onClose();
     } catch (error) {
       console.error("Error adding resident:", error);

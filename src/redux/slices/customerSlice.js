@@ -70,10 +70,9 @@ const customerSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(addNewResident.fulfilled, (state, action) => {
+      .addCase(addNewResident.fulfilled, (state) => {
         state.loading = false;
-        state.addedResident = action.payload;
-        state.users.push(action.payload); // auto-add to list
+        // list is refetched in the component after success
       })
       .addCase(addNewResident.rejected, (state, action) => {
         state.loading = false;
