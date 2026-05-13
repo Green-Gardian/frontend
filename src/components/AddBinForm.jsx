@@ -4,6 +4,7 @@ import Cookies from 'js-cookie';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { API_BASE_URL } from "@/config/api";
 
 const CITIES = {
   karachi: { name: 'Karachi', lat: 24.8607, lng: 67.0011 },
@@ -41,7 +42,7 @@ const AddBinForm = ({ onBinAdded }) => {
     const fetchSocieties = async () => {
       try {
         const token = Cookies.get('access_token');
-        const apiBase = 'http://localhost:3001';
+        const apiBase = API_BASE_URL;
 
         const response = await axios.get(
           `${apiBase}/society/get-societies`,
@@ -96,7 +97,7 @@ const AddBinForm = ({ onBinAdded }) => {
 
     try {
       const token = Cookies.get('access_token');
-      const apiBase = 'http://localhost:3001';
+      const apiBase = API_BASE_URL;
 
       const response = await axios.post(
         `${apiBase}/bins`,

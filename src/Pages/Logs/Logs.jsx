@@ -4,6 +4,7 @@ import Cookies from "js-cookie";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, Truck, Trash2, Calendar, MapPin, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { API_BASE_URL } from "@/config/api";
 
 const Logs = () => {
   const [activeTab, setActiveTab] = useState("bins");
@@ -30,7 +31,7 @@ const Logs = () => {
 
   const fetchStats = async () => {
     try {
-      const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+      const BACKEND_URL = API_BASE_URL;
       const societyId = Cookies.get("society_id");
 
       const response = await apiFetch(`${BACKEND_URL}/logs/bins/stats?societyId=${societyId || ''}`, {
@@ -49,7 +50,7 @@ const Logs = () => {
 
   const fetchLogs = async () => {
     try {
-      const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+      const BACKEND_URL = API_BASE_URL;
       const endpoint = activeTab === "bins" ? `${BACKEND_URL}/logs/bins` : `${BACKEND_URL}/logs/tasks`;
 
       const response = await apiFetch(endpoint, { method: 'GET' });

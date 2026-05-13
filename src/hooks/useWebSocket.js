@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Cookies from 'js-cookie';
 import io from 'socket.io-client';
+import { SOCKET_URL } from "@/config/api";
 
 export const useWebSocket = (url) => {
   const [isConnected, setIsConnected] = useState(false);
@@ -18,7 +19,7 @@ export const useWebSocket = (url) => {
       }
 
       // Create actual Socket.IO connection
-      socketRef.current = io(url || 'http://localhost:3001', {
+      socketRef.current = io(url || SOCKET_URL, {
         auth: {
           token: token,
         },
@@ -143,7 +144,7 @@ export const useWebSocket = (url) => {
 export const useAlertWebSocket = () => {
   const [alerts, setAlerts] = useState([]);
   const { isConnected, lastMessage, error, on, off } = useWebSocket(
-    import.meta.env.VITE_WEBSOCKET_URL || 'http://localhost:3001'
+    SOCKET_URL
   );
 
   useEffect(() => {
@@ -190,7 +191,7 @@ export const useAlertWebSocket = () => {
 // Hook specifically for chat functionality
 export const useChatWebSocket = () => {
   const { isConnected, error, emit, on, off, socket } = useWebSocket(
-    import.meta.env.VITE_WEBSOCKET_URL || 'http://localhost:3001'
+    SOCKET_URL
   );
 
   const joinRoom = (chatId, userId) => {

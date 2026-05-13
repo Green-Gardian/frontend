@@ -13,6 +13,7 @@ import EditBinModal from "@/components/EditBinModal"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { apiFetch } from "@/utils/apiClient"
 import { io } from "socket.io-client"
+import { API_BASE_URL } from "@/config/api";
 
 const fixLeafletIcons = () => {
   delete L.Icon.Default.prototype._getIconUrl
@@ -81,7 +82,7 @@ export const BinsManagement = () => {
 
   useEffect(() => {
     const token = Cookies.get('access_token')
-    const apiBase = 'http://localhost:3001'
+    const apiBase = API_BASE_URL
 
     // fetch initial bins
     apiFetch(`${apiBase}/bins`, { method: 'GET' })
@@ -174,7 +175,7 @@ export const BinsManagement = () => {
 
   const refreshData = () => {
     setLastRefreshed(new Date())
-    const apiBase = 'http://localhost:3001'
+    const apiBase = API_BASE_URL
     apiFetch(`${apiBase}/bins`, { method: 'GET' })
       .then((res) => res.json())
       .then((resData) => {
@@ -200,7 +201,7 @@ export const BinsManagement = () => {
   const pollIoTData = async () => {
     setIotPolling(true)
     try {
-      const apiBase = 'http://localhost:3001'
+      const apiBase = API_BASE_URL
       await apiFetch(`${apiBase}/bins/iot/poll`, { method: 'POST' })
       // Refresh data after polling
       setTimeout(() => {
@@ -229,7 +230,7 @@ export const BinsManagement = () => {
 
   const emptyBin = async (binId) => {
     try {
-      const apiBase = 'http://localhost:3001'
+      const apiBase = API_BASE_URL
       const response = await apiFetch(
         `${apiBase}/bins/${binId}`,
         { method: 'PUT', body: JSON.stringify({ fill_level: 0, status: 'idle' }) }
@@ -249,7 +250,7 @@ export const BinsManagement = () => {
 
   const deleteBin = async (binId) => {
     try {
-      const apiBase = 'http://localhost:3001'
+      const apiBase = API_BASE_URL
       const response = await apiFetch(
         `${apiBase}/bins/${binId}`,
         { method: 'DELETE' }

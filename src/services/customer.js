@@ -1,9 +1,10 @@
 import { apiFetch } from "@/utils/apiClient";
+import { API_BASE_URL } from "@/config/api";
 
 export const getUsersBySociety = async () => {
   try {
     const response = await apiFetch(
-      `${import.meta.env.VITE_BACKEND_URL}/auth/get-users-by-society`,
+      `${API_BASE_URL}/auth/get-users-by-society`,
       { method: "GET" }
     );
     if (!response.ok) {
@@ -19,7 +20,7 @@ export const getUsersBySociety = async () => {
 export const addResident = async (residentData) => {
   try {
     const response = await apiFetch(
-      `${import.meta.env.VITE_BACKEND_URL}/auth/add-resident`,
+      `${API_BASE_URL}/auth/add-resident`,
       {
         method: "POST",
         body: JSON.stringify({

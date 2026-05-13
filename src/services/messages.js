@@ -1,9 +1,10 @@
 import { apiFetch } from "@/utils/apiClient";
+import { API_BASE_URL } from "@/config/api";
 
 const getMessages = async ({ chatId }) => {
   try {
     const response = await apiFetch(
-      `${import.meta.env.VITE_BACKEND_URL}/chat/get-chat-messages/${chatId}`,
+      `${API_BASE_URL}/chat/get-chat-messages/${chatId}`,
       { method: "GET" }
     );
     const data = await response.json();
@@ -19,7 +20,7 @@ const getChats = async () => {
   console.log("Fetching chat groups...");
   try {
     const response = await apiFetch(
-      `${import.meta.env.VITE_BACKEND_URL}/chat/get-chat-groups`,
+      `${API_BASE_URL}/chat/get-chat-groups`,
       { method: "GET" }
     );
     const data = await response.json();

@@ -1,6 +1,7 @@
 import { apiFetch } from "@/utils/apiClient";
+import { API_BASE_URL } from "@/config/api";
 
-const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
+const BASE_URL = API_BASE_URL;
 
 // Add a new vehicle to inventory (Super Admin only)
 export const addVehicleToInventory = async (vehicleData) => {

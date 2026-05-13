@@ -15,6 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { apiFetch } from "@/utils/apiClient"
 import { io } from "socket.io-client"
 import MockBinTester from "@/components/MockBinTester"
+import { API_BASE_URL } from "@/config/api";
 
 const fixLeafletIcons = () => {
   delete L.Icon.Default.prototype._getIconUrl
@@ -98,7 +99,7 @@ const Dashboard = () => {
   }, [])
 
   useEffect(() => {
-    const apiBase = 'http://localhost:3001'
+    const apiBase = API_BASE_URL
 
     // fetch initial bins
     apiFetch(`${apiBase}/bins`, { method: 'GET' })
@@ -249,7 +250,7 @@ const Dashboard = () => {
   // Simulate refreshing data (manually trigger re-fetch)
   const refreshData = () => {
     setLastRefreshed(new Date())
-    const apiBase = 'http://localhost:3001'
+    const apiBase = API_BASE_URL
     apiFetch(`${apiBase}/bins`, { method: 'GET' })
       .then((res) => res.json())
       .then((resData) => {
@@ -288,7 +289,7 @@ const Dashboard = () => {
   // Empty bin function - reset fill level to 0
   const emptyBin = async (binId) => {
     try {
-      const apiBase = 'http://localhost:3001'
+      const apiBase = API_BASE_URL
       const response = await apiFetch(
         `${apiBase}/bins/${binId}`,
         { method: 'PUT', body: JSON.stringify({ fill_level: 0, status: 'idle' }) }
@@ -309,7 +310,7 @@ const Dashboard = () => {
   // Delete bin function
   const deleteBin = async (binId) => {
     try {
-      const apiBase = 'http://localhost:3001'
+      const apiBase = API_BASE_URL
       const response = await apiFetch(
         `${apiBase}/bins/${binId}`,
         { method: 'DELETE' }

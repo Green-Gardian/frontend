@@ -1,6 +1,6 @@
 import Cookies from "js-cookie";
+import { API_BASE_URL } from "@/config/api";
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
 
 const getAuthHeaders = () => ({
   "Content-Type": "application/json",

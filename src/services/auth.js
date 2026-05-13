@@ -1,5 +1,6 @@
 import Cookies from "js-cookie";
 import { apiFetch } from "@/utils/apiClient";
+import { API_BASE_URL } from "@/config/api";
 
 const signUp = async (credentials) => {
   try {
@@ -10,7 +11,7 @@ const signUp = async (credentials) => {
     };
 
     const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/auth/signup`,
+      `${API_BASE_URL}/auth/signup`,
       options
     );
 
@@ -34,7 +35,7 @@ const signInFunc = async (credentials) => {
     };
 
     const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/auth/signin`,
+      `${API_BASE_URL}/auth/signin`,
       options
     );
 
@@ -59,7 +60,7 @@ const verifyEmail = async (token, credentials) => {
     };
 
     const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/auth/verify-email?token=${token}`,
+      `${API_BASE_URL}/auth/verify-email?token=${token}`,
       options
     );
 
@@ -85,7 +86,7 @@ const getAllUsers = async (params = {}) => {
     if (params.search) queryParams.append("search", params.search);
 
     const response = await apiFetch(
-      `${import.meta.env.VITE_BACKEND_URL}/auth/users?${queryParams}`,
+      `${API_BASE_URL}/auth/users?${queryParams}`,
       { method: "GET" }
     );
 
@@ -111,7 +112,7 @@ const blockUser = async (userId, isBlocked) => {
 
   try {
     const response = await apiFetch(
-      `${import.meta.env.VITE_BACKEND_URL}/auth/users/${userId}/block`,
+      `${API_BASE_URL}/auth/users/${userId}/block`,
       {
         method: "PATCH",
         body: JSON.stringify({ isBlocked }),
@@ -135,7 +136,7 @@ const blockUser = async (userId, isBlocked) => {
 const updateUser = async (userId, userData) => {
   try {
     const response = await apiFetch(
-      `${import.meta.env.VITE_BACKEND_URL}/auth/users/${userId}`,
+      `${API_BASE_URL}/auth/users/${userId}`,
       {
         method: "PUT",
         body: JSON.stringify(userData),
@@ -158,7 +159,7 @@ const updateUser = async (userId, userData) => {
 const deleteUser = async (userId) => {
   try {
     const response = await apiFetch(
-      `${import.meta.env.VITE_BACKEND_URL}/auth/users/${userId}`,
+      `${API_BASE_URL}/auth/users/${userId}`,
       { method: "DELETE" }
     );
 
@@ -177,7 +178,7 @@ const deleteUser = async (userId) => {
 const getSystemStats = async () => {
   try {
     const response = await apiFetch(
-      `${import.meta.env.VITE_BACKEND_URL}/auth/system-stats`,
+      `${API_BASE_URL}/auth/system-stats`,
       { method: "GET" }
     );
 
@@ -196,7 +197,7 @@ const getSystemStats = async () => {
 const addAdminAndStaff = async (userData) => {
   try {
     const response = await apiFetch(
-      `${import.meta.env.VITE_BACKEND_URL}/auth/add-admin-and-staff`,
+      `${API_BASE_URL}/auth/add-admin-and-staff`,
       {
         method: "POST",
         body: JSON.stringify(userData),
@@ -224,7 +225,7 @@ const forgotPasswordFunc = async (credentials) => {
     };
 
     const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/auth/forgot-password`,
+      `${API_BASE_URL}/auth/forgot-password`,
       options
     );
 
@@ -249,7 +250,7 @@ const resetPasswordFunc = async (token, credentials) => {
     };
 
     const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/auth/reset-password?token=${token}`,
+      `${API_BASE_URL}/auth/reset-password?token=${token}`,
       options
     );
 
@@ -268,7 +269,7 @@ const resetPasswordFunc = async (token, credentials) => {
 const getProfileData = async () => {
   try {
     const response = await apiFetch(
-      `${import.meta.env.VITE_BACKEND_URL}/auth/profile`,
+      `${API_BASE_URL}/auth/profile`,
       { method: "GET" }
     );
 
@@ -291,7 +292,7 @@ const updateProfile = async (payload) => {
   console.log(`Payload size: ${sizeInBytes} bytes (${sizeInKB.toFixed(2)} KB)`);
   try {
     const response = await apiFetch(
-      `${import.meta.env.VITE_BACKEND_URL}/auth/update-profile`,
+      `${API_BASE_URL}/auth/update-profile`,
       {
         method: "PUT",
         body: JSON.stringify({
@@ -322,7 +323,7 @@ const changePassword = async ({
 }) => {
   try {
     const response = await apiFetch(
-      `${import.meta.env.VITE_BACKEND_URL}/auth/change-password`,
+      `${API_BASE_URL}/auth/change-password`,
       {
         method: "POST",
         body: JSON.stringify({
@@ -347,7 +348,7 @@ const changePassword = async ({
 const getMFAStatus = async () => {
   try {
     const response = await apiFetch(
-      `${import.meta.env.VITE_BACKEND_URL}/auth/mfa/status`,
+      `${API_BASE_URL}/auth/mfa/status`,
       { method: "GET" }
     );
 
@@ -366,7 +367,7 @@ const getMFAStatus = async () => {
 const generateMFASecret = async () => {
   try {
     const response = await apiFetch(
-      `${import.meta.env.VITE_BACKEND_URL}/auth/mfa/generate-secret`,
+      `${API_BASE_URL}/auth/mfa/generate-secret`,
       { method: "POST" }
     );
 
@@ -385,7 +386,7 @@ const generateMFASecret = async () => {
 const enableMFA = async (totpCode) => {
   try {
     const response = await apiFetch(
-      `${import.meta.env.VITE_BACKEND_URL}/auth/mfa/enable`,
+      `${API_BASE_URL}/auth/mfa/enable`,
       {
         method: "POST",
         body: JSON.stringify({ totpCode }),
@@ -407,7 +408,7 @@ const enableMFA = async (totpCode) => {
 const disableMFA = async () => {
   try {
     const response = await apiFetch(
-      `${import.meta.env.VITE_BACKEND_URL}/auth/mfa/disable`,
+      `${API_BASE_URL}/auth/mfa/disable`,
       { method: "POST" }
     );
 
@@ -426,7 +427,7 @@ const disableMFA = async () => {
 const verifyMFA = async (email, totpCode) => {
   try {
     const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/auth/mfa/verify`,
+      `${API_BASE_URL}/auth/mfa/verify`,
       {
         method: "POST",
         headers: {

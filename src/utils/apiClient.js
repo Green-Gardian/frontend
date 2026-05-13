@@ -1,6 +1,5 @@
 import Cookies from "js-cookie";
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+import { API_BASE_URL } from "@/config/api";
 
 /**
  * Attempts to refresh the access token using the stored refresh token.
@@ -18,7 +17,7 @@ const attemptTokenRefresh = async () => {
   }
 
   try {
-    const response = await fetch(`${BACKEND_URL}/auth/refresh-token`, {
+    const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh_token: refreshToken }),

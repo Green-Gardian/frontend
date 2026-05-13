@@ -1,6 +1,7 @@
 import { apiFetch } from "@/utils/apiClient";
+import { API_BASE_URL } from "@/config/api";
 
-const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+const API_URL = API_BASE_URL;
 
 // Sentiment Analytics Endpoints
 export const getSentimentOverview = async (startDate, endDate) => {

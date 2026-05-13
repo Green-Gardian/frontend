@@ -10,6 +10,7 @@ import {
 import { AppSidebar } from "@/components/app-sidebar";
 import MFABlockingModal from "@/components/MFABlockingModal";
 import { getMFAStatus } from "@/services/auth";
+import { SOCKET_URL } from "@/config/api";
 
 const forceLogout = () => {
   const cookies = document.cookie.split(";");
@@ -27,7 +28,7 @@ const AdminLayout = () => {
 
   useEffect(() => {
     if (!accessToken) return;
-    const socket = io(import.meta.env.VITE_WEBSOCKET_URL || "http://localhost:3001", {
+    const socket = io(SOCKET_URL, {
       auth: { token: accessToken },
     });
     socketRef.current = socket;
@@ -112,15 +113,15 @@ const AdminLayout = () => {
           </div>
         </div>
       ) : (
-        <SidebarProvider className="overflow-hidden h-screen">
+        <SidebarProvider className="h-screen overflow-hidden">
           <AppSidebar role="admin" />
-          <SidebarInset className="overflow-hidden">
+          <SidebarInset className="flex min-h-0 flex-col overflow-hidden">
             <div className="flex-shrink-0 flex items-center h-10 px-2 border-b bg-white">
               <SidebarTrigger />
             </div>
-            <div className="flex flex-1 flex-col bg-white overflow-hidden" style={{height: 'calc(100% - 2.5rem)'}}>
+            <main className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-white">
               <Outlet className="rounded-3xl" />
-            </div>
+            </main>
           </SidebarInset>
         </SidebarProvider>
       )}
