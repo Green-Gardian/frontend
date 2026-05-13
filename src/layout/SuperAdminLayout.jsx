@@ -2,15 +2,34 @@ import React, { useState, useEffect, useRef } from "react";
 import { Outlet, Navigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import io from "socket.io-client";
+import { ChevronRight } from "lucide-react";
 import {
   SidebarProvider,
-  SidebarTrigger,
   SidebarInset,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import MFABlockingModal from "@/components/MFABlockingModal";
 import { getMFAStatus } from "@/services/auth";
 import { SOCKET_URL } from "@/config/api";
+
+const CollapsedSidebarTrigger = () => {
+  const { open, toggleSidebar } = useSidebar();
+
+  if (open) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={toggleSidebar}
+      className="fixed left-4 top-4 z-40 flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-md transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40"
+      aria-label="Open sidebar"
+      title="Open sidebar"
+    >
+      <ChevronRight className="h-6 w-6" />
+    </button>
+  );
+};
 
 const SuperAdminLayout = () => {
   const userRole = Cookies.get("user_role");
@@ -107,10 +126,8 @@ const SuperAdminLayout = () => {
       ) : (
         <SidebarProvider className="h-screen overflow-hidden">
           <AppSidebar role="super-admin" />
+          <CollapsedSidebarTrigger />
           <SidebarInset className="flex min-h-0 flex-col overflow-hidden">
-            <div className="flex-shrink-0 flex items-center h-10 px-2 border-b bg-white">
-              <SidebarTrigger />
-            </div>
             <main className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-white">
               <Outlet className="rounded-3xl" />
             </main>

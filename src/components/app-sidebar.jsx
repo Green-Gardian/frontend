@@ -16,7 +16,8 @@ import {
   Building2,
   FileClock,
   Activity,
-  Trash
+  Trash,
+  ChevronLeft,
 } from "lucide-react"
 
 import {
@@ -29,6 +30,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
+  useSidebar,
 } from "@/components/ui/sidebar"
 
 import {
@@ -162,6 +164,7 @@ function getInitials(name) {
 }
 
 export function AppSidebar({ role }) {
+  const { toggleSidebar } = useSidebar()
   const [userData, setUserData] = useState({
     name: "",
     email: "",
@@ -215,27 +218,29 @@ export function AppSidebar({ role }) {
   }, [role])
 
   return (
-    <Sidebar className="bg-white border-r border-primary/20">
+    <Sidebar collapsible="offcanvas" className="bg-white border-r border-primary/20">
       {/* Header */}
       <SidebarHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-primary/20">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-white data-[state=open]:text-slate-900 hover:bg-primary/5 bg-transparent text-slate-900"
-            >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Leaf className="size-4" />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold text-slate-900">Green Guardian</span>
-                <span className="truncate text-xs text-slate-600">
-                  {role === "super-admin" ? "Super Admin" : "Admin"}
-                </span>
-              </div>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <div className="flex h-16 items-center gap-2 px-4">
+          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <Leaf className="size-4" />
+          </div>
+          <div className="grid flex-1 text-left text-sm leading-tight">
+            <span className="truncate font-semibold text-slate-900">Green Guardian</span>
+            <span className="truncate text-xs text-slate-600">
+              {role === "super-admin" ? "Super Admin" : "Admin"}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40"
+            aria-label="Collapse sidebar"
+            title="Collapse sidebar"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+        </div>
       </SidebarHeader>
 
       {/* Navigation Content */}
