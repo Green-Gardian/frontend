@@ -4,6 +4,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import Cookies from "js-cookie";
+import { useEffect } from "react";
 
 import { AdminLayout, SuperAdminLayout } from "./layout";
 
@@ -36,6 +37,8 @@ import {
 
 import { Provider } from "react-redux";
 import store from "./redux/store";
+import socketService from "./services/socketService";
+import { useSocketNotifications } from "./hooks/useSocketNotifications";
 
 import "./index.css";
 
@@ -55,6 +58,42 @@ const RootRedirect = () => {
     return <Navigate to="/admin" replace />;
   }
 };
+
+/**
+ * Socket initialization component
+ * Initializes socket connection on auth and sets up listeners
+ */
+function SocketInitializer() {
+  const accessToken = Cookies.get("access_token");
+  
+  useEffect(() => {
+    if (accessToken && !socketService.isSocketConnected()) {
+      // Parse user info from cookies or Redux store
+      const userId = Cookies.get("user_id") || localStorage.getItem("userId");
+      const societyId = Cookies.get("user_society_id") || localStorage.getItem("societyId");
+      const userRole = Cookies.get("user_role") || localStorage.getItem("userRole");
+
+      if (userId) {
+        console.log("🚀 Initializing socket from App...");
+        socketService.connect(accessToken, userId, societyId, userRole);
+      }
+    } else if (!accessToken && socketService.isSocketConnected()) {
+      console.log("🔴 Disconnecting socket due to logout");
+      socketService.disconnect();
+    }
+
+    return () => {
+      // Cleanup on unmount
+      // Note: We keep socket connected even on component unmount
+      // Only disconnect on explicit logout
+    };
+  }, [accessToken]);
+
+  // Setup notification listeners
+  useSocketNotifications();
+
+  return null; // This component doesn't render anything
+}
 
 function App() {
   const router = createBrowserRouter([
@@ -198,7 +237,8 @@ function App() {
 
   return (
     <Provider store={store}>
-      <RouterProvider router={router} />;
+      <SocketInitializer />
+      <RouterProvider router={router} />
     </Provider>
   );
 }

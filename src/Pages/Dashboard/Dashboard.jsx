@@ -6,7 +6,7 @@ import "./dashboard.css"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { RefreshCw, LocateFixed, Trash2, Edit2, OctagonX } from "lucide-react"
+import { RefreshCw, LocateFixed, Trash2, Edit2, OctagonX, FlaskConical, ChevronDown, ChevronUp } from "lucide-react"
 import Cookies from "js-cookie"
 import InfoCards from "@/components/info-cards"
 import BinManagementModal from "@/components/BinManagementModal"
@@ -14,6 +14,7 @@ import EditBinModal from "@/components/EditBinModal"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { apiFetch } from "@/utils/apiClient"
 import { io } from "socket.io-client"
+import MockBinTester from "@/components/MockBinTester"
 
 const fixLeafletIcons = () => {
   delete L.Icon.Default.prototype._getIconUrl
@@ -79,6 +80,7 @@ const Dashboard = () => {
   const [dustbins, setDustbins] = useState([])
   const [drivers, setDrivers] = useState([])
   const [selectedBinForEdit, setSelectedBinForEdit] = useState(null)
+  const [showMockTester, setShowMockTester] = useState(false)
   const mapRef = useRef(null)
   const socketRef = useRef(null)
 
@@ -147,8 +149,11 @@ const Dashboard = () => {
 
     // connect socket
     try {
+      const token = Cookies.get('access_token')
+      if (!token) console.warn('Socket init: no access token found in cookies')
+
       socketRef.current = io(apiBase, {
-        auth: { token },
+        auth: { token: token || null },
       })
 
       socketRef.current.on('connect', () => {
@@ -637,6 +642,28 @@ const Dashboard = () => {
           }}
         />
       )}
+
+      {/* Mock Bin Tester — collapsible dev panel */}
+      <div className="flex flex-col w-full border border-dashed border-violet-300 rounded-xl overflow-hidden">
+        <button
+          onClick={() => setShowMockTester((v) => !v)}
+          className="flex items-center justify-between px-4 py-3 bg-violet-50 hover:bg-violet-100 transition-colors text-left"
+        >
+          <span className="flex items-center gap-2 text-sm font-semibold text-violet-700">
+            <FlaskConical className="h-4 w-4" />
+            Mock Bin Simulation — Push Notification Tester
+          </span>
+          {showMockTester
+            ? <ChevronUp className="h-4 w-4 text-violet-500" />
+            : <ChevronDown className="h-4 w-4 text-violet-500" />
+          }
+        </button>
+        {showMockTester && (
+          <div className="bg-white">
+            <MockBinTester />
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -84,6 +84,7 @@ const SignIn = () => {
     if (res && res.requiresMFASetup === true) {
       Cookies.set("access_token", res.access_token ? res.access_token : null)
       Cookies.set("refresh_token", res.refresh_token)
+      Cookies.set("user_id", res.user_id)
       Cookies.set("username", res.username)
       Cookies.set("user_role", res.role)
       Cookies.set("user_society_id", res.society_id)
@@ -155,6 +156,7 @@ const SignIn = () => {
   const completeSignIn = (res) => {
     Cookies.set("access_token", res.access_token ? res.access_token : null)
     Cookies.set("refresh_token", res.refresh_token)
+    Cookies.set("user_id", res.user_id)
     Cookies.set("username", res.username)
     Cookies.set("user_role", res.role)
     Cookies.set("user_society_id", res.society_id)
