@@ -190,9 +190,7 @@ export const useAlertWebSocket = () => {
 
 // Hook specifically for chat functionality
 export const useChatWebSocket = () => {
-  const { isConnected, error, emit, on, off, socket } = useWebSocket(
-    SOCKET_URL
-  );
+  const { isConnected, error, emit, lastMessage, socket } = useWebSocket(SOCKET_URL);
 
   const joinRoom = (chatId, userId) => {
     emit('joinRoom', { chatId, userId });
@@ -202,31 +200,12 @@ export const useChatWebSocket = () => {
     emit('message', { chatId, content });
   };
 
-  const onReceiveMessage = (callback) => {
-    on('receiveMessage', callback);
-  };
-
-  const onMessageSent = (callback) => {
-    on('messageSent', callback);
-  };
-
-  const onConnect = (callback) => {
-    on('connect', callback);
-  };
-
-  const onDisconnect = (callback) => {
-    on('disconnect', callback);
-  };
-
   return {
     isConnected,
     error,
+    lastMessage,   // reactive — triggers re-render on every socket event
     joinRoom,
     sendMessage,
-    onReceiveMessage,
-    onMessageSent,
-    onConnect,
-    onDisconnect,
-    socket
+    socket,
   };
 };

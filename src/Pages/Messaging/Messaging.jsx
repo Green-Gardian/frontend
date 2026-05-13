@@ -11,6 +11,7 @@ import { getMessages, getChats } from "@/services/messages"
 
 const Messaging = () => {
   const [username, setUsername] = useState("")
+  const [currentUserId, setCurrentUserId] = useState(null)
   const [selectedConversation, setSelectedConversation] = useState(null)
   const [conversations, setConversations] = useState([])
   const [messages, setMessages] = useState([])
@@ -19,11 +20,11 @@ const Messaging = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const messagesEndRef = useRef(null)
 
-  const { joinRoom, sendMessage, onReceiveMessage, onMessageSent, onConnect, onDisconnect } = useChatWebSocket()
+  const { joinRoom, sendMessage, lastMessage, isConnected } = useChatWebSocket()
 
   useEffect(() => {
-    const storedUsername = Cookies.get("username")
-    setUsername(storedUsername)
+    setUsername(Cookies.get("username"))
+    setCurrentUserId(Cookies.get("user_id"))
   }, [])
 
   useEffect(() => {
@@ -32,34 +33,52 @@ const Messaging = () => {
     }
   }, [])
 
+  // Reactive — runs whenever a new socket event arrives (no stale closures)
   useEffect(() => {
-    onConnect(() => {
-      console.log("Connected to unified WebSocket server")
-    })
+    if (!lastMessage) return
 
-    onReceiveMessage(async (msg) => {
-      console.log("Received message:", msg)
-      await fetchChatGroups()
-      if (selectedConversation?.id === msg.chatId) {
-        await fetchMessagesForChat(selectedConversation.id)
+    const { event, data } = lastMessage
+
+    if (event === 'receiveMessage') {
+      const msg = data
+      // Refresh sidebar preview
+      fetchChatGroups()
+      // Only update messages if this chat is open
+      if (selectedConversation && String(selectedConversation.id) === String(msg.chatId)) {
+        const isMine = currentUserId
+          ? String(msg.sender_id || msg.senderId) === String(currentUserId)
+          : false
+        const formatted = {
+          id: msg.id || Date.now(),
+          sender: msg.sender_name || msg.senderName,
+          message: msg.content,
+          time: new Date(msg.created_at || new Date()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          senderId: msg.sender_id || msg.senderId,
+          isMine,
+        }
+        setMessages(prev => {
+          if (prev.some(m => String(m.id) === String(formatted.id))) return prev
+          // Replace optimistic placeholder for own message echo
+          if (isMine) {
+            const lastOptIdx = [...prev].reverse().findIndex(m => String(m.id).startsWith('opt-'))
+            if (lastOptIdx !== -1) {
+              const realIdx = prev.length - 1 - lastOptIdx
+              const next = [...prev]
+              next[realIdx] = formatted
+              return next
+            }
+          }
+          return [...prev, formatted]
+        })
+        // Scroll to bottom after state update
+        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
       }
-    })
-
-    onMessageSent(async (data) => {
-      console.log("Message sent confirmation:", data)
-      if (selectedConversation) {
-        await fetchMessagesForChat(selectedConversation.id)
-      }
-    })
-
-    onDisconnect(() => {
-      console.log("Disconnected from WebSocket server")
-    })
-
-    return () => {
-      // Cleanup is handled by the hook
     }
-  }, [selectedConversation, onConnect, onReceiveMessage, onMessageSent, onDisconnect])
+
+    if (event === 'messageSent' && data && !data.success) {
+      console.error('Message send failed:', data.error)
+    }
+  }, [lastMessage]) // fires every time ANY socket event arrives
 
   const fetchChatGroups = async () => {
     try {
@@ -76,6 +95,14 @@ const Messaging = () => {
   useEffect(() => {
     fetchChatGroups()
   }, [])
+
+  // Re-join room whenever socket (re)connects or conversation changes
+  // Handles race: user picks conversation before socket connected
+  useEffect(() => {
+    if (isConnected && selectedConversation?.id) {
+      joinRoom(selectedConversation.id, username)
+    }
+  }, [isConnected, selectedConversation?.id])
 
   const fetchMessagesForChat = async (chatId) => {
     try {
@@ -109,11 +136,7 @@ const Messaging = () => {
     setSelectedConversation(conversation)
     setNewMessage("")
     setSidebarOpen(false)
-
-    if (conversation.id) {
-      console.log(`Joining room for chat: ${conversation.id}`)
-      joinRoom(conversation.id, username)
-    }
+    // joinRoom is called by the isConnected+selectedConversation effect
   }
 
   useEffect(() => {
@@ -133,8 +156,21 @@ const Messaging = () => {
   const handleSendMessage = async () => {
     if (newMessage.trim() === "" || !selectedConversation) return
 
-    sendMessage(selectedConversation.id, newMessage)
+    const content = newMessage.trim()
     setNewMessage("")
+
+    // Optimistic append — show immediately without waiting for server echo
+    const optimistic = {
+      id: `opt-${Date.now()}`,
+      sender: username,
+      senderId: currentUserId,
+      message: content,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isMine: true,
+    }
+    setMessages(prev => [...prev, optimistic])
+
+    sendMessage(selectedConversation.id, content)
   }
 
   const handleKeyPress = (e) => {
@@ -210,7 +246,7 @@ const Messaging = () => {
                   <div className="flex items-start gap-3">
                     <div className="relative flex-shrink-0">
                       <Avatar>
-                        <AvatarImage src="/placeholder.svg?height=40&width=40" alt={conversation.chattitle} />
+                        <AvatarImage src={conversation.participant_profile_picture || "/placeholder.svg?height=40&width=40"} alt={conversation.chattitle} />
                         <AvatarFallback>
                           {(() => {
                             const parts = (conversation.chattitle || "U").split(" ").filter(Boolean)
@@ -249,7 +285,7 @@ const Messaging = () => {
                 <div className="flex items-center gap-3">
                   <Avatar>
                     <AvatarImage
-                      src="/placeholder.svg?height=40&width=40"
+                      src={selectedConversation.participant_profile_picture || "/placeholder.svg?height=40&width=40"}
                       alt={selectedConversation.chattitle}
                     />
                     <AvatarFallback>
