@@ -326,8 +326,8 @@ const Dashboard = () => {
 
   // Calculate statistics
   const totalDustbins = dustbins.length
-  const criticalDustbins = dustbins.filter((bin) => bin.status === "Critical").length
-  const warningDustbins = dustbins.filter((bin) => bin.status === "Warning").length
+  const criticalDustbins = dustbins.filter((bin) => Number(bin.fillLevel) >= 80).length
+  const warningDustbins = dustbins.filter((bin) => Number(bin.fillLevel) >= 60 && Number(bin.fillLevel) < 80).length
   const averageFillLevel = dustbins.length ? Math.round(dustbins.reduce((sum, bin) => sum + bin.fillLevel, 0) / dustbins.length) : 0
 
   // Filter dustbins based on user role
@@ -338,8 +338,8 @@ const Dashboard = () => {
 
   // Recalculate statistics based on filtered bins
   const totalDustbinsFiltered = filteredDustbins.length
-  const criticalDustbinsFiltered = filteredDustbins.filter((bin) => bin.status === "Critical").length
-  const warningDustbinsFiltered = filteredDustbins.filter((bin) => bin.status === "Warning").length
+  const criticalDustbinsFiltered = filteredDustbins.filter((bin) => Number(bin.fillLevel) >= 80).length
+  const warningDustbinsFiltered = filteredDustbins.filter((bin) => Number(bin.fillLevel) >= 60 && Number(bin.fillLevel) < 80).length
   const averageFillLevelFiltered = filteredDustbins.length ? Math.round(filteredDustbins.reduce((sum, bin) => sum + bin.fillLevel, 0) / filteredDustbins.length) : 0
 
   // Cards data
