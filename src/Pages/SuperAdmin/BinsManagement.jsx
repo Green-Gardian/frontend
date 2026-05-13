@@ -106,8 +106,11 @@ export const BinsManagement = () => {
 
     // connect socket
     try {
+      const token = Cookies.get('access_token')
+      if (!token) console.warn('Socket init (BinsManagement): no access token found in cookies')
+
       socketRef.current = io(apiBase, {
-        auth: { token },
+        auth: { token: token || null },
       })
 
       socketRef.current.on('connect', () => {
