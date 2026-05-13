@@ -97,25 +97,21 @@ const UserManagement = () => {
       {
         title: "Total Users",
         number: totalUsers.toString(),
-        percentage: totalUsers ? ((totalUsers - (totalUsers - 10)) / totalUsers) * 100 : 0,
         backgroundColor: "bg-[#EDEEFC]",
       },
       {
         title: "Verified Users",
         number: verifiedUsers.toString(),
-        percentage: verifiedUsers ? ((verifiedUsers - (verifiedUsers - 8)) / verifiedUsers) * 100 : 0,
         backgroundColor: "bg-[#E6F1FD]",
       },
       {
         title: "Pending Users",
         number: pendingUsers.toString(),
-        percentage: pendingUsers ? ((pendingUsers - (pendingUsers - 5)) / pendingUsers) * 100 : 0,
         backgroundColor: "bg-[#E6F1FD]",
       },
       {
         title: "New This Month",
         number: newThisMonth.toString(),
-        percentage: newThisMonth ? ((newThisMonth - (newThisMonth - 3)) / newThisMonth) * 100 : 0,
         backgroundColor: "bg-[#EDEEFC]",
       },
     ]
@@ -355,7 +351,6 @@ const UserManagement = () => {
             key={index}
             title={card.title}
             number={card.number}
-            percentage={card.percentage}
             backgroundColor={card.backgroundColor}
           />
         ))}
