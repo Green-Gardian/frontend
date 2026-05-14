@@ -354,8 +354,8 @@ const Payments = () => {
               value={statusFilter}
               onValueChange={(val) => {
                 setStatusFilter(val);
-                // outstanding crosses all months — clear month filter
-                if (val === "outstanding") setMonthFilter("");
+                // outstanding and paid cross all months — clear month filter
+                if (val === "outstanding" || val === "paid") setMonthFilter("");
               }}
             >
               <SelectTrigger className="w-full sm:w-[180px]">
@@ -377,8 +377,8 @@ const Payments = () => {
                 value={monthFilter}
                 onChange={(e) => setMonthFilter(e.target.value)}
                 className="w-full sm:w-[160px] h-10"
-                disabled={statusFilter === "outstanding"}
-                title={statusFilter === "outstanding" ? "Month filter disabled for outstanding view" : ""}
+                disabled={statusFilter === "outstanding" || statusFilter === "paid"}
+                title={statusFilter === "outstanding" ? "Month filter disabled for outstanding view" : statusFilter === "paid" ? "Month filter disabled for paid view — shows all paid records" : ""}
               />
               {monthFilter && statusFilter !== "outstanding" && (
                 <button
