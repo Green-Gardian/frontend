@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Cookies from "js-cookie";
-import { Download, Eye } from "lucide-react";
+import { Download, Eye, X, CreditCard, Home, Phone, Mail, Calendar, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import * as XLSX from "xlsx";
 
 import InfoCards from "@/components/info-cards";
 import Modal from "@/components/modal";
-import PaymentHistory from "@/components/payment-history";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
-import { getDuesOverview, getDuesRecords, getResidentDuesHistory } from "@/services/payments";
+import { getDuesOverview, getDuesRecords } from "@/services/payments";
 
 const formatCurrency = (amount, currency = "PKR") =>
   new Intl.NumberFormat("en-PK", {
@@ -42,10 +41,10 @@ const monthKeyNow = () => {
 
 const getStatusBadgeStyle = (status) => {
   const value = String(status || "pending").toLowerCase();
-  if (value === "paid") return "bg-[#EBF9F1] text-[#1F9254]";
-  if (value === "overdue") return "bg-[#FBE7E8] text-[#A30D11]";
-  if (value === "failed") return "bg-[#FEF3E2] text-[#B54708]";
-  return "bg-[#E6F1FD] text-[#0369A1]";
+  if (value === "paid") return "bg-[#ecfdf5] text-[#047857] border border-[#d1fae5]";
+  if (value === "overdue") return "bg-[#fef2f2] text-[#dc2626] border border-[#fecaca]";
+  if (value === "failed") return "bg-[#f1f5f9] text-[#64748b] border border-[#e2e8f0]";
+  return "bg-[#f0fdfa] text-[#0d9488] border border-[#ccfbf1]";
 };
 
 const Payments = () => {
@@ -57,10 +56,7 @@ const Payments = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState(monthKeyNow());
-  const [historyModalOpen, setHistoryModalOpen] = useState(false);
-  const [historyLoading, setHistoryLoading] = useState(false);
-  const [selectedResident, setSelectedResident] = useState(null);
-  const [selectedHistory, setSelectedHistory] = useState([]);
+  const [viewRecord, setViewRecord] = useState(null);
 
   useEffect(() => {
     setUsername(Cookies.get("username") || "");
@@ -109,11 +105,6 @@ const Payments = () => {
     const currency = (overview?.currency || "PKR").toUpperCase();
     return [
       {
-        title: "Total Due",
-        number: formatCurrency(overview?.totalDue || 0, currency),
-        backgroundColor: "bg-[#EDEEFC]",
-      },
-      {
         title: "Total Collected",
         number: formatCurrency(overview?.totalCollected || 0, currency),
         backgroundColor: "bg-[#E6F1FD]",
@@ -126,6 +117,16 @@ const Payments = () => {
       {
         title: "Collection Rate",
         number: `${Number(overview?.collectionRate || 0).toFixed(2)}%`,
+        backgroundColor: "bg-[#E6F1FD]",
+      },
+      {
+        title: "Services Delivered",
+        number: String(overview?.completedServices || 0),
+        backgroundColor: "bg-[#EDEEFC]",
+      },
+      {
+        title: "Service Fees Due",
+        number: formatCurrency(overview?.serviceFeesOutstanding || 0, currency),
         backgroundColor: "bg-[#E6F1FD]",
       },
     ];
@@ -159,32 +160,8 @@ const Payments = () => {
     exportRows(rows, `Dues_Records_Page_${pagination.page}_${new Date().toISOString().split("T")[0]}`);
   };
 
-  const openHistoryModal = async (residentRecord) => {
-    try {
-      setHistoryLoading(true);
-      setHistoryModalOpen(true);
-      const result = await getResidentDuesHistory(residentRecord.userId);
-      setSelectedResident({
-        ...residentRecord,
-        residentName: result.resident?.name || residentRecord.residentName,
-        email: result.resident?.email || residentRecord.email,
-        phone: result.resident?.phone || residentRecord.phone,
-      });
-      setSelectedHistory(result.history || []);
-    } catch (error) {
-      console.error("Failed to load resident history:", error);
-      setSelectedResident(residentRecord);
-      setSelectedHistory([]);
-    } finally {
-      setHistoryLoading(false);
-    }
-  };
-
-  const closeHistoryModal = () => {
-    setHistoryModalOpen(false);
-    setSelectedResident(null);
-    setSelectedHistory([]);
-  };
+  const openViewModal = (record) => setViewRecord(record);
+  const closeViewModal = () => setViewRecord(null);
 
   const handleSearchSubmit = () => loadData(1);
 
@@ -252,19 +229,16 @@ const Payments = () => {
                   <TableHead className="min-w-[170px]">Resident</TableHead>
                   <TableHead className="min-w-[100px]">House</TableHead>
                   <TableHead className="min-w-[120px]">Month</TableHead>
-                  <TableHead className="min-w-[120px]">Due Date</TableHead>
                   <TableHead className="min-w-[120px]">Amount</TableHead>
                   <TableHead className="min-w-[110px]">Status</TableHead>
-                  <TableHead className="min-w-[150px]">Paid At</TableHead>
-                  <TableHead className="min-w-[140px]">Payment Method</TableHead>
-                  <TableHead className="min-w-[220px]">Stripe Session</TableHead>
+                  <TableHead className="min-w-[130px]">Type</TableHead>
                   <TableHead className="min-w-[120px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {!loading && records.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8">
+                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                       No payment records found.
                     </TableCell>
                   </TableRow>
@@ -274,24 +248,25 @@ const Payments = () => {
                   <TableRow key={record.id} className={`${index % 2 === 0 ? "bg-[#F7F6FE]" : "bg-white"}`}>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-medium">{record.residentName}</span>
+                        <span className="font-medium text-sm">{record.residentName}</span>
                         <span className="text-xs text-gray-500">{record.email}</span>
                       </div>
                     </TableCell>
-                    <TableCell>{record.houseNumber || "-"}</TableCell>
-                    <TableCell>{record.billingMonth}</TableCell>
-                    <TableCell>{formatDate(record.dueDate)}</TableCell>
-                    <TableCell className="font-medium">{formatCurrency(record.amount, record.currency)}</TableCell>
+                    <TableCell className="text-sm">{record.houseNumber || "-"}</TableCell>
+                    <TableCell className="text-sm">{record.billingMonth?.slice(0, 7) || "-"}</TableCell>
+                    <TableCell className="font-semibold text-sm">{formatCurrency(record.amount, record.currency)}</TableCell>
                     <TableCell>
-                      <Badge className={`${getStatusBadgeStyle(record.status)} text-xs`}>{record.status}</Badge>
+                      <Badge className={`${getStatusBadgeStyle(record.status)} text-xs capitalize`}>{record.status}</Badge>
                     </TableCell>
-                    <TableCell>{record.paidAt ? formatDate(record.paidAt) : "-"}</TableCell>
-                    <TableCell>{record.paymentMethod || "-"}</TableCell>
-                    <TableCell className="text-xs text-slate-600">{record.stripeCheckoutSessionId || "-"}</TableCell>
                     <TableCell>
-                      <Button size="sm" variant="outline" onClick={() => openHistoryModal(record)}>
-                        <Eye className="h-4 w-4 mr-1" />
-                        History
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${record.isServiceFee ? "bg-blue-50 text-blue-700" : "bg-gray-100 text-gray-600"}`}>
+                        {record.isServiceFee ? "Service Fee" : "Monthly Due"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Button size="sm" variant="outline" onClick={() => openViewModal(record)} className="text-xs h-7 px-3">
+                        <Eye className="h-3 w-3 mr-1" />
+                        View
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -324,13 +299,80 @@ const Payments = () => {
         </Pagination>
       </div>
 
-      <Modal status={historyModalOpen}>
-        <PaymentHistory
-          resident={selectedResident}
-          history={selectedHistory}
-          loading={historyLoading}
-          onClose={closeHistoryModal}
-        />
+      <Modal isOpen={!!viewRecord} onClose={closeViewModal} title="Payment Details">
+        {viewRecord && (
+          <div className="space-y-5">
+            {/* Resident info */}
+            <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                  <span className="text-green-700 text-xs font-bold">{(viewRecord.residentName || "R")[0]}</span>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Resident</p>
+                  <p className="font-semibold text-sm">{viewRecord.residentName || "-"}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Home className="h-4 w-4 text-gray-400" />
+                <div>
+                  <p className="text-xs text-gray-500">House</p>
+                  <p className="font-medium text-sm">{viewRecord.houseNumber || "-"}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-gray-400" />
+                <div>
+                  <p className="text-xs text-gray-500">Email</p>
+                  <p className="font-medium text-sm">{viewRecord.email || "-"}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-gray-400" />
+                <div>
+                  <p className="text-xs text-gray-500">Phone</p>
+                  <p className="font-medium text-sm">{viewRecord.phone || "-"}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment details */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Payment Info</h4>
+              {[
+                { icon: <Calendar className="h-4 w-4 text-gray-400" />, label: "Billing Month", value: viewRecord.billingMonth?.slice(0, 7) || "-" },
+                { icon: <Clock className="h-4 w-4 text-gray-400" />, label: "Due Date", value: formatDate(viewRecord.dueDate) },
+                { icon: <CreditCard className="h-4 w-4 text-gray-400" />, label: "Amount", value: formatCurrency(viewRecord.amount, viewRecord.currency), bold: true },
+                { icon: <CheckCircle className="h-4 w-4 text-gray-400" />, label: "Paid On", value: viewRecord.paidAt ? formatDate(viewRecord.paidAt) : "Not paid" },
+                { icon: <CreditCard className="h-4 w-4 text-gray-400" />, label: "Payment Method", value: viewRecord.paymentMethod ? viewRecord.paymentMethod.charAt(0).toUpperCase() + viewRecord.paymentMethod.slice(1) : "-" },
+                { icon: <AlertCircle className="h-4 w-4 text-gray-400" />, label: "Type", value: viewRecord.isServiceFee ? "Service Fee" : "Monthly Due" },
+              ].map(({ icon, label, value, bold }) => (
+                <div key={label} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                  <div className="flex items-center gap-2">
+                    {icon}
+                    <span className="text-sm text-gray-600">{label}</span>
+                  </div>
+                  <span className={`text-sm ${bold ? "font-bold text-gray-900" : "text-gray-700"}`}>{value}</span>
+                </div>
+              ))}
+              {/* Status */}
+              <div className="flex items-center justify-between py-2">
+                <span className="text-sm text-gray-600">Status</span>
+                <Badge className={`${getStatusBadgeStyle(viewRecord.status)} text-xs capitalize`}>{viewRecord.status}</Badge>
+              </div>
+              {/* Receipt link */}
+              {viewRecord.receiptUrl && (
+                <div className="pt-2">
+                  <a href={viewRecord.receiptUrl} target="_blank" rel="noreferrer"
+                    className="w-full flex items-center justify-center gap-2 bg-green-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
+                    <Download className="h-4 w-4" />
+                    Download Receipt
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );
