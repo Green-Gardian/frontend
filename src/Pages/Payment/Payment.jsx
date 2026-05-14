@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Cookies from "js-cookie";
-import { Download, Eye, X, CreditCard, Home, Phone, Mail, Calendar, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { Download, Eye, CreditCard, Home, Phone, Mail, Calendar, CheckCheck, Clock, AlertCircle, Plus, FileText, Banknote, User, ChevronDown, ChevronRight, Wrench } from "lucide-react";
 import * as XLSX from "xlsx";
 
 import InfoCards from "@/components/info-cards";
@@ -20,7 +20,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
-import { getDuesOverview, getDuesRecords } from "@/services/payments";
+import { getDuesOverview, getDuesRecords, adminAdjustBalance, adminMarkDuePaid, getOutstandingBreakdown } from "@/services/payments";
 
 const formatCurrency = (amount, currency = "PKR") =>
   new Intl.NumberFormat("en-PK", {
@@ -47,6 +47,8 @@ const getStatusBadgeStyle = (status) => {
   return "bg-[#f0fdfa] text-[#0d9488] border border-[#ccfbf1]";
 };
 
+const monthKeyNowVal = monthKeyNow();
+
 const Payments = () => {
   const [username, setUsername] = useState("");
   const [overview, setOverview] = useState(null);
@@ -55,8 +57,28 @@ const Payments = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [monthFilter, setMonthFilter] = useState(monthKeyNow());
+  const [monthFilter, setMonthFilter] = useState(monthKeyNowVal);
   const [viewRecord, setViewRecord] = useState(null);
+
+  // Outstanding breakdown
+  const [outstandingResidents, setOutstandingResidents] = useState([]);
+  const [expandedResidents, setExpandedResidents] = useState({});
+
+  // Admin action states
+  const [actionError, setActionError] = useState("");
+  const [actionSuccess, setActionSuccess] = useState("");
+  const [markingPaid, setMarkingPaid] = useState(false);
+  const [markPaidNotes, setMarkPaidNotes] = useState("");
+  const [markPaidMethod, setMarkPaidMethod] = useState("manual");
+
+  // Adjust balance modal
+  const [showAdjustModal, setShowAdjustModal] = useState(false);
+  const [adjustResidentId, setAdjustResidentId] = useState("");
+  const [adjustAmount, setAdjustAmount] = useState("");
+  const [adjustNotes, setAdjustNotes] = useState("");
+  const [adjustMonth, setAdjustMonth] = useState(monthKeyNowVal);
+  const [adjustStatus, setAdjustStatus] = useState("pending");
+  const [adjusting, setAdjusting] = useState(false);
 
   useEffect(() => {
     setUsername(Cookies.get("username") || "");
@@ -72,13 +94,15 @@ const Payments = () => {
       const status = statusFilter === "all" ? undefined : statusFilter;
       const search = searchTerm.trim() || undefined;
 
-      const [overviewRes, recordsRes] = await Promise.all([
+      const [overviewRes, recordsRes, outstandingRes] = await Promise.all([
         getDuesOverview({ month: monthFilter }),
         getDuesRecords({ page, limit: pagination.limit, month: monthFilter, status, search }),
+        getOutstandingBreakdown(),
       ]);
 
       setOverview(overviewRes.overview || null);
       setRecords(recordsRes.records || []);
+      setOutstandingResidents(outstandingRes.residents || []);
       setPagination((prev) => ({
         ...prev,
         page: recordsRes.pagination?.page || page,
@@ -160,10 +184,71 @@ const Payments = () => {
     exportRows(rows, `Dues_Records_Page_${pagination.page}_${new Date().toISOString().split("T")[0]}`);
   };
 
-  const openViewModal = (record) => setViewRecord(record);
+  const openViewModal = (record) => {
+    setViewRecord(record);
+    setActionError("");
+    setActionSuccess("");
+    setMarkPaidNotes("");
+    setMarkPaidMethod("manual");
+  };
   const closeViewModal = () => setViewRecord(null);
 
   const handleSearchSubmit = () => loadData(1);
+
+  const handleMarkPaid = async () => {
+    if (!viewRecord) return;
+    setMarkingPaid(true);
+    setActionError("");
+    setActionSuccess("");
+    try {
+      await adminMarkDuePaid(viewRecord.id, { paymentMethod: markPaidMethod, notes: markPaidNotes || undefined });
+      setActionSuccess("Marked as paid.");
+      setViewRecord((r) => ({ ...r, status: "paid" }));
+      loadData(pagination.page);
+    } catch (err) {
+      setActionError(err.message || "Failed to mark as paid.");
+    } finally {
+      setMarkingPaid(false);
+    }
+  };
+
+  const openAdjustModal = (record) => {
+    setAdjustResidentId(record ? String(record.userId) : "");
+    setAdjustAmount("");
+    setAdjustNotes("");
+    setAdjustMonth(monthKeyNowVal);
+    setAdjustStatus("pending");
+    setActionError("");
+    setActionSuccess("");
+    setShowAdjustModal(true);
+  };
+  const closeAdjustModal = () => setShowAdjustModal(false);
+
+  const handleAdjustSubmit = async () => {
+    if (!adjustResidentId || !adjustAmount || !adjustNotes) {
+      setActionError("Resident ID, amount, and notes are required.");
+      return;
+    }
+    setAdjusting(true);
+    setActionError("");
+    setActionSuccess("");
+    try {
+      await adminAdjustBalance({
+        residentId: Number(adjustResidentId),
+        amountPKR: Number(adjustAmount),
+        notes: adjustNotes,
+        billingMonth: adjustMonth,
+        status: adjustStatus,
+      });
+      setActionSuccess("Adjustment recorded.");
+      setShowAdjustModal(false);
+      loadData(pagination.page);
+    } catch (err) {
+      setActionError(err.message || "Failed to create adjustment.");
+    } finally {
+      setAdjusting(false);
+    }
+  };
 
   return (
     <div className="bg-white min-h-screen py-6 px-4 gap-y-6 flex flex-col w-auto">
@@ -177,6 +262,82 @@ const Payments = () => {
         ))}
       </div>
 
+      {/* Outstanding dues breakdown */}
+      {outstandingResidents.length > 0 && (
+        <div className="w-full">
+          <h2 className="text-[16px] font-semibold text-[#121212] mb-3">
+            Outstanding Dues — {outstandingResidents.length} resident{outstandingResidents.length !== 1 ? "s" : ""}
+          </h2>
+          <div className="flex flex-col gap-2">
+            {outstandingResidents.map((resident) => {
+              const expanded = !!expandedResidents[resident.userId];
+              return (
+                <div key={resident.userId} className="border rounded-lg overflow-hidden">
+                  {/* Resident header row */}
+                  <button
+                    type="button"
+                    onClick={() => setExpandedResidents((prev) => ({ ...prev, [resident.userId]: !prev[resident.userId] }))}
+                    className="w-full flex items-center justify-between px-4 py-3 bg-[#F7F6FE] hover:bg-[#EDEEFC] transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <User className="h-4 w-4 text-primary shrink-0" />
+                      <div>
+                        <span className="font-semibold text-sm text-[#121212]">{resident.name}</span>
+                        {resident.houseNumber !== "-" && (
+                          <span className="ml-2 text-xs text-gray-500">· {resident.houseNumber}</span>
+                        )}
+                        <span className="ml-2 text-xs text-gray-400">{resident.email}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="text-right">
+                        <span className="font-bold text-sm text-[#121212]">{formatCurrency(resident.total, resident.currency)}</span>
+                        <span className="ml-2 text-xs text-gray-500">({resident.dues.length} item{resident.dues.length !== 1 ? "s" : ""})</span>
+                      </div>
+                      {expanded ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
+                    </div>
+                  </button>
+
+                  {/* Expanded due items */}
+                  {expanded && (
+                    <div className="divide-y divide-gray-100 bg-white">
+                      {resident.dues.map((due) => (
+                        <div key={due.id} className="flex items-center justify-between px-6 py-2.5">
+                          <div className="flex items-center gap-2">
+                            {due.isServiceFee ? (
+                              <Wrench className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                            ) : due.isAdjustment ? (
+                              <FileText className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                            ) : (
+                              <Calendar className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                            )}
+                            <div>
+                              <span className="text-sm text-gray-700">
+                                {due.isServiceFee ? "Service Fee" : due.isAdjustment ? "Adjustment" : "Monthly Due"}
+                              </span>
+                              <span className="ml-2 text-xs text-gray-400">{due.billingMonth?.slice(0, 7)}</span>
+                              {due.notes && <span className="ml-2 text-xs text-amber-600 italic">— {due.notes}</span>}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="font-semibold text-sm">{formatCurrency(due.amount, resident.currency)}</span>
+                            <Badge className={`${getStatusBadgeStyle(due.status)} text-xs capitalize`}>{due.status}</Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {outstandingResidents.length === 0 && !loading && (
+        <div className="w-full text-center py-4 text-sm text-gray-400">No outstanding dues across all residents.</div>
+      )}
+
       <div className="flex flex-col justify-center w-full">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center px-2 py-3 gap-3">
           <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
@@ -189,12 +350,20 @@ const Payments = () => {
               className="w-full sm:max-w-[280px] h-10 px-4 rounded-md border"
             />
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-[160px]">
+            <Select
+              value={statusFilter}
+              onValueChange={(val) => {
+                setStatusFilter(val);
+                // outstanding crosses all months — clear month filter
+                if (val === "outstanding") setMonthFilter("");
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="outstanding">Due (Outstanding)</SelectItem>
                 <SelectItem value="paid">Paid</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="overdue">Overdue</SelectItem>
@@ -202,12 +371,26 @@ const Payments = () => {
               </SelectContent>
             </Select>
 
-            <Input
-              type="month"
-              value={monthFilter}
-              onChange={(e) => setMonthFilter(e.target.value)}
-              className="w-full sm:w-[180px] h-10"
-            />
+            <div className="flex items-center gap-1 w-full sm:w-auto">
+              <Input
+                type="month"
+                value={monthFilter}
+                onChange={(e) => setMonthFilter(e.target.value)}
+                className="w-full sm:w-[160px] h-10"
+                disabled={statusFilter === "outstanding"}
+                title={statusFilter === "outstanding" ? "Month filter disabled for outstanding view" : ""}
+              />
+              {monthFilter && statusFilter !== "outstanding" && (
+                <button
+                  type="button"
+                  onClick={() => setMonthFilter("")}
+                  className="text-xs text-gray-400 hover:text-gray-700 px-1"
+                  title="Clear month filter (show all months)"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="flex gap-2 w-full lg:w-auto">
@@ -217,6 +400,10 @@ const Payments = () => {
             <Button variant="outline" onClick={exportCurrentPage} className="w-full sm:w-auto">
               <Download className="h-4 w-4 mr-2" />
               Export Page
+            </Button>
+            <Button onClick={() => openAdjustModal(null)} className="w-full sm:w-auto">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Adjustment
             </Button>
           </div>
         </div>
@@ -259,15 +446,20 @@ const Payments = () => {
                       <Badge className={`${getStatusBadgeStyle(record.status)} text-xs capitalize`}>{record.status}</Badge>
                     </TableCell>
                     <TableCell>
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${record.isServiceFee ? "bg-blue-50 text-blue-700" : "bg-gray-100 text-gray-600"}`}>
-                        {record.isServiceFee ? "Service Fee" : "Monthly Due"}
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                        record.isServiceFee ? "bg-blue-50 text-blue-700" :
+                        record.isAdjustment ? "bg-amber-50 text-amber-700" :
+                        "bg-gray-100 text-gray-600"
+                      }`}>
+                        {record.isServiceFee ? "Service Fee" : record.isAdjustment ? "Adjustment" : "Monthly Due"}
                       </span>
                     </TableCell>
                     <TableCell>
-                      <Button size="sm" variant="outline" onClick={() => openViewModal(record)} className="text-xs h-7 px-3">
-                        <Eye className="h-3 w-3 mr-1" />
-                        View
-                      </Button>
+                      <Eye
+                        className="h-4 w-4 cursor-pointer text-primary"
+                        onClick={() => openViewModal(record)}
+                        title="View details"
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -342,10 +534,10 @@ const Payments = () => {
               {[
                 { icon: <Calendar className="h-4 w-4 text-gray-400" />, label: "Billing Month", value: viewRecord.billingMonth?.slice(0, 7) || "-" },
                 { icon: <Clock className="h-4 w-4 text-gray-400" />, label: "Due Date", value: formatDate(viewRecord.dueDate) },
-                { icon: <CreditCard className="h-4 w-4 text-gray-400" />, label: "Amount", value: formatCurrency(viewRecord.amount, viewRecord.currency), bold: true },
-                { icon: <CheckCircle className="h-4 w-4 text-gray-400" />, label: "Paid On", value: viewRecord.paidAt ? formatDate(viewRecord.paidAt) : "Not paid" },
+                { icon: <Banknote className="h-4 w-4 text-gray-400" />, label: "Amount", value: formatCurrency(viewRecord.amount, viewRecord.currency), bold: true },
+                { icon: <CheckCheck className="h-4 w-4 text-gray-400" />, label: "Paid On", value: viewRecord.paidAt ? formatDate(viewRecord.paidAt) : "Not paid" },
                 { icon: <CreditCard className="h-4 w-4 text-gray-400" />, label: "Payment Method", value: viewRecord.paymentMethod ? viewRecord.paymentMethod.charAt(0).toUpperCase() + viewRecord.paymentMethod.slice(1) : "-" },
-                { icon: <AlertCircle className="h-4 w-4 text-gray-400" />, label: "Type", value: viewRecord.isServiceFee ? "Service Fee" : "Monthly Due" },
+                { icon: <FileText className="h-4 w-4 text-gray-400" />, label: "Type", value: viewRecord.isServiceFee ? "Service Fee" : viewRecord.isAdjustment ? "Manual Adjustment" : "Monthly Due" },
               ].map(({ icon, label, value, bold }) => (
                 <div key={label} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
                   <div className="flex items-center gap-2">
@@ -364,15 +556,158 @@ const Payments = () => {
               {viewRecord.receiptUrl && (
                 <div className="pt-2">
                   <a href={viewRecord.receiptUrl} target="_blank" rel="noreferrer"
-                    className="w-full flex items-center justify-center gap-2 bg-green-600 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
+                    className="w-full flex items-center justify-center gap-2 bg-primary text-white text-sm font-medium py-2 px-4 rounded-lg hover:opacity-90 transition-opacity">
                     <Download className="h-4 w-4" />
                     Download Receipt
                   </a>
                 </div>
               )}
+
+              {/* Notes */}
+              {viewRecord.notes && (
+                <div className="pt-2 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <p className="text-xs text-amber-700 font-semibold uppercase mb-1">Notes</p>
+                  <p className="text-sm text-amber-900">{viewRecord.notes}</p>
+                </div>
+              )}
             </div>
+
+            {/* Admin actions */}
+            {actionError && <p className="text-sm text-red-600 bg-red-50 rounded p-2">{actionError}</p>}
+            {actionSuccess && <p className="text-sm text-green-700 bg-green-50 rounded p-2">{actionSuccess}</p>}
+
+            {viewRecord.status !== "paid" && (
+              <div className="border-t pt-4 space-y-3">
+                <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Admin Actions</h4>
+                <div className="flex gap-2 flex-wrap">
+                  <Select value={markPaidMethod} onValueChange={setMarkPaidMethod}>
+                    <SelectTrigger className="w-[140px] h-9">
+                      <SelectValue placeholder="Method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="manual">Manual</SelectItem>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="bank">Bank Transfer</SelectItem>
+                      <SelectItem value="cheque">Cheque</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    placeholder="Notes (optional)"
+                    value={markPaidNotes}
+                    onChange={(e) => setMarkPaidNotes(e.target.value)}
+                    className="flex-1 h-9 min-w-[120px]"
+                  />
+                  <Button
+                    size="sm"
+                    disabled={markingPaid}
+                    onClick={handleMarkPaid}
+                    className="h-9"
+                  >
+                    <CheckCheck className="h-4 w-4 mr-1" />
+                    {markingPaid ? "Saving…" : "Mark as Paid"}
+                  </Button>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { closeViewModal(); openAdjustModal(viewRecord); }}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Adjustment for this Resident
+                </Button>
+              </div>
+            )}
+
+            {viewRecord.status === "paid" && (
+              <div className="border-t pt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { closeViewModal(); openAdjustModal(viewRecord); }}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Adjustment for this Resident
+                </Button>
+              </div>
+            )}
           </div>
         )}
+      </Modal>
+
+      {/* Adjust Balance Modal */}
+      <Modal isOpen={showAdjustModal} onClose={closeAdjustModal} title="Add Manual Adjustment">
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Creates a new payment record (e.g. outstanding charge or correction) for a resident with a description.
+          </p>
+
+          {actionError && <p className="text-sm text-red-600 bg-red-50 rounded p-2">{actionError}</p>}
+          {actionSuccess && <p className="text-sm text-green-700 bg-green-50 rounded p-2">{actionSuccess}</p>}
+
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Resident ID *</label>
+              <Input
+                placeholder="Enter resident user ID"
+                value={adjustResidentId}
+                onChange={(e) => setAdjustResidentId(e.target.value)}
+                type="number"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Amount (PKR) *</label>
+              <Input
+                placeholder="e.g. 500"
+                value={adjustAmount}
+                onChange={(e) => setAdjustAmount(e.target.value)}
+                type="number"
+                min="1"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Billing Month</label>
+              <Input
+                type="month"
+                value={adjustMonth}
+                onChange={(e) => setAdjustMonth(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Status</label>
+              <Select value={adjustStatus} onValueChange={setAdjustStatus}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending (still owed)</SelectItem>
+                  <SelectItem value="paid">Paid (already collected)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-600 uppercase mb-1 block">Description / Reason *</label>
+              <Input
+                placeholder="e.g. Late fee correction, damage charge..."
+                value={adjustNotes}
+                onChange={(e) => setAdjustNotes(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" onClick={closeAdjustModal} className="flex-1">Cancel</Button>
+            <Button
+              disabled={adjusting}
+              onClick={handleAdjustSubmit}
+              className="flex-1"
+            >
+              <CheckCheck className="h-4 w-4 mr-2" />
+              {adjusting ? "Saving…" : "Save Adjustment"}
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

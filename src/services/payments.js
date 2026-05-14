@@ -57,3 +57,44 @@ export const getResidentDuesHistory = async (residentId) => {
   }
   return data;
 };
+
+export const getOutstandingBreakdown = async () => {
+  const response = await fetch(`${API_BASE_URL}/services/admin/dues/outstanding`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to fetch outstanding breakdown");
+  }
+  return data;
+};
+
+export const adminAdjustBalance = async ({ residentId, amountPKR, notes, billingMonth, status }) => {
+  const response = await fetch(`${API_BASE_URL}/services/admin/dues/adjust`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ residentId, amountPKR, notes, billingMonth, status }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to create adjustment");
+  }
+  return data;
+};
+
+export const adminMarkDuePaid = async (dueId, { paymentMethod = "manual", notes } = {}) => {
+  const response = await fetch(`${API_BASE_URL}/services/admin/dues/${dueId}/mark-paid`, {
+    method: "PUT",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ paymentMethod, notes }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to mark due as paid");
+  }
+  return data;
+};

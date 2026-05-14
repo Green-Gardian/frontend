@@ -313,28 +313,38 @@ const SentimentAnalytics = () => {
                                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                                     Sentiment Distribution
                                 </h3>
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <PieChart>
-                                        <Pie
-                                            data={Object.entries(overview.distribution).map(([key, value]) => ({
-                                                name: formatSentimentLabel(key),
-                                                value: value
-                                            }))}
-                                            cx="50%"
-                                            cy="50%"
-                                            labelLine={false}
-                                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                                            outerRadius={100}
-                                            fill="#8884d8"
-                                            dataKey="value"
-                                        >
-                                            {Object.keys(overview.distribution).map((key, index) => (
-                                                <Cell key={`cell-${index}`} fill={SENTIMENT_COLORS[key]} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip />
-                                    </PieChart>
-                                </ResponsiveContainer>
+                                {Object.values(overview.distribution).every(v => v === 0) ? (
+                                    <div className="flex items-center justify-center h-[300px] text-gray-400 text-sm">
+                                        No sentiment data yet — submit feedback to populate this chart.
+                                    </div>
+                                ) : (
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <PieChart>
+                                            <Pie
+                                                data={Object.entries(overview.distribution)
+                                                    .filter(([, value]) => value > 0)
+                                                    .map(([key, value]) => ({
+                                                        name: formatSentimentLabel(key),
+                                                        value,
+                                                        key
+                                                    }))}
+                                                cx="50%"
+                                                cy="50%"
+                                                labelLine={false}
+                                                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                                                outerRadius={100}
+                                                dataKey="value"
+                                            >
+                                                {Object.entries(overview.distribution)
+                                                    .filter(([, value]) => value > 0)
+                                                    .map(([key], index) => (
+                                                        <Cell key={`cell-${index}`} fill={SENTIMENT_COLORS[key]} />
+                                                    ))}
+                                            </Pie>
+                                            <Tooltip />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                )}
                             </div>
 
                             {/* Distribution Breakdown */}
@@ -498,7 +508,7 @@ const SentimentAnalytics = () => {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                    {ranking.stats.avg_sentiment_score}
+                                                    {ranking.stats.avg_sentiment_score != null && !isNaN(Number(ranking.stats.avg_sentiment_score)) ? ranking.stats.avg_sentiment_score : 'N/A'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
