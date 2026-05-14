@@ -347,25 +347,21 @@ const Dashboard = () => {
     {
       title: "Total Dustbins",
       number: totalDustbinsFiltered.toString(),
-      percentage: 8.2,
       backgroundColor: "bg-[#EDEEFC]",
     },
     {
       title: "Critical Dustbins",
       number: criticalDustbinsFiltered.toString(),
-      percentage: -15.2,
       backgroundColor: "bg-[#E6F1FD]",
     },
     {
       title: "Warning Dustbins",
       number: warningDustbinsFiltered.toString(),
-      percentage: 5.3,
       backgroundColor: "bg-[#EDEEFC]",
     },
     {
       title: "Average Fill Level",
       number: `${averageFillLevelFiltered}%`,
-      percentage: 6.8,
       backgroundColor: "bg-[#E6F1FD]",
     },
   ]
@@ -383,7 +379,6 @@ const Dashboard = () => {
             key={index}
             title={card.title}
             number={card.number}
-            percentage={card.percentage}
             backgroundColor={card.backgroundColor}
           />
         ))}

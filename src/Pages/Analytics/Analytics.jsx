@@ -19,7 +19,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts"
-import { ArrowUpRight, ArrowDownRight, Download } from "lucide-react"
+import { Download } from "lucide-react"
 import Cookies from "js-cookie"
 import { getCustomerAnalytics, getStaffAnalytics, getVehicleAnalytics } from "@/services/analytics"
 
@@ -119,12 +119,7 @@ const Analytics = () => {
                       <h3 className="text-2xl font-bold mt-1">
                         {customerAnalytics?.metrics?.totalCustomers?.value || 0}
                       </h3>
-                      <div className="flex items-center mt-1 text-[#1F9254]">
-                        <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">
-                          {customerAnalytics?.metrics?.totalCustomers?.change || "0"}% increase
-                        </span>
-                      </div>
+                      
                     </div>
                   </div>
                 </div>
@@ -138,12 +133,7 @@ const Analytics = () => {
                       <h3 className="text-2xl font-bold mt-1">
                         {customerAnalytics?.metrics?.activeCustomers?.value || 0}
                       </h3>
-                      <div className="flex items-center mt-1 text-[#1F9254]">
-                        <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">
-                          {customerAnalytics?.metrics?.activeCustomers?.change || "0"}% increase
-                        </span>
-                      </div>
+                      
                     </div>
                   </div>
                 </div>
@@ -157,12 +147,7 @@ const Analytics = () => {
                       <h3 className="text-2xl font-bold mt-1">
                         {customerAnalytics?.metrics?.newThisMonth?.value || 0}
                       </h3>
-                      <div className="flex items-center mt-1 text-[#1F9254]">
-                        <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">
-                          {customerAnalytics?.metrics?.newThisMonth?.change || "0"}% increase
-                        </span>
-                      </div>
+                      
                     </div>
                   </div>
                 </div>
@@ -176,12 +161,7 @@ const Analytics = () => {
                       <h3 className="text-2xl font-bold mt-1">
                         {customerAnalytics?.metrics?.premiumUsers?.value || 0}
                       </h3>
-                      <div className="flex items-center mt-1 text-[#1F9254]">
-                        <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">
-                          {customerAnalytics?.metrics?.premiumUsers?.change || "0"}% increase
-                        </span>
-                      </div>
+                      
                     </div>
                   </div>
                 </div>
@@ -234,12 +214,7 @@ const Analytics = () => {
                     <div>
                       <p className="text-sm font-medium text-gray-500">Total Staff</p>
                       <h3 className="text-2xl font-bold mt-1">{staffAnalytics?.metrics?.totalStaff?.value || 0}</h3>
-                      <div className="flex items-center mt-1 text-[#1F9254]">
-                        <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">
-                          {staffAnalytics?.metrics?.totalStaff?.change || "0"}% increase
-                        </span>
-                      </div>
+                      
                     </div>
                   </div>
                 </div>
@@ -251,12 +226,7 @@ const Analytics = () => {
                     <div>
                       <p className="text-sm font-medium text-gray-500">On Duty</p>
                       <h3 className="text-2xl font-bold mt-1">{staffAnalytics?.metrics?.onDuty?.value || 0}</h3>
-                      <div className="flex items-center mt-1 text-[#1F9254]">
-                        <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">
-                          {staffAnalytics?.metrics?.onDuty?.change || "0"}% increase
-                        </span>
-                      </div>
+                      
                     </div>
                   </div>
                 </div>
@@ -268,12 +238,7 @@ const Analytics = () => {
                     <div>
                       <p className="text-sm font-medium text-gray-500">On Leave</p>
                       <h3 className="text-2xl font-bold mt-1">{staffAnalytics?.metrics?.onLeave?.value || 0}</h3>
-                      <div className="flex items-center mt-1 text-[#1F9254]">
-                        <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">
-                          {staffAnalytics?.metrics?.onLeave?.change || "0"}% increase
-                        </span>
-                      </div>
+                      
                     </div>
                   </div>
                 </div>
@@ -285,12 +250,7 @@ const Analytics = () => {
                     <div>
                       <p className="text-sm font-medium text-gray-500">Drivers</p>
                       <h3 className="text-2xl font-bold mt-1">{staffAnalytics?.metrics?.drivers?.value || 0}</h3>
-                      <div className="flex items-center mt-1 text-[#1F9254]">
-                        <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">
-                          {staffAnalytics?.metrics?.drivers?.change || "0"}% increase
-                        </span>
-                      </div>
+                      
                     </div>
                   </div>
                 </div>
@@ -345,12 +305,7 @@ const Analytics = () => {
                       <h3 className="text-2xl font-bold mt-1">
                         {vehicleAnalytics?.metrics?.totalVehicles?.value || 0}
                       </h3>
-                      <div className="flex items-center mt-1 text-[#1F9254]">
-                        <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">
-                          {vehicleAnalytics?.metrics?.totalVehicles?.change || "0"}% increase
-                        </span>
-                      </div>
+                      
                     </div>
                   </div>
                 </div>
@@ -362,12 +317,7 @@ const Analytics = () => {
                     <div>
                       <p className="text-sm font-medium text-gray-500">Operational</p>
                       <h3 className="text-2xl font-bold mt-1">{vehicleAnalytics?.metrics?.operational?.value || 0}</h3>
-                      <div className="flex items-center mt-1 text-[#1F9254]">
-                        <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">
-                          {vehicleAnalytics?.metrics?.operational?.change || "0"}% increase
-                        </span>
-                      </div>
+                      
                     </div>
                   </div>
                 </div>
@@ -381,12 +331,7 @@ const Analytics = () => {
                       <h3 className="text-2xl font-bold mt-1">
                         {vehicleAnalytics?.metrics?.inMaintenance?.value || 0}
                       </h3>
-                      <div className="flex items-center mt-1 text-[#A30D11]">
-                        <ArrowDownRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">
-                          {vehicleAnalytics?.metrics?.inMaintenance?.change || "0"}% increase
-                        </span>
-                      </div>
+                      
                     </div>
                   </div>
                 </div>
@@ -400,12 +345,7 @@ const Analytics = () => {
                       <h3 className="text-2xl font-bold mt-1">
                         {vehicleAnalytics?.metrics?.avgUtilization?.value || 0}%
                       </h3>
-                      <div className="flex items-center mt-1 text-[#1F9254]">
-                        <ArrowUpRight className="h-4 w-4 mr-1" />
-                        <span className="text-xs font-medium">
-                          {vehicleAnalytics?.metrics?.avgUtilization?.change || "0"}% increase
-                        </span>
-                      </div>
+                      
                     </div>
                   </div>
                 </div>
