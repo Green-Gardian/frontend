@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { AdminLayout, SuperAdminLayout } from "./layout";
 
 import {
+  Landing,
   Dashboard,
   Vehicles,
   Staff,
@@ -47,16 +48,15 @@ const RootRedirect = () => {
   const userRole = Cookies.get("user_role");
   const accessToken = Cookies.get("access_token");
 
-
   if (!accessToken) {
-    return <Navigate to="/signin" replace />;
+    return <Landing />;
   }
 
   if (userRole === "super_admin") {
     return <Navigate to="/super-admin" replace />;
   } else {
     return <Navigate to="/admin" replace />;
-  } 
+  }
 };
 
 /**
@@ -99,7 +99,7 @@ function App() {
   const router = createBrowserRouter([
     {
       path: "/",
-      element: <RootRedirect />,
+      element: <Landing />,
     },
     {
       path: "/admin",

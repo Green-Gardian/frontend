@@ -1,3 +1,4 @@
+import { Landing } from "./Landing";
 import { Dashboard } from "./Dashboard";
 import { Vehicles } from "./Vehicles";
 import { Staff } from "./Staff";
@@ -19,6 +20,7 @@ import { Logs } from "./Logs";
 export * from "./SuperAdmin";
 
 export {
+  Landing,
   Dashboard,
   Vehicles,
   Customer,
